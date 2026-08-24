@@ -274,7 +274,7 @@ export const siteData = {
   // High-Resolution Curated Visuals
   images: {
     heroPet: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=900&q=80", // Happy dog
-    aboutVet: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80", // Vet with cute puppy
+    aboutVet: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=800&q=80", // Caring veterinarian tenderly examining and holding sweet companion pet
     ctaPet: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80" // Friendly veterinarian consulting with pet owner & companion pet in modern clinic
   }
 };
