@@ -194,7 +194,12 @@ export function renderHome() {
                 <div class="service-line-icon">
                   <i class="${srv.icon}"></i>
                 </div>
-                <span class="service-card-badge">${srv.badge}</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+                  <span class="service-card-badge">${srv.badge}</span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-forest-green); opacity: 0.85;">
+                    <i class="${srv.petTypeIcon || 'fa-solid fa-paw'}" style="font-size: 0.68rem; margin-right: 0.2rem; color: var(--color-soft-coral);"></i>${srv.petTypeLabel}
+                  </span>
+                </div>
               </div>
               <h3>${srv.title}</h3>
               <p>${srv.shortDesc}</p>

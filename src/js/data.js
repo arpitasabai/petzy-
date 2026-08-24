@@ -21,19 +21,21 @@ export const siteData = {
     { value: 98, suffix: "%", label: "Pet Parent Satisfaction", icon: "fa-solid fa-heart" }
   ],
 
-  // 6 Medical & Wellness Services
+  // 6 Medical & Wellness Services (Diverse Companion Animals: Dogs, Cats, Rabbits, Birds, Small Pets)
   services: [
     {
       id: "consultation",
       title: "Veterinary Consultation",
+      petTypeLabel: "Cat & Dog Care",
+      petTypeIcon: "fa-solid fa-cat",
       icon: "fa-solid fa-stethoscope",
       shortDesc: "Comprehensive physical examinations, diagnostic evaluations, and compassionate care tailored to your pet's life stage.",
       bgClass: "bg-white",
       badge: "Preventive Care",
-      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80",
+      image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80", // Gentle feline clinical consultation
       description: "Our comprehensive veterinary consultations focus on whole-pet health, early symptom detection, preventive lifestyle planning, and open communication with pet parents.",
       features: [
-        "Nose-to-tail clinical physical examination",
+        "Nose-to-tail clinical physical examination for felines & canines",
         "Vital signs, heart, lung, and abdominal health assessment",
         "Nutritional counseling & weight management roadmaps",
         "Behavioral evaluations and lifestyle guidance"
@@ -42,12 +44,14 @@ export const siteData = {
     {
       id: "vaccination",
       title: "Vaccination & Immunity",
+      petTypeLabel: "Kitten & Puppy Care",
+      petTypeIcon: "fa-solid fa-shield-cat",
       icon: "fa-solid fa-syringe",
       shortDesc: "Core and lifestyle vaccine protocols to protect against rabies, distemper, parvovirus, and feline leukemia.",
       bgClass: "bg-cream",
       badge: "Immunity & Shield",
-      image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=800&q=80",
-      description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration.",
+      image: "https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=800&q=80", // Adorable young kitten receiving wellness care
+      description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration for puppies, kittens, and rabbits.",
       features: [
         "Core canine (DHPP, Rabies) & feline (FVRCP, FeLV) vaccines",
         "Lifestyle-based risk assessments (Bordetella, Lyme, Lepto)",
@@ -58,12 +62,14 @@ export const siteData = {
     {
       id: "grooming",
       title: "Spa & Medical Grooming",
+      petTypeLabel: "Dog & Cat Spa",
+      petTypeIcon: "fa-solid fa-shower",
       icon: "fa-solid fa-scissors",
       shortDesc: "Therapeutic hydro-massage baths, organic botanical skin care, breed styling, and sanitary ear/nail hygiene.",
       bgClass: "bg-sage-soft",
       badge: "Pampering & Hygiene",
-      image: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80",
-      description: "Fear-Free certified grooming sessions utilizing hypoallergenic organic botanicals, non-slip hydraulic tables, and calming aromatics.",
+      image: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80", // Clean, premium spa grooming
+      description: "Fear-Free certified grooming sessions utilizing hypoallergenic organic botanicals, non-slip hydraulic tables, and calming aromatics for both dogs and cats.",
       features: [
         "Warm hydro-surge massage bath with botanical wash",
         "Complete undercoat deshedding and fluff blow-dry",
@@ -74,28 +80,32 @@ export const siteData = {
     {
       id: "dental-care",
       title: "Dental Care & Hygiene",
+      petTypeLabel: "Small Pets & Rabbits",
+      petTypeIcon: "fa-solid fa-carrot",
       icon: "fa-solid fa-tooth",
       shortDesc: "Ultrasonic scaling, subgingival polishing, digital oral radiographs, and periodontal disease prevention.",
       bgClass: "bg-cream",
       badge: "Oral Wellness",
-      image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80",
-      description: "Advanced dental suites equipped with digital oral X-rays and precision ultrasonic scaling to treat plaque and bad breath.",
+      image: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=800&q=80", // Healthy Holland Lop rabbit dental and oral health
+      description: "Advanced dental suites equipped with digital oral X-rays and precision ultrasonic scaling to treat plaque and maintain dental health in dogs, cats, and small herbivores.",
       features: [
-        "Comprehensive oral evaluation and charting",
+        "Comprehensive oral evaluation, incisor alignment & charting",
         "Ultrasonic supragingival and subgingival scaling",
         "High-gloss fluoride enamel polishing",
-        "Home oral hygiene coaching and pet dental treats"
+        "Home oral hygiene coaching and safe dental chews"
       ]
     },
     {
       id: "surgery",
       title: "Soft Tissue & Orthopedic Surgery",
+      petTypeLabel: "Advanced Surgical Care",
+      petTypeIcon: "fa-solid fa-hospital",
       icon: "fa-solid fa-kit-medical",
       shortDesc: "State-of-the-art sterile surgical suites for spay/neuter, mass removal, and advanced orthopedic procedures.",
       bgClass: "bg-white",
       badge: "Advanced Care",
-      image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80",
-      description: "Equipped with multiparameter continuous anesthesia monitoring, warming blankets, and dedicated veterinary surgical nursing teams.",
+      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80", // Professional surgical doctor & patient in sterile suite
+      description: "Equipped with multiparameter continuous anesthesia monitoring, warming blankets, and dedicated veterinary surgical nursing teams for all companion animal species.",
       features: [
         "Routine elective procedures (Spay, Neuter, Microchipping)",
         "Soft tissue surgery (mass removals, gastrointestinal procedures)",
@@ -106,17 +116,19 @@ export const siteData = {
     {
       id: "emergency",
       title: "24/7 Emergency & Urgent Care",
+      petTypeLabel: "Avian, Cat & Exotic Care",
+      petTypeIcon: "fa-solid fa-dove",
       icon: "fa-solid fa-truck-medical",
       shortDesc: "Rapid response critical care, trauma stabilization, oxygen therapy, and emergency surgery around the clock.",
       bgClass: "bg-sage-soft",
       badge: "24/7 Readiness",
-      image: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=800&q=80",
-      description: "Our hospital is staffed 24 hours a day, 365 days a year with intensive care veterinarians ready for urgent medical triage.",
+      image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=800&q=80", // Exotic colorful bird receiving specialized veterinary attention
+      description: "Our hospital is staffed 24 hours a day, 365 days a year with intensive care veterinarians ready for urgent medical triage of canines, felines, birds, and pocket pets.",
       features: [
         "Immediate emergency triage with zero wait for critical cases",
-        "Oxygen therapy and point-of-care ultrasound diagnostics",
+        "Oxygen therapy and avian/exotic intensive care incubators",
         "Complete in-house critical bloodwork results in 10 minutes",
-        "Blood transfusions and intensive overnight hospitalization"
+        "Emergency fluid resuscitation and overnight hospitalization"
       ]
     }
   ],
