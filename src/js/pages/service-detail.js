@@ -1,19 +1,19 @@
-/* PETZY Service Detail View (Milestone 1) */
+/* PETZY Service Detail View (Veterinary Platform) */
 import { siteData } from '../data.js';
 
 export function renderServiceDetail() {
-  const service = siteData.services[0]; // Signature Spa Grooming & Styling
+  const service = siteData.services[0]; // Veterinary Consultation
 
   return `
     <!-- Service Hero -->
-    <section class="service-detail-hero animate-fade-in">
+    <section class="inner-page-hero animate-fade-up">
       <div class="container">
-        <div class="section-subtitle coral">
-          <i class="fa-solid fa-scissors"></i>
-          <span>Service Deep Dive</span>
+        <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
+          <i class="fa-solid fa-stethoscope"></i>
+          <span>Clinical Examination</span>
         </div>
-        <h1>Signature Spa Grooming & Styling</h1>
-        <p>A tranquil, therapeutic pampering experience featuring warm hydro-massage baths, organic botanicals, gentle deshedding, and breed-standard artisan scissoring.</p>
+        <h1>Veterinary Consultation & Diagnostics</h1>
+        <p>Comprehensive nose-to-tail physical health examinations, diagnostic imaging evaluations, and compassionate care tailored to your pet's life stage.</p>
       </div>
     </section>
 
@@ -22,120 +22,104 @@ export function renderServiceDetail() {
       <div class="container">
         <div class="service-detail-layout">
           
-          <!-- Main Content -->
-          <div class="service-detail-main">
-            
-            <!-- About The Service -->
-            <div>
-              <h2 class="section-title">About the Signature Spa Experience</h2>
-              <p style="margin-bottom: 1rem;">At PETZY, grooming is more than hygiene — it is a therapeutic wellness ritual. Our salons are specially crafted with sound-insulating acoustics, non-slip ergonomic hydraulic tables, and private drying suites to minimize sensory overwhelm.</p>
-              <p>Every session begins with a personalized nose-to-tail coat and skin evaluation by our Master Certified Groomer to select the exact botanical formulations matched to your pet’s dermal pH and coat texture.</p>
+          <!-- Left Column -->
+          <div>
+            <!-- About The Consultation -->
+            <div style="margin-bottom: 2.5rem;">
+              <h2 class="section-title">About the Consultation Experience</h2>
+              <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1rem;">A veterinary consultation at PETZY is designed to be thorough, low-stress, and collaborative. We understand that visiting the clinic can cause anxiety for some pets, which is why our examination rooms are equipped with pheromone diffusers, warm non-slip mats, and gentle positive-reinforcement treats.</p>
+              <p style="font-size: 1.05rem; line-height: 1.7;">Our board-certified veterinarians conduct a complete physical evaluation, review medical history and nutritional habits, and answer every question you have about your pet’s vitality.</p>
             </div>
 
-            <!-- What's Included (Interactive Checklist) -->
-            <div>
-              <h3 style="margin-bottom: 0.5rem; font-size: 1.5rem;">What's Included in Every Session</h3>
-              <p style="margin-bottom: 1rem; color: var(--color-charcoal-muted);">Comprehensive 8-point care included as standard with no hidden add-on fees:</p>
+            <!-- What's Included (8-Point Checklist) -->
+            <div style="margin-bottom: 2.5rem;">
+              <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">What's Included in Every Examination</h3>
+              <p style="color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Our standard comprehensive checkup covers 8 vital clinical points:</p>
               
-              <div class="included-checklist">
-                <div class="checklist-item">
+              <div class="service-checklist-grid">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Warm Hydro-Surge Massage Bath</span>
+                  <span>Nose-to-Tail Physical Exam</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Organic Blueberry Brightening Facial</span>
+                  <span>Heart & Lung Auscultation</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Deep Coat Conditioner & Fluff Dry</span>
+                  <span>Oral Health & Dental Grading</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Gentle Undercoat Deshedding</span>
+                  <span>Ophthalmic (Eye) & Ear Otoscopy</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Precision Breed Hand-Scissor Styling</span>
+                  <span>Abdominal Palpation & Organ Check</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Nail Trimming & Dremel Polishing</span>
+                  <span>Joint Mobility & Musculoskeletal Exam</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Ear Cleansing & Sanitary Trim</span>
+                  <span>Skin & Coat Dermal Analysis</span>
                 </div>
-                <div class="checklist-item">
+                <div class="checklist-card">
                   <i class="fa-solid fa-circle-check"></i>
-                  <span>Moisturizing Organic Paw Pad Balm</span>
+                  <span>Customized Diet & Lifestyle Roadmap</span>
                 </div>
               </div>
             </div>
 
-            <!-- Benefits -->
-            <div>
-              <h3 style="margin-bottom: 0.75rem; font-size: 1.5rem;">Health & Wellness Benefits</h3>
-              <div class="service-benefits-grid" style="margin-top: 1rem;">
-                <div class="benefit-card">
-                  <div class="benefit-icon"><i class="fa-solid fa-shield-virus"></i></div>
-                  <h4>Dermal Health & Protection</h4>
-                  <p style="font-size: 0.92rem;">Removes environmental allergens, dead dander, and trapped debris to prevent itchy hot spots and infections.</p>
+            <!-- Health & Longevity Benefits -->
+            <div style="margin-bottom: 2.5rem;">
+              <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--color-forest-green);">Health & Longevity Benefits</h3>
+              <div class="benefits-grid-4" style="grid-template-columns: 1fr 1fr;">
+                <div class="benefit-card-box">
+                  <div class="benefit-icon-pill" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-shield-virus"></i></div>
+                  <h4>Early Disease Detection</h4>
+                  <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin: 0;">Catches subtle cardiac, renal, or endocrine changes before symptoms worsen.</p>
                 </div>
-                <div class="benefit-card">
-                  <div class="benefit-icon"><i class="fa-solid fa-heart-pulse"></i></div>
-                  <h4>Stimulated Circulation</h4>
-                  <p style="font-size: 0.92rem;">Gentle hydrotherapy massage stimulates blood flow to hair follicles, promoting glossy, resilient coat growth.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Why Choose PETZY Comparison -->
-            <div>
-              <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Why Choose PETZY for Grooming</h3>
-              <div class="why-petzy-cards">
-                <div class="why-petzy-card">
-                  <h4><i class="fa-solid fa-check" style="color: var(--color-forest-green);"></i> Fear-Free Certified</h4>
-                  <p style="font-size: 0.9rem; color: var(--color-charcoal-muted);">Our groomers are trained in body language cues, using calming positive reinforcement without rushing.</p>
-                </div>
-                <div class="why-petzy-card">
-                  <h4><i class="fa-solid fa-check" style="color: var(--color-forest-green);"></i> Cage-Free Comfort</h4>
-                  <p style="font-size: 0.9rem; color: var(--color-charcoal-muted);">Pets are never left unattended in noisy drying crates. Every pet receives dedicated 1-on-1 stylist care.</p>
+                <div class="benefit-card-box">
+                  <div class="benefit-icon-pill" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-heart-pulse"></i></div>
+                  <h4>Optimal Weight & Nutrition</h4>
+                  <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin: 0;">Preserves joint health and adds years of active vitality to your pet's life.</p>
                 </div>
               </div>
             </div>
 
             <!-- Service Specific FAQ Accordion -->
             <div>
-              <h3 style="margin-bottom: 1.25rem; font-size: 1.5rem;">Frequently Asked Questions</h3>
+              <h3 style="font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--color-forest-green);">Frequently Asked Questions</h3>
               <div class="accordion-wrapper" id="service-faq-accordion">
                 <div class="accordion-item active">
                   <button class="accordion-header">
-                    <span>How long does a full spa grooming session take?</span>
+                    <span>How long does a comprehensive consultation take?</span>
                     <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
                   </button>
                   <div class="accordion-content">
-                    <p>A full signature spa session typically takes 90 to 120 minutes depending on your pet's coat length, thickness, and breed styling requirements. We never rush the process.</p>
+                    <p>Our standard examination visits last between 30 to 45 minutes to ensure plenty of time for thorough evaluations and answering all your questions.</p>
                   </div>
                 </div>
 
                 <div class="accordion-item">
                   <button class="accordion-header">
-                    <span>What if my pet gets anxious around clippers or driers?</span>
+                    <span>What should I bring to my pet's consultation?</span>
                     <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
                   </button>
                   <div class="accordion-content">
-                    <p>We use ultra-quiet variable-speed dryers, soothing lavender pheromone therapy, and gentle towel-blotting techniques. We take gentle break intervals whenever needed.</p>
+                    <p>Please bring past vaccination history, records of current medications or flea/tick preventatives, and any specific questions you have noted down.</p>
                   </div>
                 </div>
 
                 <div class="accordion-item">
                   <button class="accordion-header">
-                    <span>Can I bring my pet’s prescribed medicated shampoo?</span>
+                    <span>Are diagnostic blood tests done during the same visit?</span>
                     <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
                   </button>
                   <div class="accordion-content">
-                    <p>Absolutely! If your veterinarian has prescribed a specific dermatological wash, our stylists will apply it following exact contact time instructions.</p>
+                    <p>Yes! With our in-house laboratory suite, routine blood chemistry, hematology, and urinalysis results are available within 15–20 minutes.</p>
                   </div>
                 </div>
               </div>
@@ -144,32 +128,32 @@ export function renderServiceDetail() {
           </div>
 
           <!-- Sticky Sidebar Information Box -->
-          <div class="service-detail-sidebar">
-            <div style="width: 100%; height: 200px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;">
-              <img src="${siteData.petImages.catDog}" alt="Clean happy groomed dog" style="width: 100%; height: 100%; object-fit: cover;">
+          <div style="position: sticky; top: 110px; background: var(--color-white); border-radius: var(--radius-xl); padding: 2.25rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-lg);">
+            <div style="width: 100%; height: 210px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;">
+              <img src="${service.image}" alt="${service.title}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
 
-            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">Signature Spa Overview</h3>
-            <p style="font-size: 0.95rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Customized for small, medium, and large dog breeds & long-haired cats.</p>
+            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">Consultation Details</h3>
+            <p style="font-size: 0.95rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Available for dogs, cats, rabbits, and small companion animals.</p>
             
             <div style="border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 1rem 0; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.65rem;">
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <span style="color: var(--color-charcoal-muted);">Typical Duration:</span>
-                <strong>90 – 120 mins</strong>
+                <span style="color: var(--color-charcoal-muted);">Duration:</span>
+                <strong>30 – 45 mins</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <span style="color: var(--color-charcoal-muted);">Stylist Level:</span>
-                <strong>Master Certified</strong>
+                <span style="color: var(--color-charcoal-muted);">Doctor:</span>
+                <strong>Board Certified Vet</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <span style="color: var(--color-charcoal-muted);">Products Used:</span>
-                <strong>100% Organic Eco-Cert</strong>
+                <span style="color: var(--color-charcoal-muted);">Standard:</span>
+                <strong>Fear-Free Protocol</strong>
               </div>
             </div>
 
-            <a href="#/contact" class="btn btn-primary" style="width: 100%; margin-bottom: 0.75rem;">
-              <i class="fa-solid fa-envelope"></i>
-              <span>Inquire About Care</span>
+            <a href="#/contact" class="btn btn-teal" style="width: 100%; margin-bottom: 0.75rem;">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Book an Appointment</span>
             </a>
 
             <a href="#/services" class="btn btn-outline" style="width: 100%;">
@@ -180,42 +164,17 @@ export function renderServiceDetail() {
         </div>
       </div>
     </section>
-
-    <!-- Closing CTA -->
-    <section class="section final-cta-section">
-      <div class="container">
-        <div class="final-cta-card">
-          <div class="cta-peeking-rabbit float-gentle">
-            <img src="${siteData.petImages.peekingRabbitCta}" alt="Rabbit">
-            <span>Fresh, Soft & Happy Pets</span>
-          </div>
-          <h2>Ready to Treat Your Pet to the Ultimate Spa Day?</h2>
-          <p>Contact our concierge care desk to learn more about our Fear-Free grooming sessions and customized styling options.</p>
-          <div class="cta-btn-group">
-            <a href="#/contact" class="btn btn-primary btn-lg">
-              <i class="fa-solid fa-phone"></i>
-              <span>Contact Care Concierge</span>
-            </a>
-            <a href="#/" class="btn btn-outline-white btn-lg">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <span>Shop Pet Grooming Essentials</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
   `;
 }
 
 export function setupServiceDetailEvents() {
-  // Accordion Expand/Collapse Logic
   const accordion = document.getElementById('service-faq-accordion');
   if (!accordion) return;
 
   const items = accordion.querySelectorAll('.accordion-item');
   items.forEach(item => {
     const header = item.querySelector('.accordion-header');
-    header.addEventListener('click', () => {
+    header?.addEventListener('click', () => {
       const wasActive = item.classList.contains('active');
       items.forEach(i => i.classList.remove('active'));
       if (!wasActive) {

@@ -1,57 +1,46 @@
-/* PETZY FAQ View (Milestone 1) */
+/* PETZY FAQ View (Veterinary Platform) */
 import { siteData } from '../data.js';
-
-let activeCategory = 'all';
 
 export function renderFaq() {
   return `
-    <!-- FAQ Hero -->
-    <section class="page-hero animate-fade-in">
+    <!-- Inner Page Hero -->
+    <section class="inner-page-hero animate-fade-up">
       <div class="container" style="text-align: center;">
-        <div class="section-subtitle coral" style="margin: 0 auto 1rem;">
+        <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none; margin: 0 auto 1rem;">
           <i class="fa-solid fa-circle-question"></i>
-          <span>Help & Answers</span>
+          <span>Help & Information</span>
         </div>
         <h1>Frequently Asked Questions</h1>
-        <p style="margin: 0 auto;">Everything you need to know about our products, veterinary care, grooming appointments, and shipping.</p>
+        <p style="margin: 0 auto;">Everything you need to know about clinic visits, doctor appointments, emergency procedures, and hospital care.</p>
       </div>
     </section>
 
-    <!-- FAQ Search & Categories Filter -->
+    <!-- FAQ Search & Accordion Section -->
     <section class="section">
       <div class="container container-narrow">
         
-        <!-- Live FAQ Search Input -->
-        <div class="faq-search-wrapper">
-          <i class="fa-solid fa-magnifying-glass faq-search-icon"></i>
-          <input type="text" id="faq-search-input" class="faq-search-input" placeholder="Search questions (e.g., shipping, grooming, ingredients)...">
-        </div>
-
-        <!-- Category Tab Filters -->
-        <div class="faq-filter-tabs" id="faq-filter-tabs">
-          <button class="faq-tab-btn active" data-cat="all">All Questions</button>
-          <button class="faq-tab-btn" data-cat="general"><i class="fa-solid fa-sparkles"></i> General</button>
-          <button class="faq-tab-btn" data-cat="products"><i class="fa-solid fa-box-open"></i> Products</button>
-          <button class="faq-tab-btn" data-cat="services"><i class="fa-solid fa-stethoscope"></i> Services</button>
-          <button class="faq-tab-btn" data-cat="account"><i class="fa-solid fa-user-gear"></i> Account</button>
+        <!-- Live FAQ Search Filter -->
+        <div class="faq-search-wrapper" style="max-width: 580px; margin: 0 auto 2.5rem; position: relative;">
+          <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--color-forest-green); font-size: 1.1rem;"></i>
+          <input type="text" id="faq-page-search" placeholder="Search questions (e.g. appointment, emergency, prepare)..." style="width: 100%; padding: 0.95rem 1.25rem 0.95rem 3.25rem; border-radius: var(--radius-full); border: 2px solid var(--color-border); background: var(--color-white); font-family: inherit; font-size: 1rem; outline: none; box-shadow: var(--shadow-sm);">
         </div>
 
         <!-- Accordions Container -->
-        <div class="accordion-wrapper" id="main-faq-accordion">
-          ${renderFaqList('all')}
+        <div class="accordion-wrapper" id="faq-page-accordion">
+          ${renderFaqAccordionItems('')}
         </div>
 
         <!-- Support Card Prompt -->
         <div style="background: var(--color-sage-green-soft); border-radius: var(--radius-2xl); padding: 3rem; text-align: center; margin-top: 4rem; border: 1px solid var(--color-sage-green);">
-          <div class="cta-peeking-rabbit float-gentle" style="position: static; transform: none; display: inline-flex; margin-bottom: 1.5rem;">
-            <img src="${siteData.petImages.heroMiniCat}" alt="Curious cat">
-            <span>Can't find what you're looking for?</span>
+          <div class="section-badge" style="background: var(--color-white); margin-bottom: 1rem;">
+            <i class="fa-solid fa-headset"></i>
+            <span>Have More Questions?</span>
           </div>
-          <h3 style="font-size: 1.85rem; margin-bottom: 0.75rem; color: var(--color-forest-green);">We're Always Here to Help!</h3>
-          <p style="max-width: 500px; margin: 0 auto 1.75rem; color: var(--color-charcoal-muted);">Our knowledgeable pet care specialists are on standby to answer any questions about your specific pet's needs.</p>
-          <a href="#/contact" class="btn btn-primary btn-lg">
+          <h3 style="font-size: 1.85rem; margin-bottom: 0.75rem; color: var(--color-forest-green);">Our Veterinary Care Desk Is Standing By</h3>
+          <p style="max-width: 520px; margin: 0 auto 1.75rem; color: var(--color-charcoal-muted);">Whether you have questions about an upcoming surgery or need routine wellness advice, our team is happy to assist.</p>
+          <a href="#/contact" class="btn btn-teal btn-lg">
             <i class="fa-solid fa-envelope"></i>
-            <span>Contact Customer Care</span>
+            <span>Contact Our Team</span>
           </a>
         </div>
 
@@ -60,35 +49,22 @@ export function renderFaq() {
   `;
 }
 
-function renderFaqList(category = 'all', searchQuery = '') {
-  let items = [];
+function renderFaqAccordionItems(searchQuery = '') {
   const q = searchQuery.toLowerCase().trim();
+  const filtered = siteData.faqs.filter(f => !q || f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q));
 
-  const categoriesToPull = category === 'all' 
-    ? ['general', 'products', 'services', 'account'] 
-    : [category];
-
-  categoriesToPull.forEach(catKey => {
-    const list = siteData.faqs[catKey] || [];
-    list.forEach(item => {
-      if (!q || item.q.toLowerCase().includes(q) || item.a.toLowerCase().includes(q)) {
-        items.push({ ...item, cat: catKey });
-      }
-    });
-  });
-
-  if (items.length === 0) {
+  if (filtered.length === 0) {
     return `
-      <div style="text-align: center; padding: 3rem 1.5rem; background: var(--color-white); border-radius: var(--radius-xl);">
-        <i class="fa-solid fa-paw" style="font-size: 2.5rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
+      <div style="text-align: center; padding: 3rem; background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border);">
+        <i class="fa-solid fa-circle-question" style="font-size: 2.5rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
         <h4 style="color: var(--color-forest-green); margin-bottom: 0.5rem;">No matching questions found</h4>
-        <p style="color: var(--color-charcoal-muted);">Try searching with different keywords or contact our team directly.</p>
+        <p style="color: var(--color-charcoal-muted);">Try a different keyword or contact our clinic directly at ${siteData.brand.phone}.</p>
       </div>
     `;
   }
 
-  return items.map((faq, index) => `
-    <div class="accordion-item ${index === 0 ? 'active' : ''}">
+  return filtered.map((faq, idx) => `
+    <div class="accordion-item ${idx === 0 ? 'active' : ''}">
       <button class="accordion-header">
         <span>${faq.q}</span>
         <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
@@ -101,12 +77,10 @@ function renderFaqList(category = 'all', searchQuery = '') {
 }
 
 export function setupFaqEvents() {
-  const container = document.getElementById('main-faq-accordion');
-  const searchInput = document.getElementById('faq-search-input');
-  const tabBtns = document.querySelectorAll('.faq-tab-btn');
+  const container = document.getElementById('faq-page-accordion');
+  const searchInput = document.getElementById('faq-page-search');
 
-  // Bind accordion collapse/expand
-  function bindAccordionClicks() {
+  function bindClicks() {
     if (!container) return;
     const items = container.querySelectorAll('.accordion-item');
     items.forEach(item => {
@@ -121,26 +95,12 @@ export function setupFaqEvents() {
     });
   }
 
-  bindAccordionClicks();
+  bindClicks();
 
-  // Tab Filtering
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeCategory = btn.getAttribute('data-cat') || 'all';
-      if (container) {
-        container.innerHTML = renderFaqList(activeCategory, searchInput?.value || '');
-        bindAccordionClicks();
-      }
-    });
-  });
-
-  // Search Filtering
   searchInput?.addEventListener('input', (e) => {
     if (container) {
-      container.innerHTML = renderFaqList(activeCategory, e.target.value);
-      bindAccordionClicks();
+      container.innerHTML = renderFaqAccordionItems(e.target.value);
+      bindClicks();
     }
   });
 }

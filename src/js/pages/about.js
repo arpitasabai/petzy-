@@ -1,51 +1,59 @@
-/* PETZY About Us View (Milestone 1) */
+/* PETZY About Us View (Veterinary Platform) */
 import { siteData } from '../data.js';
 
 export function renderAbout() {
   return `
-    <!-- Page Hero -->
-    <section class="page-hero animate-fade-in">
+    <!-- Inner Page Hero -->
+    <section class="inner-page-hero animate-fade-up">
       <div class="container">
-        <div class="section-subtitle coral">
+        <div class="section-badge" style="background: rgba(255,255,255,0.15); color: var(--color-warm-cream); border: none;">
           <i class="fa-solid fa-heart"></i>
-          <span>Our Story & Mission</span>
+          <span>Our Mission & Story</span>
         </div>
-        <h1>Committed to Healthier, Happier Pets.</h1>
-        <p>Founded by passionate veterinarians and lifelong pet parents, PETZY was born from a simple belief: every pet deserves uncompromising quality and compassionate care.</p>
+        <h1>Dedicated to Your Pet's Health & Happiness</h1>
+        <p>Providing compassionate veterinary care, state-of-the-art medical technology, and personalized wellness support for every stage of your pet's life.</p>
       </div>
     </section>
 
     <!-- Our Story Section -->
     <section class="section">
       <div class="container">
-        <div class="about-story-grid">
-          <div class="about-img-composite">
-            <img src="${siteData.petImages.storyDogOwner}" alt="PETZY founders with friendly golden retriever" class="about-main-photo">
-            <!-- Overlapping dog element -->
-            <img src="${siteData.petImages.heroDog}" alt="Golden retriever companion" class="about-overlapping-dog float-gentle">
+        <div class="about-petzy-layout">
+          <div class="about-visual-side">
+            <img src="${siteData.images.aboutVet}" alt="Veterinarian examining cute dog" class="about-primary-photo">
+            
+            <div class="about-trusted-badge float-gentle">
+              <div class="trusted-badge-icon">
+                <i class="fa-solid fa-medal"></i>
+              </div>
+              <div>
+                <h4 style="color: var(--color-warm-cream); font-size: 1.1rem; margin-bottom: 0.2rem;">AAHA Accredited</h4>
+                <p style="color: var(--color-sage-green-light); font-size: 0.82rem; margin: 0;">Top 15% of Veterinary Hospitals</p>
+              </div>
+            </div>
           </div>
 
-          <div class="about-story-text">
-            <div class="section-subtitle">
+          <div class="about-text-side">
+            <div class="section-badge">
               <i class="fa-solid fa-sparkles"></i>
-              <span>How We Started</span>
+              <span>Our Origins</span>
             </div>
-            <h2 class="section-title">Built From Love, Driven by Veterinary Science.</h2>
-            <p style="margin-bottom: 1.25rem;">In 2021, our founding team noticed a concerning trend in the pet industry: mass-produced pet foods packed with chemical preservatives and clinical spaces that made pets feel scared and anxious.</p>
-            <p style="margin-bottom: 1.5rem;">We set out to create a sanctuary where pet parents could find 100% transparent organic nutrition, enriching interactive toys, and fear-free grooming and veterinary wellness — all in one modern, friendly destination.</p>
-            
-            <div style="display: flex; gap: 2rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem;">
+            <h2 class="section-title">Founded on Compassion & Clinical Excellence</h2>
+            <p style="margin-bottom: 1.25rem; font-size: 1.05rem;">PETZY was founded by a passionate collective of veterinarians and veterinary nurses with a clear vision: to create a healthcare environment where pets feel safe, stress-free, and loved like family.</p>
+            <p style="margin-bottom: 1.75rem; font-size: 1.05rem;">From our Fear-Free accredited clinical examination suites to our 24/7 intensive emergency trauma response team, every single protocol we design puts the comfort and health of your pet at the center.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem;">
               <div>
-                <h3 style="font-size: 2rem; color: var(--color-forest-green);">50K+</h3>
-                <p style="font-size: 0.9rem;">Happy Pets Cared For</p>
+                <h3 style="font-size: 2rem; color: var(--color-forest-green);">500+</h3>
+                <p style="font-size: 0.9rem;">Happy Pets</p>
               </div>
               <div>
-                <h3 style="font-size: 2rem; color: var(--color-forest-green);">100%</h3>
-                <p style="font-size: 0.9rem;">Non-Toxic Vetted</p>
+                <h3 style="font-size: 2rem; color: var(--color-forest-green);">20+</h3>
+                <p style="font-size: 0.9rem;">Expert Vets</p>
               </div>
               <div>
-                <h3 style="font-size: 2rem; color: var(--color-forest-green);">4.9★</h3>
-                <p style="font-size: 0.9rem;">Parent Satisfaction</p>
+                <h3 style="font-size: 2rem; color: var(--color-forest-green);">98%</h3>
+                <p style="font-size: 0.9rem;">Satisfaction</p>
               </div>
             </div>
           </div>
@@ -53,75 +61,54 @@ export function renderAbout() {
       </div>
     </section>
 
-    <!-- Our Core Values -->
+    <!-- Why Choose PETZY Benefits -->
     <section class="section" style="background-color: var(--color-warm-cream-dark); border-radius: var(--radius-2xl);">
       <div class="container">
         <div class="section-header">
-          <div class="section-subtitle coral">
-            <i class="fa-solid fa-compass"></i>
+          <div class="section-badge coral">
+            <i class="fa-solid fa-shield-heart"></i>
             <span>Our Guiding Principles</span>
           </div>
-          <h2 class="section-title">Values That Guide Every Wag & Purr</h2>
-          <p class="section-desc">Our foundational pillars ensure that your pet receives only the safest, most enriching care possible.</p>
+          <h2 class="section-title">The Pillars of PETZY Veterinary Care</h2>
+          <p class="section-desc">Our foundational clinical standards ensure your companion receives the highest standard of modern medicine.</p>
         </div>
 
-        <div class="values-grid">
-          ${siteData.values.map(val => `
-            <div class="value-card hover-lift">
-              <div class="value-icon-box">
-                <i class="${val.icon}"></i>
+        <div class="benefits-grid-4">
+          ${siteData.benefits.map((b, idx) => `
+            <div class="benefit-card-box stagger-${idx + 1}">
+              <div class="benefit-top-row">
+                <span class="benefit-number">${b.number}</span>
+                <div class="benefit-icon-pill">
+                  <i class="${b.icon}"></i>
+                </div>
               </div>
-              <h3>${val.title}</h3>
-              <p>${val.desc}</p>
+              <h3>${b.title}</h3>
+              <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">${b.desc}</p>
             </div>
           `).join('')}
         </div>
       </div>
     </section>
 
-    <!-- Brand Philosophy Banner -->
+    <!-- Closing CTA -->
     <section class="section">
       <div class="container">
-        <div class="philosophy-banner">
-          <div>
-            <div class="section-subtitle" style="background: rgba(255,255,255,0.7); color: var(--color-forest-green);">
-              <i class="fa-solid fa-leaf"></i>
-              <span>Holistic Pet Wellness</span>
+        <div class="pet-care-cta-box">
+          <div class="cta-content-side">
+            <div class="section-badge" style="background: rgba(255,255,255,0.15); color: var(--color-warm-cream); border: none;">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Schedule a Visit</span>
             </div>
-            <h2 style="margin-bottom: 1rem;">Nurturing Body, Mind & Spirit</h2>
-            <p style="font-size: 1.08rem; line-height: 1.7; margin-bottom: 1.5rem;">Just like humans, pets need balanced nutrition, mental stimulation, physical conditioning, and deep emotional security to thrive. That’s why our veterinary specialists and pet nutritionists curate every single item on our shelves.</p>
-            <a href="#/services" class="btn btn-forest">
-              <span>Explore Our Services</span>
-              <i class="fa-solid fa-arrow-right"></i>
+            <h2>Meet Our Doctors & Tour Our Hospital</h2>
+            <p>Schedule a routine wellness exam or consult with our veterinary specialists today.</p>
+            <a href="#/contact" class="btn btn-coral btn-lg">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Book an Appointment</span>
             </a>
           </div>
 
-          <div style="position: relative;">
-            <img src="${siteData.petImages.catCat}" alt="Cat relaxing comfortably" style="width: 100%; height: 320px; object-fit: cover; border-radius: var(--radius-xl); border: 4px solid var(--color-white); box-shadow: var(--shadow-lg);">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Closing CTA Banner -->
-    <section class="section final-cta-section">
-      <div class="container">
-        <div class="final-cta-card">
-          <div class="cta-peeking-rabbit float-gentle">
-            <img src="${siteData.petImages.peekingRabbitCta}" alt="Friendly rabbit">
-            <span>Join 50,000+ Happy Pet Families</span>
-          </div>
-          <h2>Ready to Elevate Your Pet's Everyday Life?</h2>
-          <p>Join the PETZY family today and experience the difference of pure organic ingredients and loving care.</p>
-          <div class="cta-btn-group">
-            <a href="#/" class="btn btn-primary btn-lg">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <span>Shop Pet Essentials</span>
-            </a>
-            <a href="#/contact" class="btn btn-outline-white btn-lg">
-              <i class="fa-solid fa-envelope"></i>
-              <span>Get in Touch</span>
-            </a>
+          <div class="cta-img-side">
+            <img src="${siteData.images.ctaPet}" alt="Golden retriever pet" class="cta-main-pet-img">
           </div>
         </div>
       </div>
@@ -129,6 +116,4 @@ export function renderAbout() {
   `;
 }
 
-export function setupAboutEvents() {
-  // Any specific interaction listeners for about page
-}
+export function setupAboutEvents() {}

@@ -13,35 +13,35 @@ html {
 }
 
 body {
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
   background-color: var(--color-warm-cream);
   color: var(--color-charcoal);
-  line-height: 1.6;
+  line-height: 1.65;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
 }
 
-/* Typography Defaults */
+/* Headings with Plus Jakarta Sans */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--color-forest-green);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 h1 {
-  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-size: clamp(2.35rem, 5.2vw, 3.85rem);
 }
 
 h2 {
-  font-size: clamp(1.85rem, 3.5vw, 2.75rem);
+  font-size: clamp(1.9rem, 3.8vw, 2.85rem);
 }
 
 h3 {
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-size: clamp(1.4rem, 2.4vw, 1.95rem);
 }
 
 h4 {
@@ -51,17 +51,17 @@ h4 {
 p {
   color: var(--color-charcoal-muted);
   font-size: 1.05rem;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 a {
   color: inherit;
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 button {
-  font-family: inherit;
+  font-family: var(--font-heading);
   cursor: pointer;
   border: none;
   background: none;
@@ -134,7 +134,7 @@ ul, ol {
   padding-bottom: var(--space-2xl);
 }
 
-/* Section Headings Layout */
+/* Section Header Standards */
 .section-header {
   text-align: center;
   max-width: 680px;
@@ -147,28 +147,33 @@ ul, ol {
   margin-left: 0;
 }
 
-.section-subtitle {
+.section-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--color-forest-green);
   background-color: var(--color-sage-green-soft);
-  padding: 0.35rem 1rem;
+  padding: 0.4rem 1.15rem;
   border-radius: var(--radius-full);
   margin-bottom: var(--space-md);
+  border: 1px solid rgba(23, 74, 58, 0.1);
 }
 
-.section-subtitle.coral {
-  color: #C84F3D;
+.section-badge.coral {
+  color: #B9402E;
   background-color: var(--color-soft-coral-soft);
+  border-color: rgba(242, 140, 123, 0.25);
 }
 
-.section-subtitle i {
-  font-size: 0.85rem;
+.section-badge.yellow {
+  color: #8C6A12;
+  background-color: var(--color-soft-yellow-light);
+  border-color: rgba(245, 217, 139, 0.4);
 }
 
 .section-title {
@@ -177,7 +182,7 @@ ul, ol {
 }
 
 .section-desc {
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   color: var(--color-charcoal-muted);
 }
 

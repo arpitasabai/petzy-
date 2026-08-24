@@ -1,170 +1,92 @@
-/* PETZY Services Overview View (Milestone 1) */
+/* PETZY Services Overview View (Veterinary Platform) */
 import { siteData } from '../data.js';
 
 export function renderServices() {
   return `
-    <!-- Services Hero -->
-    <section class="page-hero animate-fade-in">
+    <!-- Inner Page Hero -->
+    <section class="inner-page-hero animate-fade-up">
       <div class="container">
-        <div class="section-subtitle coral">
-          <i class="fa-solid fa-hands-holding-circle"></i>
-          <span>Professional Pet Care</span>
+        <div class="section-badge" style="background: rgba(255,255,255,0.15); color: var(--color-warm-cream); border: none;">
+          <i class="fa-solid fa-stethoscope"></i>
+          <span>Clinical & Wellness Services</span>
         </div>
-        <h1>Comprehensive Care Tailored to Your Pet.</h1>
-        <p>From luxurious spa hydrotherapy and stress-free breed styling to preventive veterinary checkups and therapeutic massage, our certified specialists are here for your pet.</p>
+        <h1>Everything Your Pet Needs, Under One Roof</h1>
+        <p>Comprehensive preventive health, surgical excellence, diagnostic screening, and therapeutic wellness under the care of certified veterinary professionals.</p>
       </div>
     </section>
 
-    <!-- Services Deep-Dive Sections -->
+    <!-- Services Deep-Dive Grid -->
     <section class="section">
       <div class="container">
-        
-        <!-- 1. Grooming Deep Dive -->
-        <div class="service-feature-block">
-          <div>
-            <div class="section-subtitle">
-              <i class="fa-solid fa-scissors"></i>
-              <span>Spa & Grooming</span>
-            </div>
-            <h2 class="section-title">Signature Spa Grooming & Styling</h2>
-            <p>Our low-stress grooming salons utilize warm hydro-massage baths, organic botanical shampoos, and hand-scissor precision styling to ensure your pet leaves looking and feeling radiant.</p>
-            
-            <ul class="service-feature-list">
-              <li><i class="fa-solid fa-check"></i> Hypoallergenic tearless blueberry facial & coat bath</li>
-              <li><i class="fa-solid fa-check"></i> Complete undercoat deshedding & blow-out styling</li>
-              <li><i class="fa-solid fa-check"></i> Organic paw pad balm massage & nail smoothing</li>
-              <li><i class="fa-solid fa-check"></i> Sanitary ear flush & gentle dental freshening</li>
-            </ul>
-
-            <a href="#/service-detail" class="btn btn-forest">
-              <span>View Service Details & Inclusions</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </a>
+        <div class="section-header">
+          <div class="section-badge coral">
+            <i class="fa-solid fa-sparkles"></i>
+            <span>Our Full Spectrum Care</span>
           </div>
-
-          <div>
-            <img src="${siteData.services[0].image}" alt="Luxury dog grooming" class="service-feature-img hover-lift">
-          </div>
+          <h2 class="section-title">Specialized Veterinary Services</h2>
+          <p class="section-desc">Each service is tailored with Fear-Free clinical protocols to ensure your pet is relaxed, comfortable, and thoroughly evaluated.</p>
         </div>
 
-        <!-- 2. Veterinary Care Deep Dive -->
-        <div class="service-feature-block reverse">
-          <div>
-            <div class="section-subtitle coral">
-              <i class="fa-solid fa-stethoscope"></i>
-              <span>Veterinary Care</span>
+        <div style="display: flex; flex-direction: column; gap: 3.5rem;">
+          ${siteData.services.map((srv, idx) => `
+            <div class="about-petzy-layout ${idx % 2 !== 0 ? 'reverse' : ''}" style="${idx % 2 !== 0 ? 'direction: rtl;' : ''}">
+              <div class="about-visual-side" style="${idx % 2 !== 0 ? 'direction: ltr;' : ''}">
+                <img src="${srv.image}" alt="${srv.title}" class="about-primary-photo hover-card-lift">
+              </div>
+
+              <div class="about-text-side" style="${idx % 2 !== 0 ? 'direction: ltr;' : ''}">
+                <div class="section-badge">
+                  <i class="${srv.icon}"></i>
+                  <span>${srv.badge}</span>
+                </div>
+                <h2 class="section-title">${srv.title}</h2>
+                <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">${srv.description}</p>
+                
+                <ul style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
+                  ${srv.features.map(f => `
+                    <li style="display: flex; align-items: center; gap: 0.75rem; font-weight: 600; color: var(--color-charcoal);">
+                      <i class="fa-solid fa-circle-check" style="color: var(--color-forest-green);"></i>
+                      <span>${f}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                  <a href="#/service-detail" class="btn btn-teal">
+                    <span>View Service Inclusions</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </a>
+                  <a href="#/contact" class="btn btn-outline">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Book for This Service</span>
+                  </a>
+                </div>
+              </div>
             </div>
-            <h2 class="section-title">Preventive Clinical Wellness & Diagnostics</h2>
-            <p>Compassionate examinations that prioritize early detection, gentle preventative medicine, and personalized health roadmaps for dogs, cats, rabbits, and exotic companions.</p>
-            
-            <ul class="service-feature-list">
-              <li><i class="fa-solid fa-check"></i> Comprehensive nose-to-tail physical health examinations</li>
-              <li><i class="fa-solid fa-check"></i> Tailored core vaccination schedules & titer testing</li>
-              <li><i class="fa-solid fa-check"></i> Digital in-house diagnostic bloodwork & microscopic screening</li>
-              <li><i class="fa-solid fa-check"></i> Preventive senior mobility and heart health tracking</li>
-            </ul>
-
-            <a href="#/contact" class="btn btn-primary">
-              <span>Consult Our Care Team</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </a>
-          </div>
-
-          <div>
-            <img src="${siteData.services[1].image}" alt="Veterinary doctor examining pet" class="service-feature-img hover-lift">
-          </div>
+          `).join('')}
         </div>
-
-        <!-- 3. Pet Wellness Deep Dive -->
-        <div class="service-feature-block">
-          <div>
-            <div class="section-subtitle">
-              <i class="fa-solid fa-heart-pulse"></i>
-              <span>Therapy & Wellness</span>
-            </div>
-            <h2 class="section-title">Holistic Physical & Emotional Support</h2>
-            <p>Designed for aging pets, athletic dogs, and anxious rescues, our wellness sessions restore physical mobility and calm anxious nervous systems through gentle touch and therapy.</p>
-            
-            <ul class="service-feature-list">
-              <li><i class="fa-solid fa-check"></i> Gentle therapeutic canine & feline massage therapy</li>
-              <li><i class="fa-solid fa-check"></i> Joint flexibility mobility exercises and cold laser therapy</li>
-              <li><i class="fa-solid fa-check"></i> Calming essential oil aromatherapy & sonic sound baths</li>
-              <li><i class="fa-solid fa-check"></i> Customized whole-food herbal nutritional consultations</li>
-            </ul>
-
-            <a href="#/contact" class="btn btn-forest">
-              <span>Inquire About Wellness Plans</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </a>
-          </div>
-
-          <div>
-            <img src="${siteData.services[2].image}" alt="Relaxed calm pet enjoying wellness" class="service-feature-img hover-lift">
-          </div>
-        </div>
-
       </div>
     </section>
 
-    <!-- Service Benefits Grid -->
+    <!-- Closing CTA -->
     <section class="section" style="background-color: var(--color-warm-cream-dark); border-radius: var(--radius-2xl);">
       <div class="container">
-        <div class="section-header">
-          <div class="section-subtitle">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>The PETZY Difference</span>
-          </div>
-          <h2 class="section-title">Why Parents Trust PETZY Care</h2>
-          <p class="section-desc">Our modern facilities and certified staff ensure a stress-free environment for pets of all personalities.</p>
-        </div>
-
-        <div class="service-benefits-grid">
-          <div class="benefit-card">
-            <div class="benefit-icon"><i class="fa-solid fa-medal"></i></div>
-            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Certified Specialists</h3>
-            <p style="font-size: 0.95rem;">Every team member is Fear-Free certified with over 500+ hours of specialized animal behavior training.</p>
-          </div>
-
-          <div class="benefit-card">
-            <div class="benefit-icon"><i class="fa-solid fa-spa"></i></div>
-            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Stress-Free Spaces</h3>
-            <p style="font-size: 0.95rem;">Sound-dampened suites, soothing pheromone diffusers, and private non-slip examination tables.</p>
-          </div>
-
-          <div class="benefit-card">
-            <div class="benefit-icon"><i class="fa-solid fa-seedling"></i></div>
-            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">100% Organic Products</h3>
-            <p style="font-size: 0.95rem;">We only formulate and apply botanical, sulfate-free, and veterinary-grade non-toxic formulas.</p>
-          </div>
-
-          <div class="benefit-card">
-            <div class="benefit-icon"><i class="fa-solid fa-comments"></i></div>
-            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Transparent Reports</h3>
-            <p style="font-size: 0.95rem;">Detailed digital report cards after each session covering coat health, weight, teeth, and mood notes.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="section final-cta-section">
-      <div class="container">
-        <div class="final-cta-card">
-          <div class="cta-peeking-rabbit float-gentle">
-            <img src="${siteData.petImages.peekingRabbitCta}" alt="Rabbit">
-            <span>Special Care for Every Pet</span>
-          </div>
-          <h2>Looking for Personalized Care Recommendations?</h2>
-          <p>Talk with our certified pet care consultants to design a custom wellness roadmap for your pet companion.</p>
-          <div class="cta-btn-group">
-            <a href="#/contact" class="btn btn-primary btn-lg">
-              <i class="fa-solid fa-envelope"></i>
-              <span>Contact Care Team</span>
+        <div class="pet-care-cta-box">
+          <div class="cta-content-side">
+            <div class="section-badge" style="background: rgba(255,255,255,0.15); color: var(--color-warm-cream); border: none;">
+              <i class="fa-solid fa-phone"></i>
+              <span>Direct Assistance</span>
+            </div>
+            <h2>Need Advice on the Right Service for Your Pet?</h2>
+            <p>Our concierge veterinary desk is available to answer your questions and book the right diagnostic or wellness checkup.</p>
+            <a href="#/contact" class="btn btn-coral btn-lg">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Book an Appointment</span>
             </a>
-            <a href="#/service-detail" class="btn btn-outline-white btn-lg">
-              <i class="fa-solid fa-sparkles"></i>
-              <span>View Spa Detail Page</span>
-            </a>
+          </div>
+
+          <div class="cta-img-side">
+            <img src="${siteData.images.ctaPet}" alt="Happy pet" class="cta-main-pet-img">
           </div>
         </div>
       </div>
@@ -172,6 +94,4 @@ export function renderServices() {
   `;
 }
 
-export function setupServicesEvents() {
-  // Service page specific events
-}
+export function setupServicesEvents() {}

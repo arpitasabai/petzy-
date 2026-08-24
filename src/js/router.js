@@ -1,8 +1,10 @@
-/* PETZY Client-Side Router */
+/* PETZY Client-Side SPA Router (10 Milestone 1 Pages) */
 import { renderHome, setupHomeEvents } from './pages/home.js';
 import { renderAbout, setupAboutEvents } from './pages/about.js';
 import { renderServices, setupServicesEvents } from './pages/services.js';
 import { renderServiceDetail, setupServiceDetailEvents } from './pages/service-detail.js';
+import { renderVeterinarians, setupVeterinariansEvents } from './pages/veterinarians.js';
+import { renderVeterinarianProfile, setupVeterinarianProfileEvents } from './pages/veterinarian-profile.js';
 import { renderContact, setupContactEvents } from './pages/contact.js';
 import { renderFaq, setupFaqEvents } from './pages/faq.js';
 import { renderLogin, setupLoginEvents } from './pages/login.js';
@@ -10,14 +12,16 @@ import { renderRegister, setupRegisterEvents } from './pages/register.js';
 import { updateActiveNav } from './components/header.js';
 
 const routes = {
-  '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Everything Your Pet Needs, All in One Place' },
-  '/about': { render: renderAbout, setup: setupAboutEvents, title: 'About Us — PETZY Pet Care & Mission' },
-  '/services': { render: renderServices, setup: setupServicesEvents, title: 'Services — PETZY Spa Grooming & Veterinary Care' },
-  '/service-detail': { render: renderServiceDetail, setup: setupServiceDetailEvents, title: 'Signature Spa Grooming — PETZY Care' },
-  '/contact': { render: renderContact, setup: setupContactEvents, title: 'Contact Us — PETZY Pet Care Concierge' },
-  '/faq': { render: renderFaq, setup: setupFaqEvents, title: 'FAQ & Help — PETZY' },
-  '/login': { render: renderLogin, setup: setupLoginEvents, title: 'Sign In — PETZY' },
-  '/register': { render: renderRegister, setup: setupRegisterEvents, title: 'Create Account — PETZY' }
+  '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Because Every Paw Deserves the Best Care' },
+  '/about': { render: renderAbout, setup: setupAboutEvents, title: 'About Us — PETZY Veterinary Care' },
+  '/services': { render: renderServices, setup: setupServicesEvents, title: 'Services — PETZY Veterinary Hospital' },
+  '/service-detail': { render: renderServiceDetail, setup: setupServiceDetailEvents, title: 'Veterinary Consultation — PETZY' },
+  '/veterinarians': { render: renderVeterinarians, setup: setupVeterinariansEvents, title: 'Meet Our Veterinary Experts — PETZY' },
+  '/veterinarian-profile': { render: renderVeterinarianProfile, setup: setupVeterinarianProfileEvents, title: 'Dr. Ananya Sharma — PETZY Chief Surgeon' },
+  '/contact': { render: renderContact, setup: setupContactEvents, title: 'Contact & Appointments — PETZY Veterinary Hospital' },
+  '/faq': { render: renderFaq, setup: setupFaqEvents, title: 'Frequently Asked Questions — PETZY' },
+  '/login': { render: renderLogin, setup: setupLoginEvents, title: 'Pet Parent Portal Sign In — PETZY' },
+  '/register': { render: renderRegister, setup: setupRegisterEvents, title: 'Register New Patient Account — PETZY' }
 };
 
 export function navigateTo(path) {
@@ -26,7 +30,6 @@ export function navigateTo(path) {
 
 export function handleRoute() {
   const hash = window.location.hash.slice(1) || '/';
-  // Strip query or sub-anchors
   const cleanPath = hash.split('?')[0].split('#')[0] || '/';
   
   const route = routes[cleanPath] || routes['/'];
