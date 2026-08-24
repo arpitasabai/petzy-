@@ -280,8 +280,8 @@ export function renderHome() {
           <p class="section-desc">Experienced doctors dedicated to the health, longevity, and happiness of your beloved companion.</p>
         </div>
 
-        <div class="vets-grid">
-          ${siteData.veterinarians.map(vet => `
+        <div class="vets-grid home-vets-grid">
+          ${siteData.veterinarians.slice(0, 4).map(vet => `
             <div class="vet-card">
               <div class="vet-image-box">
                 <img src="${vet.image}" alt="${vet.name}" loading="lazy">
