@@ -320,9 +320,9 @@ export const siteData = {
       }
     },
     {
-      id: "arjun-rao",
-      slug: "arjun-rao",
-      name: "Dr. Arjun Rao",
+      id: "priya-rao",
+      slug: "priya-rao",
+      name: "Dr. Priya Rao",
       title: "Avian & Exotic Pet Specialist",
       experience: "9+ Years Experience",
       degrees: "DVM, ABVP (Avian & Exotic Practice)",
@@ -330,8 +330,8 @@ export const siteData = {
       image: "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80",
       shortDesc: "Specialized clinical medicine, beak trimming, nutrition, and gentle surgery for birds, rabbits, and small pets.",
       headline: "Comprehensive Avian & Small Mammal Medicine",
-      bio: "Dr. Arjun Rao brings world-class medical and surgical expertise to non-traditional companion animals including parrots, songbirds, rabbits, ferrets, and small rodents.",
-      bioExtended: "He is an active member of the Association of Avian Veterinarians (AAV) and has pioneered low-stress handling protocols and specialized micro-endoscopic procedures for exotic companions.",
+      bio: "Dr. Priya Rao brings world-class medical and surgical expertise to non-traditional companion animals including parrots, songbirds, rabbits, ferrets, and small rodents.",
+      bioExtended: "She is an active member of the Association of Avian Veterinarians (AAV) and has pioneered low-stress handling protocols and specialized micro-endoscopic procedures for exotic companions.",
       specialties: ["Avian Internal Medicine & Surgery", "Small Mammal Dentistry & GI Stasis", "Exotic Nutrition & Husbandry", "Micro-Endoscopy & Diagnostics", "Reptile & Rodent Wellness"],
       education: [
         "Doctor of Veterinary Medicine (DVM) — Exotic Animal Distinction",
@@ -345,7 +345,7 @@ export const siteData = {
         certification: "ABVP Avian & Exotic Certified"
       },
       testimonial: {
-        quote: "Finding a true avian expert for our African Grey was crucial. Dr. Arjun's gentle touch, beak care, and dietary advice keep our parrot thriving.",
+        quote: "Finding a true avian expert for our African Grey was crucial. Dr. Priya's gentle touch, beak care, and dietary advice keep our parrot thriving.",
         author: "Sunil & Meera Iyer (Chirpy's Parents)"
       }
     }
