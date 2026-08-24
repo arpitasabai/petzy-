@@ -167,7 +167,7 @@ export const siteData = {
     }
   ],
 
-  // 4 Featured Veterinarians (Dynamic Profiles)
+  // 6 Featured Veterinarians (Dynamic Profiles & Compact Card Data)
   veterinarians: [
     {
       id: "ananya-sharma",
@@ -178,6 +178,7 @@ export const siteData = {
       degrees: "BVSc & AH, MVSc (Surgery), DACVS",
       badge: "Surgical Director",
       image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Specializes in minimally invasive soft tissue surgery, reconstructive procedures, and post-operative pain protocols.",
       headline: "Compassionate Surgical Leadership",
       bio: "Dr. Ananya Sharma serves as the Surgical Director at PETZY Veterinary Hospital. With over 8 years of advanced surgical practice, she is renowned for her calm bedside manner, precision laparoscopic procedures, and multimodal post-operative pain protocols.",
       bioExtended: "She completed her advanced surgical residency at the Veterinary Medical Center and has published clinical research on soft tissue recovery and orthopedic rehabilitation in companion canines.",
@@ -207,6 +208,7 @@ export const siteData = {
       degrees: "DVM, ACVN Board Certified",
       badge: "Wellness Lead",
       image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Leads preventive longevity programs, species-appropriate clinical nutrition, and chronic metabolic therapy.",
       headline: "Preventive Longevity & Holistic Nutrition",
       bio: "Dr. Rohan Mehta leads PETZY's preventive wellness and dietary therapy programs. With 6+ years of dedicated practice, he specializes in customized species-appropriate nutrition, metabolic balancing, and allergy therapeutics.",
       bioExtended: "He graduated with top clinical honors in Veterinary Medicine and completed his post-doctoral fellowship in Comparative Animal Clinical Nutrition (ACVN). He believes proactive nutrition adds vibrant, healthy years to our pets' lives.",
@@ -236,6 +238,7 @@ export const siteData = {
       degrees: "DVM, DABVP (Canine/Feline Practice)",
       badge: "Senior Clinician",
       image: "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Expert in comprehensive internal medicine, gentle low-stress handling, endocrinology, and senior vitality.",
       headline: "Comprehensive Internal Medicine & Feline Care",
       bio: "With over a decade of clinical medicine experience, Dr. Sarah Kapoor oversees general internal medicine, geriatric pet wellness programs, endocrinology, and feline low-stress medicine.",
       bioExtended: "She is board-certified by the American Board of Veterinary Practitioners (DABVP) and serves as an advocate for Fear-Free feline clinic design, ensuring even the most anxious cats and senior dogs feel at home.",
@@ -265,6 +268,7 @@ export const siteData = {
       degrees: "DVM, DACVECC Fellow",
       badge: "Emergency Lead",
       image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Directs 24/7 trauma stabilization, cardiovascular critical care resuscitation, and point-of-care ultrasound.",
       headline: "Rapid Trauma Stabilization & Critical Care",
       bio: "Dr. David Chen leads PETZY's 24/7 emergency trauma department and ICU. With over 12 years on the frontlines of animal emergency medicine, he specializes in rapid triage, cardiovascular resuscitation, and emergency imaging.",
       bioExtended: "He completed an intensive critical care fellowship at the Pacific Emergency Veterinary Center and has trained hundreds of clinicians in advanced point-of-care ultrasound (POCUS) and emergency trauma resuscitation.",
@@ -283,6 +287,66 @@ export const siteData = {
       testimonial: {
         quote: "When our Labrador swallowed a foreign object in the middle of the night, Dr. David and the emergency team stabilized him immediately. Their swift action saved his life.",
         author: "Kavita & Sanjay Patel (Rocky's Parents)"
+      }
+    },
+    {
+      id: "maya-patel",
+      slug: "maya-patel",
+      name: "Dr. Maya Patel",
+      title: "Veterinary Dermatology Specialist",
+      experience: "7+ Years Experience",
+      degrees: "BVSc, MVSc, ACVD Certified",
+      badge: "Skin & Allergy Care",
+      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Specializes in chronic allergy testing, immunotherapy treatment, autoimmune skin diseases, and ear care.",
+      headline: "Advanced Clinical Dermatology & Allergy Care",
+      bio: "Dr. Maya Patel specializes in complex companion animal dermatology, chronic allergic dermatitis, immune-mediated skin disorders, and recurrent ear infections.",
+      bioExtended: "She completed her specialized dermatology residency at the Animal Allergy & Skin Center and is dedicated to restoring skin barrier health and lasting comfort for itchy, allergic pets.",
+      specialties: ["Allergy Testing & Immunotherapy", "Autoimmune Skin Diseases", "Chronic Otitis & Ear Care", "Dermatopathology & Cytology", "Barrier Repair Therapeutics"],
+      education: [
+        "Bachelor of Veterinary Science & Animal Husbandry (BVSc & AH) — Honors",
+        "Master of Veterinary Science (MVSc Dermatology & Therapeutics)",
+        "Diplomate, American College of Veterinary Dermatology (ACVD)"
+      ],
+      quickFacts: {
+        experience: "7+ Years",
+        cases: "2,800+ Dermatology Cases",
+        languages: "English, Hindi, Gujarati",
+        certification: "ACVD Board Certified"
+      },
+      testimonial: {
+        quote: "Our French Bulldog suffered from severe chronic itching for 2 years until we met Dr. Maya. Her custom allergy immunotherapy gave him total relief!",
+        author: "Karan & Shweta Joshi (Leo's Parents)"
+      }
+    },
+    {
+      id: "arjun-rao",
+      slug: "arjun-rao",
+      name: "Dr. Arjun Rao",
+      title: "Avian & Exotic Pet Specialist",
+      experience: "9+ Years Experience",
+      degrees: "DVM, ABVP (Avian & Exotic Practice)",
+      badge: "Avian & Exotic Lead",
+      image: "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Specialized clinical medicine, beak trimming, nutrition, and gentle surgery for birds, rabbits, and small pets.",
+      headline: "Comprehensive Avian & Small Mammal Medicine",
+      bio: "Dr. Arjun Rao brings world-class medical and surgical expertise to non-traditional companion animals including parrots, songbirds, rabbits, ferrets, and small rodents.",
+      bioExtended: "He is an active member of the Association of Avian Veterinarians (AAV) and has pioneered low-stress handling protocols and specialized micro-endoscopic procedures for exotic companions.",
+      specialties: ["Avian Internal Medicine & Surgery", "Small Mammal Dentistry & GI Stasis", "Exotic Nutrition & Husbandry", "Micro-Endoscopy & Diagnostics", "Reptile & Rodent Wellness"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Exotic Animal Distinction",
+        "Diplomate, American Board of Veterinary Practitioners (ABVP Avian Practice)",
+        "Association of Exotic Mammal Veterinarians (AEMV) Certified"
+      ],
+      quickFacts: {
+        experience: "9+ Years",
+        cases: "3,500+ Exotic Patients",
+        languages: "English, Kannada, Hindi",
+        certification: "ABVP Avian & Exotic Certified"
+      },
+      testimonial: {
+        quote: "Finding a true avian expert for our African Grey was crucial. Dr. Arjun's gentle touch, beak care, and dietary advice keep our parrot thriving.",
+        author: "Sunil & Meera Iyer (Chirpy's Parents)"
       }
     }
   ],

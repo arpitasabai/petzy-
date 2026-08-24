@@ -283,17 +283,22 @@ export function renderHome() {
         <div class="vets-grid">
           ${siteData.veterinarians.map(vet => `
             <div class="vet-card">
-              <div class="vet-image-box hover-zoom-img">
+              <div class="vet-image-box">
                 <img src="${vet.image}" alt="${vet.name}" loading="lazy">
                 <span class="vet-badge-overlay">${vet.badge}</span>
               </div>
               <div class="vet-card-body">
-                <h3>${vet.name}</h3>
-                <div class="vet-specialty">${vet.title}</div>
-                <div class="vet-experience">
-                  <i class="fa-solid fa-medal" style="color: #DEB853;"></i>
-                  <span>${vet.experience}</span>
+                <div class="vet-card-info">
+                  <h3>${vet.name}</h3>
+                  <div class="vet-specialty">${vet.title}</div>
+                  <div class="vet-qualification">${vet.degrees}</div>
+                  <div class="vet-experience">
+                    <i class="fa-solid fa-medal" style="color: #DEB853;"></i>
+                    <span>${vet.experience}</span>
+                  </div>
+                  <p class="vet-short-desc">${vet.shortDesc || vet.bio}</p>
                 </div>
+
                 <a href="#/veterinarians/${vet.slug || vet.id}" class="vet-view-profile-btn">
                   <span>View Profile</span>
                   <i class="fa-solid fa-arrow-right"></i>

@@ -29,31 +29,27 @@ export function renderVeterinarians() {
           <p class="section-desc">Each doctor at PETZY participates in ongoing veterinary research and Fear-Free behavior training.</p>
         </div>
 
-        <div class="vets-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+        <div class="vets-grid">
           ${siteData.veterinarians.map(vet => `
             <div class="vet-card">
-              <div class="vet-image-box hover-zoom-img">
+              <div class="vet-image-box">
                 <img src="${vet.image}" alt="${vet.name}" loading="lazy">
                 <span class="vet-badge-overlay">${vet.badge}</span>
               </div>
               <div class="vet-card-body">
-                <h3>${vet.name}</h3>
-                <div class="vet-specialty">${vet.title}</div>
-                <p style="font-size: 0.85rem; color: var(--color-forest-green); font-weight: 700; margin-bottom: 0.5rem;">${vet.degrees}</p>
-                <div class="vet-experience">
-                  <i class="fa-solid fa-medal" style="color: #DEB853;"></i>
-                  <span>${vet.experience}</span>
-                </div>
-                <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); line-height: 1.6; margin-bottom: 1.25rem;">${vet.bio}</p>
-                
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                  ${vet.specialties.map(sp => `
-                    <span class="specialty-tag" style="font-size: 0.75rem; padding: 0.2rem 0.65rem;">${sp}</span>
-                  `).join('')}
+                <div class="vet-card-info">
+                  <h3>${vet.name}</h3>
+                  <div class="vet-specialty">${vet.title}</div>
+                  <div class="vet-qualification">${vet.degrees}</div>
+                  <div class="vet-experience">
+                    <i class="fa-solid fa-medal" style="color: #DEB853;"></i>
+                    <span>${vet.experience}</span>
+                  </div>
+                  <p class="vet-short-desc">${vet.shortDesc || vet.bio}</p>
                 </div>
 
                 <a href="#/veterinarians/${vet.slug || vet.id}" class="vet-view-profile-btn">
-                  <span>View Full Profile & Schedule</span>
+                  <span>View Profile</span>
                   <i class="fa-solid fa-arrow-right"></i>
                 </a>
               </div>
