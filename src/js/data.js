@@ -26,13 +26,13 @@ export const siteData = {
     {
       id: "consultation",
       title: "Veterinary Consultation",
-      petTypeLabel: "General Physical Examination",
+      petTypeLabel: "Stethoscope & Physical Exam",
       petTypeIcon: "fa-solid fa-stethoscope",
       icon: "fa-solid fa-stethoscope",
       shortDesc: "Comprehensive physical examinations, diagnostic evaluations, and compassionate care tailored to your pet's life stage.",
       bgClass: "bg-white",
       badge: "Clinical Checkup",
-      image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=800&q=80", // Veterinarian with stethoscope examining patient on clinic table
+      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80", // Doctor in medical scrubs with stethoscope performing examination on patient
       description: "Our comprehensive veterinary consultations focus on whole-pet health, early symptom detection, preventive lifestyle planning, and open communication with pet parents.",
       procedureDetail: "Physical exam with stethoscope auscultation, palpation, and temperature check.",
       features: [
@@ -45,13 +45,13 @@ export const siteData = {
     {
       id: "vaccination",
       title: "Vaccination & Immunity",
-      petTypeLabel: "Preventive Immunization",
+      petTypeLabel: "Immunization Injection",
       petTypeIcon: "fa-solid fa-syringe",
       icon: "fa-solid fa-syringe",
       shortDesc: "Core and lifestyle vaccine protocols to protect against rabies, distemper, parvovirus, and feline leukemia.",
       bgClass: "bg-cream",
       badge: "Immunity & Shield",
-      image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=800&q=80", // Clinical veterinarian administering gentle preventive health injection/care
+      image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80", // Healthcare specialist in medical gloves preparing vaccine injection syringe and vial
       description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration for puppies, kittens, and companion animals.",
       procedureDetail: "Sterile micro-needle immunization with pre-vaccine temperature and lymph node screening.",
       features: [
@@ -64,7 +64,7 @@ export const siteData = {
     {
       id: "grooming",
       title: "Spa & Medical Grooming",
-      petTypeLabel: "Hydrotherapy & Coat Care",
+      petTypeLabel: "Hydrotherapy Bathing",
       petTypeIcon: "fa-solid fa-shower",
       icon: "fa-solid fa-scissors",
       shortDesc: "Therapeutic hydro-massage baths, organic botanical skin care, breed styling, and sanitary ear/nail hygiene.",
@@ -83,13 +83,13 @@ export const siteData = {
     {
       id: "dental-care",
       title: "Dental Care & Hygiene",
-      petTypeLabel: "Oral Scaling & Polishing",
+      petTypeLabel: "Oral Teeth Check & Scaling",
       petTypeIcon: "fa-solid fa-tooth",
       icon: "fa-solid fa-tooth",
       shortDesc: "Ultrasonic scaling, subgingival polishing, digital oral radiographs, and periodontal disease prevention.",
       bgClass: "bg-cream",
       badge: "Oral Wellness",
-      image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80", // Detailed oral and dental examination of pet teeth and gums
+      image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80", // Close up mouth and teeth inspection of pet
       description: "Advanced dental suites equipped with digital oral X-rays and precision ultrasonic scaling to treat plaque, tartar, and maintain healthy gums in companion pets.",
       procedureDetail: "Subgingival plaque removal with ultrasonic scaling and fluoride polishing.",
       features: [
