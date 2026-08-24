@@ -48,10 +48,23 @@ export function renderHome() {
             </div>
           </div>
 
-          <!-- Hero Visual with 3 Floating Information Cards -->
+          <!-- Hero Visual with 4-Pet Carousel & 3 Floating Information Cards -->
           <div class="hero-visual-stage">
             <div class="hero-main-pet-frame">
-              <img src="${siteData.images.heroPet}" alt="Happy healthy dog at PETZY Clinic" class="hero-pet-image">
+              <div class="hero-carousel-viewport" id="hero-carousel-viewport">
+                ${siteData.images.heroCarousel.map((slide, idx) => `
+                  <div class="hero-pet-slide ${idx === 0 ? 'active' : ''}" data-hero-slide="${idx}">
+                    <img src="${slide.src}" alt="${slide.animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                  </div>
+                `).join('')}
+
+                <!-- Subtle Hero Indicator Dots -->
+                <div class="hero-carousel-dots" id="hero-carousel-dots">
+                  ${siteData.images.heroCarousel.map((_, idx) => `
+                    <button type="button" class="hero-dot ${idx === 0 ? 'active' : ''}" data-hero-dot="${idx}" aria-label="Slide ${idx + 1}"></button>
+                  `).join('')}
+                </div>
+              </div>
             </div>
 
             <!-- Floating Card 1: 500+ Happy Pets -->
@@ -482,7 +495,43 @@ export function renderHome() {
 }
 
 export function setupHomeEvents() {
-  // 1. Accordion Listeners
+  // 1. Hero 4-Pet Crossfade Carousel
+  let heroTimer = null;
+  let heroCurrentIndex = 0;
+  const heroSlides = document.querySelectorAll('.hero-pet-slide');
+  const heroDots = document.querySelectorAll('.hero-dot');
+
+  function goToHeroSlide(index) {
+    if (!heroSlides.length) return;
+    heroCurrentIndex = (index + heroSlides.length) % heroSlides.length;
+    heroSlides.forEach((slide, i) => {
+      slide.classList.toggle('active', i === heroCurrentIndex);
+    });
+    heroDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === heroCurrentIndex);
+    });
+  }
+
+  heroDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const idx = parseInt(dot.getAttribute('data-hero-dot'), 10);
+      goToHeroSlide(idx);
+      startHeroAutoPlay();
+    });
+  });
+
+  function startHeroAutoPlay() {
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = setInterval(() => {
+      goToHeroSlide(heroCurrentIndex + 1);
+    }, 3600);
+  }
+
+  if (heroSlides.length) {
+    startHeroAutoPlay();
+  }
+
+  // 2. Accordion Listeners
   const accordion = document.getElementById('home-faq-accordion');
   if (accordion) {
     const items = accordion.querySelectorAll('.accordion-item');
@@ -498,7 +547,7 @@ export function setupHomeEvents() {
     });
   }
 
-  // 2. Testimonials Carousel
+  // 3. Testimonials Carousel
   const prevBtn = document.getElementById('testimonial-prev-btn');
   const nextBtn = document.getElementById('testimonial-next-btn');
   const dots = document.querySelectorAll('.carousel-dot');
@@ -534,7 +583,7 @@ export function setupHomeEvents() {
     dot.addEventListener('click', () => updateCarousel(idx));
   });
 
-  // 3. Contact Form Submission
+  // 4. Contact Form Submission
   const form = document.getElementById('home-contact-form');
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
