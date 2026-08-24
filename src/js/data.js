@@ -199,7 +199,7 @@ export const siteData = {
       degrees: "DVM, DABVP (Canine/Feline Practice)",
       bio: "With over a decade of clinical medicine experience, Dr. Sarah oversees general internal medicine, geriatric pet wellness programs, and pediatric vaccinations.",
       specialties: ["Internal Medicine", "Feline Low-Stress Medicine", "Senior Pet Vitality"],
-      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80",
+      image: "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80", // Female South Asian physician
       badge: "Senior Clinician"
     },
     {
@@ -210,7 +210,7 @@ export const siteData = {
       degrees: "DVM, DACVECC Fellow",
       bio: "Dr. David leads PETZY's 24/7 urgent care and trauma unit, bringing calm precision and world-class diagnostic expertise to critical pet emergencies.",
       specialties: ["Trauma Resuscitation", "Cardiovascular Critical Care", "Emergency Imaging"],
-      image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=600&q=80",
+      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80", // Male Asian emergency specialist
       badge: "Emergency Lead"
     }
   ],
