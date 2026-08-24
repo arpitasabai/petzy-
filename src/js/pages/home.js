@@ -48,20 +48,26 @@ export function renderHome() {
             </div>
           </div>
 
-          <!-- Hero Visual with 4-Pet Carousel & 3 Floating Information Cards -->
+          <!-- Hero Visual with 4-Pet Sliding Carousel & 3 Floating Information Cards -->
           <div class="hero-visual-stage">
             <div class="hero-main-pet-frame">
               <div class="hero-carousel-viewport" id="hero-carousel-viewport">
-                ${siteData.images.heroCarousel.map((slide, idx) => `
-                  <div class="hero-pet-slide ${idx === 0 ? 'active' : ''}" data-hero-slide="${idx}">
-                    <img src="${slide.src}" alt="${slide.animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                <div class="hero-carousel-track" id="hero-carousel-track">
+                  ${siteData.images.heroCarousel.map((slide, idx) => `
+                    <div class="hero-pet-slide" data-hero-slide="${idx}">
+                      <img src="${slide.src}" alt="${slide.animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                    </div>
+                  `).join('')}
+                  <!-- Seamless Infinite Loop Clone of Slide 0 (Dog) -->
+                  <div class="hero-pet-slide hero-pet-clone" data-hero-slide="0">
+                    <img src="${siteData.images.heroCarousel[0].src}" alt="${siteData.images.heroCarousel[0].animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="lazy">
                   </div>
-                `).join('')}
+                </div>
 
                 <!-- Subtle Hero Indicator Dots -->
                 <div class="hero-carousel-dots" id="hero-carousel-dots">
-                  ${siteData.images.heroCarousel.map((_, idx) => `
-                    <button type="button" class="hero-dot ${idx === 0 ? 'active' : ''}" data-hero-dot="${idx}" aria-label="Slide ${idx + 1}"></button>
+                  ${siteData.images.heroCarousel.map((slide, idx) => `
+                    <button type="button" class="hero-dot ${idx === 0 ? 'active' : ''}" data-hero-dot="${idx}" aria-label="${slide.animal}"></button>
                   `).join('')}
                 </div>
               </div>
@@ -495,39 +501,61 @@ export function renderHome() {
 }
 
 export function setupHomeEvents() {
-  // 1. Hero 4-Pet Crossfade Carousel
+  // 1. Hero 4-Pet Continuous Sliding Carousel (2s display + 800ms smooth slide)
+  const heroTrack = document.getElementById('hero-carousel-track');
+  const heroDots = document.querySelectorAll('.hero-dot');
   let heroTimer = null;
   let heroCurrentIndex = 0;
-  const heroSlides = document.querySelectorAll('.hero-pet-slide');
-  const heroDots = document.querySelectorAll('.hero-dot');
+  const totalRealSlides = 4; // Dog, Cat, Rabbit, Bird (and index 4 is seamless clone of Dog)
 
-  function goToHeroSlide(index) {
-    if (!heroSlides.length) return;
-    heroCurrentIndex = (index + heroSlides.length) % heroSlides.length;
-    heroSlides.forEach((slide, i) => {
-      slide.classList.toggle('active', i === heroCurrentIndex);
-    });
+  function updateHeroDots(activeIdx) {
     heroDots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === heroCurrentIndex);
+      dot.classList.toggle('active', i === (activeIdx % totalRealSlides));
     });
+  }
+
+  function slideToHeroIndex(index, withAnimation = true) {
+    if (!heroTrack) return;
+    if (withAnimation) {
+      heroTrack.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+    } else {
+      heroTrack.style.transition = 'none';
+    }
+    heroTrack.style.transform = `translateX(-${index * 100}%)`;
+    updateHeroDots(index);
+  }
+
+  function advanceHeroSlide() {
+    heroCurrentIndex++;
+    slideToHeroIndex(heroCurrentIndex, true);
+
+    // When we reach the clone (index 4), seamlessly reset to index 0 after the 800ms slide completes
+    if (heroCurrentIndex === totalRealSlides) {
+      setTimeout(() => {
+        heroCurrentIndex = 0;
+        slideToHeroIndex(0, false);
+      }, 800);
+    }
+  }
+
+  function startHeroAutoPlay() {
+    if (heroTimer) clearInterval(heroTimer);
+    // Exactly 2000ms display time + 800ms slide duration = 2800ms loop
+    heroTimer = setInterval(() => {
+      advanceHeroSlide();
+    }, 2800);
   }
 
   heroDots.forEach(dot => {
     dot.addEventListener('click', () => {
-      const idx = parseInt(dot.getAttribute('data-hero-dot'), 10);
-      goToHeroSlide(idx);
+      const targetIdx = parseInt(dot.getAttribute('data-hero-dot'), 10);
+      heroCurrentIndex = targetIdx;
+      slideToHeroIndex(heroCurrentIndex, true);
       startHeroAutoPlay();
     });
   });
 
-  function startHeroAutoPlay() {
-    if (heroTimer) clearInterval(heroTimer);
-    heroTimer = setInterval(() => {
-      goToHeroSlide(heroCurrentIndex + 1);
-    }, 3600);
-  }
-
-  if (heroSlides.length) {
+  if (heroTrack) {
     startHeroAutoPlay();
   }
 
