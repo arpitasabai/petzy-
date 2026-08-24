@@ -1,12 +1,14 @@
 /* PETZY Contact Us View (Veterinary Platform) */
 import { siteData } from '../data.js';
 import { showToast } from '../components/toast.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderContact() {
   return `
     <!-- Contact Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container">
+        ${renderBackButton('#/')}
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
           <i class="fa-solid fa-phone"></i>
           <span>We're Here 24/7</span>

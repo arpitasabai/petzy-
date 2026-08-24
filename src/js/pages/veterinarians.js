@@ -1,11 +1,13 @@
 /* PETZY Veterinarians Directory View (Milestone 1) */
 import { siteData } from '../data.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderVeterinarians() {
   return `
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container">
+        ${renderBackButton('#/')}
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
           <i class="fa-solid fa-user-doctor"></i>
           <span>Clinical Specialists</span>

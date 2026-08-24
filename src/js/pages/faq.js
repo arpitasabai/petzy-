@@ -1,11 +1,15 @@
 /* PETZY FAQ View (Veterinary Platform) */
 import { siteData } from '../data.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderFaq() {
   return `
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container" style="text-align: center;">
+        <div style="display: flex; justify-content: flex-start; margin-bottom: 0.5rem;">
+          ${renderBackButton('#/')}
+        </div>
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none; margin: 0 auto 1rem;">
           <i class="fa-solid fa-circle-question"></i>
           <span>Help & Information</span>

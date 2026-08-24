@@ -1,11 +1,15 @@
 /* PETZY Register View (Veterinary Platform) */
 import { siteData } from '../data.js';
 import { showToast } from '../components/toast.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderRegister() {
   return `
     <div class="auth-page-wrapper animate-fade-up">
       <div class="auth-card-box">
+        <div style="display: flex; justify-content: flex-start; margin-bottom: 1rem;">
+          ${renderBackButton('#/')}
+        </div>
         <div class="auth-card-header">
           <div class="section-badge coral" style="margin-bottom: 0.5rem;">
             <i class="fa-solid fa-sparkles"></i>

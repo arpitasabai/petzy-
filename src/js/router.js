@@ -29,10 +29,17 @@ export function navigateTo(path) {
   window.location.hash = `#${path}`;
 }
 
+let currentActiveRoute = null;
+
 export function handleRoute() {
   const fullHash = window.location.hash.slice(1) || '/';
   const cleanPath = fullHash.split('?')[0].split('#')[0] || '/';
   
+  if (currentActiveRoute && currentActiveRoute !== cleanPath) {
+    window.petzyPreviousRoute = currentActiveRoute;
+  }
+  currentActiveRoute = cleanPath;
+
   const appRoot = document.getElementById('app-root');
   if (!appRoot) return;
 

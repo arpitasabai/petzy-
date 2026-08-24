@@ -1213,3 +1213,80 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================================================
+   10. REUSABLE PETZY BACK BUTTON COMPONENT
+   ================================================== */
+.petzy-back-btn-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.petzy-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 1.15rem;
+  background-color: var(--color-white);
+  color: var(--color-forest-green);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  user-select: none;
+  text-decoration: none;
+}
+
+.petzy-back-arrow {
+  font-size: 0.85rem;
+  color: var(--color-forest-green);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color var(--transition-fast);
+}
+
+.petzy-back-btn:hover {
+  background-color: var(--color-forest-green);
+  color: var(--color-warm-cream);
+  border-color: var(--color-forest-green);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.petzy-back-btn:hover .petzy-back-arrow {
+  color: var(--color-soft-coral);
+  transform: translateX(-4px);
+}
+
+.petzy-back-btn:active {
+  transform: translateY(0);
+}
+
+/* Inner Page Hero integration for back button */
+.inner-page-hero .petzy-back-btn-container {
+  margin-bottom: 1.25rem;
+}
+
+.inner-page-hero .petzy-back-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-warm-cream);
+  border-color: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.inner-page-hero .petzy-back-arrow {
+  color: var(--color-warm-cream);
+}
+
+.inner-page-hero .petzy-back-btn:hover {
+  background-color: var(--color-white);
+  color: var(--color-forest-green);
+  border-color: var(--color-white);
+}
+
+.inner-page-hero .petzy-back-btn:hover .petzy-back-arrow {
+  color: var(--color-soft-coral);
+}

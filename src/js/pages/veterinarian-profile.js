@@ -1,5 +1,6 @@
 /* PETZY Dynamic Veterinarian Profile View (Milestone 1) */
 import { siteData, getDoctorById } from '../data.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderVeterinarianProfile(doctorId) {
   // Extract doctorId from parameter, route hash, or query parameter
@@ -19,6 +20,7 @@ export function renderVeterinarianProfile(doctorId) {
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container">
+        ${renderBackButton('#/veterinarians')}
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
           <i class="fa-solid fa-user-doctor"></i>
           <span>Clinical Specialist Profile</span>

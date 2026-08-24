@@ -1,11 +1,13 @@
 /* PETZY Services Overview View (Veterinary Platform - Diverse Pet Imagery) */
 import { siteData } from '../data.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderServices() {
   return `
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container">
+        ${renderBackButton('#/')}
         <div class="section-badge" style="background: rgba(255,255,255,0.15); color: var(--color-warm-cream); border: none;">
           <i class="fa-solid fa-stethoscope"></i>
           <span>Clinical & Wellness Services</span>

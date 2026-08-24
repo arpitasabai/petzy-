@@ -1,5 +1,6 @@
 /* PETZY Service Detail View (Veterinary Platform) */
 import { siteData } from '../data.js';
+import { renderBackButton } from '../components/back-button.js';
 
 export function renderServiceDetail() {
   const service = siteData.services[0]; // Veterinary Consultation
@@ -8,6 +9,7 @@ export function renderServiceDetail() {
     <!-- Service Hero -->
     <section class="inner-page-hero animate-fade-up">
       <div class="container">
+        ${renderBackButton('#/services')}
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
           <i class="fa-solid fa-stethoscope"></i>
           <span>Clinical Examination</span>
