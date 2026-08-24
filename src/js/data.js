@@ -199,7 +199,7 @@ export const siteData = {
       degrees: "DVM, DABVP (Canine/Feline Practice)",
       bio: "With over a decade of clinical medicine experience, Dr. Sarah oversees general internal medicine, geriatric pet wellness programs, and pediatric vaccinations.",
       specialties: ["Internal Medicine", "Feline Low-Stress Medicine", "Senior Pet Vitality"],
-      image: "https://images.unsplash.com/photo-1594824813598-a28a307a514d?auto=format&fit=crop&w=600&q=80",
+      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=600&q=80",
       badge: "Senior Clinician"
     },
     {
