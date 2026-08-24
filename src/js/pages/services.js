@@ -57,7 +57,13 @@ export function renderServices() {
                 </div>
 
                 <h2 class="section-title" style="font-size: 2rem;">${srv.title}</h2>
-                <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">${srv.description}</p>
+                <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.25rem;">${srv.description}</p>
+                
+                <!-- Clinical Procedure Highlight -->
+                <div style="background: var(--color-warm-cream); padding: 0.85rem 1.25rem; border-radius: var(--radius-md); border-left: 4px solid var(--color-soft-coral); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                  <i class="${srv.icon}" style="color: var(--color-soft-coral); font-size: 1.15rem;"></i>
+                  <span style="font-size: 0.92rem; font-weight: 700; color: var(--color-forest-green);">Clinical Focus: ${srv.procedureDetail}</span>
+                </div>
                 
                 <ul style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
                   ${srv.features.map(f => `
