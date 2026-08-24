@@ -45,13 +45,13 @@ export const siteData = {
     {
       id: "vaccination",
       title: "Vaccination & Immunity",
-      petTypeLabel: "Immunization Injection",
+      petTypeLabel: "Pet Immunization Injection",
       petTypeIcon: "fa-solid fa-syringe",
       icon: "fa-solid fa-syringe",
       shortDesc: "Core and lifestyle vaccine protocols to protect against rabies, distemper, parvovirus, and feline leukemia.",
       bgClass: "bg-cream",
       badge: "Immunity & Shield",
-      image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80", // Healthcare specialist in medical gloves preparing vaccine injection syringe and vial
+      image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=800&q=80", // Clinical veterinarian in gloves administering pet vaccination & health checkup
       description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration for puppies, kittens, and companion animals.",
       procedureDetail: "Sterile micro-needle immunization with pre-vaccine temperature and lymph node screening.",
       features: [
