@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="46" fill="#174A3A"/>
+  <!-- Wagging Tail Z Logo -->
+  <path d="M28 32 H72 L36 68 H72" stroke="#FFF9F0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Tail Wag Accent Curve on Z -->
+  <path d="M72 68 C80 62 82 50 78 44" stroke="#F28C7B" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- Paw print accent -->
+  <circle cx="48" cy="24" r="3.5" fill="#F5D98B"/>
+  <circle cx="56" cy="23" r="3" fill="#F5D98B"/>
+</svg>

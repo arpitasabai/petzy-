@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PETZY — Everything Your Pet Needs, All in One Place</title>
+  <meta name="description" content="Discover thoughtfully selected pet essentials and trusted care services designed to make pet parenting easier and happier. Premium pet food, toys, grooming, and veterinary wellness.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for crisp UI icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Global Application Styles -->
+  <link rel="stylesheet" href="/src/styles/variables.css">
+  <link rel="stylesheet" href="/src/styles/base.css">
+  <link rel="stylesheet" href="/src/styles/animations.css">
+  <link rel="stylesheet" href="/src/styles/components.css">
+  <link rel="stylesheet" href="/src/styles/pages.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header id="site-header" class="site-header"></header>
+
+  <!-- Global Search Overlay Modal -->
+  <div id="search-modal" class="search-modal" aria-hidden="true">
+    <div class="search-modal-overlay"></div>
+    <div class="search-modal-container">
+      <div class="search-header">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="global-search-input" placeholder="Search premium foods, toys, spa grooming, wellness..." autocomplete="off">
+          <button id="search-clear-btn" class="search-clear-btn" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <button id="search-close-btn" class="search-close-btn" aria-label="Close search modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="search-quick-tags">
+        <span class="tag-title">Popular:</span>
+        <button class="quick-tag-btn" data-search="Dog Treats">Organic Treats</button>
+        <button class="quick-tag-btn" data-search="Cozy Bed">Orthopedic Beds</button>
+        <button class="quick-tag-btn" data-search="Grooming">Spa Grooming</button>
+        <button class="quick-tag-btn" data-search="Interactive Toy">Mental Toys</button>
+        <button class="quick-tag-btn" data-search="Cat Brush">Deshedding Brush</button>
+      </div>
+      <div id="search-results-container" class="search-results-container">
+        <!-- Dynamic search results render here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Viewport Router Outlet -->
+  <main id="app-root" class="app-root">
+    <!-- Pages render dynamically via router -->
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Script -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
