@@ -167,51 +167,123 @@ export const siteData = {
     }
   ],
 
-  // 4 Featured Veterinarians
+  // 4 Featured Veterinarians (Dynamic Profiles)
   veterinarians: [
     {
-      id: "dr-ananya-sharma",
+      id: "ananya-sharma",
+      slug: "ananya-sharma",
       name: "Dr. Ananya Sharma",
       title: "Chief Veterinary Surgeon",
       experience: "8+ Years Experience",
       degrees: "BVSc & AH, MVSc (Surgery), DACVS",
-      bio: "Dr. Ananya Sharma specializes in minimally invasive soft tissue surgery and complex reconstructive procedures. She has performed over 1,800 successful surgical operations with a compassionate, gentle touch.",
-      specialties: ["Orthopedic & Soft Tissue Surgery", "Minimally Invasive Laparoscopy", "Pain Management"],
+      badge: "Surgical Director",
       image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80",
-      badge: "Surgical Director"
+      headline: "Compassionate Surgical Leadership",
+      bio: "Dr. Ananya Sharma serves as the Surgical Director at PETZY Veterinary Hospital. With over 8 years of advanced surgical practice, she is renowned for her calm bedside manner, precision laparoscopic procedures, and multimodal post-operative pain protocols.",
+      bioExtended: "She completed her advanced surgical residency at the Veterinary Medical Center and has published clinical research on soft tissue recovery and orthopedic rehabilitation in companion canines.",
+      specialties: ["Orthopedic & Soft Tissue Surgery", "Minimally Invasive Laparoscopy", "Pain Management Protocols", "Emergency Trauma Repair", "Geriatric Patient Safety"],
+      education: [
+        "Master of Veterinary Science (MVSc Surgery) — Distinction Honors",
+        "Diplomate, American College of Veterinary Surgeons (DACVS)",
+        "Fear-Free Elite Certified Veterinary Practitioner"
+      ],
+      quickFacts: {
+        experience: "8+ Years",
+        cases: "1,800+ Surgeries",
+        languages: "English, Hindi",
+        certification: "DACVS Board Certified"
+      },
+      testimonial: {
+        quote: "Dr. Ananya operated on our dog Bruno’s knee with such immense care and patience. Bruno was walking comfortably in days, and Dr. Ananya called us personally every evening during his recovery.",
+        author: "Priya & Rajesh Nair (Bruno's Parents)"
+      }
     },
     {
-      id: "dr-rohan-mehta",
+      id: "rohan-mehta",
+      slug: "rohan-mehta",
       name: "Dr. Rohan Mehta",
       title: "Pet Wellness & Nutrition Specialist",
       experience: "6+ Years Experience",
       degrees: "DVM, ACVN Board Certified",
-      bio: "Dr. Rohan is deeply passionate about preventive pet longevity, holistic herbal therapeutics, and chronic dermatology management to ensure pets thrive at every age.",
-      specialties: ["Preventive Longevity", "Clinical Dermatology", "Nutritional Therapy"],
+      badge: "Wellness Lead",
       image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80",
-      badge: "Wellness Lead"
+      headline: "Preventive Longevity & Holistic Nutrition",
+      bio: "Dr. Rohan Mehta leads PETZY's preventive wellness and dietary therapy programs. With 6+ years of dedicated practice, he specializes in customized species-appropriate nutrition, metabolic balancing, and allergy therapeutics.",
+      bioExtended: "He graduated with top clinical honors in Veterinary Medicine and completed his post-doctoral fellowship in Comparative Animal Clinical Nutrition (ACVN). He believes proactive nutrition adds vibrant, healthy years to our pets' lives.",
+      specialties: ["Preventive Longevity Medicine", "Nutritional Therapy & Weight Loss", "Clinical Dermatology & Allergies", "Herbal & Integrative Support", "Metabolic Disease Management"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Clinical Honors",
+        "Diplomate, American College of Veterinary Nutrition (ACVN)",
+        "Certified Canine Rehabilitation Practitioner (CCRP)"
+      ],
+      quickFacts: {
+        experience: "6+ Years",
+        cases: "2,400+ Care Plans",
+        languages: "English, Gujarati, Hindi",
+        certification: "ACVN Nutrition Certified"
+      },
+      testimonial: {
+        quote: "Dr. Rohan completely transformed our Golden Retriever Simba's chronic skin allergies through a targeted nutrition and herbal plan. Simba has so much energy now!",
+        author: "Amit & Neha Verma (Simba's Parents)"
+      }
     },
     {
-      id: "dr-sarah-kapoor",
+      id: "sarah-kapoor",
+      slug: "sarah-kapoor",
       name: "Dr. Sarah Kapoor",
       title: "Senior Veterinary Physician",
       experience: "10+ Years Experience",
       degrees: "DVM, DABVP (Canine/Feline Practice)",
-      bio: "With over a decade of clinical medicine experience, Dr. Sarah oversees general internal medicine, geriatric pet wellness programs, and pediatric vaccinations.",
-      specialties: ["Internal Medicine", "Feline Low-Stress Medicine", "Senior Pet Vitality"],
-      image: "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80", // Female South Asian physician
-      badge: "Senior Clinician"
+      badge: "Senior Clinician",
+      image: "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80",
+      headline: "Comprehensive Internal Medicine & Feline Care",
+      bio: "With over a decade of clinical medicine experience, Dr. Sarah Kapoor oversees general internal medicine, geriatric pet wellness programs, endocrinology, and feline low-stress medicine.",
+      bioExtended: "She is board-certified by the American Board of Veterinary Practitioners (DABVP) and serves as an advocate for Fear-Free feline clinic design, ensuring even the most anxious cats and senior dogs feel at home.",
+      specialties: ["Canine & Feline Internal Medicine", "Endocrinology & Diabetes Management", "Senior & Geriatric Vitality", "Low-Stress Feline Handling", "Cardiorenal Diagnostics"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Summa Cum Laude",
+        "Diplomate, American Board of Veterinary Practitioners (DABVP)",
+        "AAFP Feline-Friendly Gold Certified Practitioner"
+      ],
+      quickFacts: {
+        experience: "10+ Years",
+        cases: "5,000+ Consultations",
+        languages: "English, Punjabi, Hindi",
+        certification: "DABVP Board Certified"
+      },
+      testimonial: {
+        quote: "Finding a doctor where my anxious Persian cat Mimi feels completely safe was a blessing. Dr. Sarah's gentle bedside manner and diagnostic precision gave us total peace of mind.",
+        author: "Vikram Malhotra (Mimi's Parent)"
+      }
     },
     {
-      id: "dr-david-chen",
+      id: "david-chen",
+      slug: "david-chen",
       name: "Dr. David Chen",
       title: "Emergency & Critical Care Specialist",
       experience: "12+ Years Experience",
       degrees: "DVM, DACVECC Fellow",
-      bio: "Dr. David leads PETZY's 24/7 urgent care and trauma unit, bringing calm precision and world-class diagnostic expertise to critical pet emergencies.",
-      specialties: ["Trauma Resuscitation", "Cardiovascular Critical Care", "Emergency Imaging"],
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80", // Male Asian emergency specialist
-      badge: "Emergency Lead"
+      badge: "Emergency Lead",
+      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80",
+      headline: "Rapid Trauma Stabilization & Critical Care",
+      bio: "Dr. David Chen leads PETZY's 24/7 emergency trauma department and ICU. With over 12 years on the frontlines of animal emergency medicine, he specializes in rapid triage, cardiovascular resuscitation, and emergency imaging.",
+      bioExtended: "He completed an intensive critical care fellowship at the Pacific Emergency Veterinary Center and has trained hundreds of clinicians in advanced point-of-care ultrasound (POCUS) and emergency trauma resuscitation.",
+      specialties: ["Emergency Trauma Resuscitation", "Cardiovascular Critical Care", "Point-of-Care Ultrasound (POCUS)", "Toxicology & Envenomation", "Oxygen Therapy & Ventilator Care"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Emergency Medicine Honors",
+        "Fellow, American College of Veterinary Emergency & Critical Care (DACVECC)",
+        "Advanced Veterinary Trauma Life Support (AVTLS) Certified"
+      ],
+      quickFacts: {
+        experience: "12+ Years",
+        cases: "3,200+ Emergency Cases",
+        languages: "English, Mandarin",
+        certification: "DACVECC Fellow"
+      },
+      testimonial: {
+        quote: "When our Labrador swallowed a foreign object in the middle of the night, Dr. David and the emergency team stabilized him immediately. Their swift action saved his life.",
+        author: "Kavita & Sanjay Patel (Rocky's Parents)"
+      }
     }
   ],
 
@@ -278,3 +350,15 @@ export const siteData = {
     ctaPet: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80" // Friendly veterinarian consulting with pet owner & companion pet in modern clinic
   }
 };
+
+export function getDoctorById(slugOrId) {
+  if (!slugOrId) return siteData.veterinarians[0];
+  const clean = String(slugOrId).toLowerCase().trim().replace(/^dr-/, '').replace(/\/$/, '');
+  const found = siteData.veterinarians.find(v => {
+    const vClean = v.id.toLowerCase().replace(/^dr-/, '');
+    const vSlug = v.slug ? v.slug.toLowerCase().replace(/^dr-/, '') : '';
+    return vClean === clean || v.id.toLowerCase() === slugOrId.toLowerCase() || vSlug === clean;
+  });
+  return found || siteData.veterinarians[0];
+}
+

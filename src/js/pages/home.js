@@ -275,7 +275,7 @@ export function renderHome() {
                   <i class="fa-solid fa-medal" style="color: #DEB853;"></i>
                   <span>${vet.experience}</span>
                 </div>
-                <a href="#/veterinarian-profile" class="vet-view-profile-btn">
+                <a href="#/veterinarians/${vet.slug || vet.id}" class="vet-view-profile-btn">
                   <span>View Profile</span>
                   <i class="fa-solid fa-arrow-right"></i>
                 </a>
