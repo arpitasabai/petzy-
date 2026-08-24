@@ -51,7 +51,7 @@ export const siteData = {
       shortDesc: "Core and lifestyle vaccine protocols to protect against rabies, distemper, parvovirus, and feline leukemia.",
       bgClass: "bg-cream",
       badge: "Immunity & Shield",
-      image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=800&q=80", // Clinical veterinarian in gloves administering pet vaccination & health checkup
+      image: "https://images.pexels.com/photos/6816869/pexels-photo-6816869.jpeg?auto=compress&cs=tinysrgb&w=800", // A veterinarian holding an injection for a cat (Pexels 6816869)
       description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration for puppies, kittens, and companion animals.",
       procedureDetail: "Sterile micro-needle immunization with pre-vaccine temperature and lymph node screening.",
       features: [
@@ -89,7 +89,7 @@ export const siteData = {
       shortDesc: "Ultrasonic scaling, subgingival polishing, digital oral radiographs, and periodontal disease prevention.",
       bgClass: "bg-cream",
       badge: "Oral Wellness",
-      image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80", // Close up mouth and teeth inspection of pet
+      image: "https://images.pexels.com/photos/6234622/pexels-photo-6234622.jpeg?auto=compress&cs=tinysrgb&w=800", // A veterinarian checking a dog (Pexels 6234622)
       description: "Advanced dental suites equipped with digital oral X-rays and precision ultrasonic scaling to treat plaque, tartar, and maintain healthy gums in companion pets.",
       procedureDetail: "Subgingival plaque removal with ultrasonic scaling and fluoride polishing.",
       features: [
