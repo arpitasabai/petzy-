@@ -1,4 +1,5 @@
 /* PETZY Main Application Initializer */
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import { renderHeader } from './js/components/header.js';
 import { renderFooter } from './js/components/footer.js';
 import { initRouter } from './js/router.js';

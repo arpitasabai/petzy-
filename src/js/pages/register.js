@@ -1,9 +1,17 @@
-/* PETZY Register View (Veterinary Platform) */
-import { siteData } from '../data.js';
+/* PETZY Customer Registration View (Milestone 2) */
+import { registerUser, loginAsDemoUser, getCurrentUser } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderRegister() {
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    setTimeout(() => {
+      window.location.hash = '#/dashboard';
+    }, 10);
+    return `<div class="auth-page-wrapper"><p>Redirecting to dashboard...</p></div>`;
+  }
+
   return `
     <div class="auth-page-wrapper animate-fade-up">
       <div class="auth-card-box">
@@ -16,7 +24,7 @@ export function renderRegister() {
             <span>New Family Registration</span>
           </div>
           <h2 style="font-size: 1.95rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">Join the PETZY Family</h2>
-          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Register your pet with our veterinary hospital for priority booking and online health records.</p>
+          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Register your pet parent account for online vaccination tracking and priority appointments.</p>
         </div>
 
         <!-- Google OAuth Mock Button -->
@@ -36,13 +44,13 @@ export function renderRegister() {
         <form id="petzy-register-form">
           <div class="form-group">
             <label class="form-label" for="reg-fullname">Full Name *</label>
-            <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Samantha Hayes" required>
+            <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Alex Morgan" required>
           </div>
 
           <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="reg-user-email">Email Address *</label>
-              <input type="email" id="reg-user-email" class="form-input" placeholder="samantha@example.com" required>
+              <input type="email" id="reg-user-email" class="form-input" placeholder="alex@example.com" required>
             </div>
             <div class="form-group">
               <label class="form-label" for="reg-user-phone">Phone Number *</label>
@@ -52,18 +60,29 @@ export function renderRegister() {
 
           <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label" for="reg-user-password">Password *</label>
-              <input type="password" id="reg-user-password" class="form-input" placeholder="At least 8 characters" required>
+              <label class="form-label" for="reg-user-password">Password (Min 8 Chars) *</label>
+              <div class="password-input-wrap">
+                <input type="password" id="reg-user-password" class="form-input" placeholder="At least 8 characters" required minlength="8">
+                <button type="button" class="password-toggle-btn" data-target="reg-user-password" aria-label="Toggle password visibility">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
             </div>
+
             <div class="form-group">
               <label class="form-label" for="reg-user-confirm">Confirm Password *</label>
-              <input type="password" id="reg-user-confirm" class="form-input" placeholder="Repeat password" required>
+              <div class="password-input-wrap">
+                <input type="password" id="reg-user-confirm" class="form-input" placeholder="Repeat password" required minlength="8">
+                <button type="button" class="password-toggle-btn" data-target="reg-user-confirm" aria-label="Toggle password visibility">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
             </div>
           </div>
 
           <div style="margin-bottom: 1.5rem;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: var(--color-charcoal-muted);">
-              <input type="checkbox" required checked style="accent-color: var(--color-forest-green);">
+              <input type="checkbox" id="reg-terms-check" required checked style="accent-color: var(--color-forest-green);">
               <span>I agree to the <a href="#/terms-conditions" target="_blank" style="color: var(--color-forest-green); font-weight: 700; text-decoration: underline;">Terms & Conditions</a> & <a href="#/privacy-policy" target="_blank" style="color: var(--color-forest-green); font-weight: 700; text-decoration: underline;">Privacy Policy</a></span>
             </label>
           </div>
@@ -84,28 +103,73 @@ export function renderRegister() {
 
 export function setupRegisterEvents() {
   const form = document.getElementById('petzy-register-form');
+  const googleBtn = document.getElementById('register-google-btn');
+
+  // Password visibility toggles
+  document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      const icon = btn.querySelector('i');
+      if (input) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (icon) icon.className = 'fa-solid fa-eye-slash';
+        } else {
+          input.type = 'password';
+          if (icon) icon.className = 'fa-solid fa-eye';
+        }
+      }
+    });
+  });
+
+  // Submit Handler
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = document.getElementById('reg-fullname')?.value || 'Pet Parent';
+    const name = document.getElementById('reg-fullname')?.value.trim();
+    const email = document.getElementById('reg-user-email')?.value.trim();
+    const phone = document.getElementById('reg-user-phone')?.value.trim();
     const pwd = document.getElementById('reg-user-password')?.value;
     const confirmPwd = document.getElementById('reg-user-confirm')?.value;
+    const terms = document.getElementById('reg-terms-check')?.checked;
+
+    if (!name || !email || !phone || !pwd) {
+      showToast('Please fill out all required fields.', 'coral', 'fa-solid fa-triangle-exclamation');
+      return;
+    }
+
+    if (pwd.length < 8) {
+      showToast('Password must be at least 8 characters long.', 'coral', 'fa-solid fa-shield-halved');
+      return;
+    }
 
     if (pwd !== confirmPwd) {
       showToast('Passwords do not match. Please verify.', 'coral', 'fa-solid fa-triangle-exclamation');
       return;
     }
 
-    showToast(`Welcome to PETZY, ${name}! Your patient account is registered.`, 'coral', 'fa-solid fa-circle-check');
-    setTimeout(() => {
-      window.location.hash = '#/';
-    }, 1500);
+    if (!terms) {
+      showToast('Please agree to the Terms & Conditions.', 'coral', 'fa-solid fa-circle-exclamation');
+      return;
+    }
+
+    try {
+      const newUser = registerUser({ name, email, phone, password: pwd });
+      showToast(`Welcome to PETZY, ${newUser.name}! Your patient account is created.`, 'sage', 'fa-solid fa-circle-check');
+      setTimeout(() => {
+        window.location.hash = '#/dashboard';
+      }, 600);
+    } catch (err) {
+      showToast(err.message || 'Registration failed', 'coral', 'fa-solid fa-triangle-exclamation');
+    }
   });
 
-  const googleBtn = document.getElementById('register-google-btn');
+  // Google OAuth Register Demo
   googleBtn?.addEventListener('click', () => {
+    const user = loginAsDemoUser();
     showToast('Signed up via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = '#/';
-    }, 1500);
+      window.location.hash = '#/dashboard';
+    }, 500);
   });
 }

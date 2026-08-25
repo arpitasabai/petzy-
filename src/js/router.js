@@ -1,4 +1,4 @@
-/* PETZY Client-Side SPA Router (Dynamic Routes & 10 Milestone 1 Pages) */
+/* PETZY Client-Side SPA Router (Dynamic Routes & Milestone 1 + Milestone 2 Pages) */
 import { renderHome, setupHomeEvents } from './pages/home.js';
 import { renderAbout, setupAboutEvents } from './pages/about.js';
 import { renderServices, setupServicesEvents } from './pages/services.js';
@@ -11,6 +11,9 @@ import { renderLogin, setupLoginEvents } from './pages/login.js';
 import { renderRegister, setupRegisterEvents } from './pages/register.js';
 import { renderPrivacyPolicy, setupPrivacyPolicyEvents } from './pages/privacy-policy.js';
 import { renderTermsConditions, setupTermsConditionsEvents } from './pages/terms-conditions.js';
+import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
+import { renderPetProfile, setupPetProfileEvents } from './pages/pet-profile.js';
+import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pages/schedule-appointment.js';
 import { updateActiveNav } from './components/header.js';
 import { getDoctorById } from './data.js';
 
@@ -25,6 +28,9 @@ const routes = {
   '/faq': { render: renderFaq, setup: setupFaqEvents, title: 'Frequently Asked Questions — PETZY' },
   '/login': { render: renderLogin, setup: setupLoginEvents, title: 'Pet Parent Portal Sign In — PETZY' },
   '/register': { render: renderRegister, setup: setupRegisterEvents, title: 'Register New Patient Account — PETZY' },
+  '/dashboard': { render: renderDashboard, setup: setupDashboardEvents, title: 'Customer Dashboard — PETZY Veterinary Care' },
+  '/schedule-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
+  '/book-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
   '/privacy-policy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
   '/privacy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
   '/terms-conditions': { render: renderTermsConditions, setup: setupTermsConditionsEvents, title: 'Terms & Conditions — PETZY Veterinary Care' },
@@ -84,7 +90,27 @@ export function handleRoute() {
     return;
   }
 
-  // 3. Standard static routes
+  // 3. Dynamic Individual Pet Profile Route: /pet-profile?id=... or /pet-profile/:id
+  if (cleanPath === '/pet-profile' || cleanPath.startsWith('/pet-profile/')) {
+    let petId = null;
+    if (fullHash.includes('?id=')) {
+      petId = fullHash.split('?id=')[1]?.split('&')[0];
+    } else if (cleanPath.startsWith('/pet-profile/')) {
+      petId = cleanPath.replace('/pet-profile/', '').replace(/\/$/, '');
+    }
+
+    appRoot.innerHTML = renderPetProfile(petId);
+    if (typeof setupPetProfileEvents === 'function') {
+      setupPetProfileEvents(petId);
+    }
+
+    document.title = `Pet Health Record — PETZY`;
+    updateActiveNav('/dashboard');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+
+  // 4. Standard static routes
   const route = routes[cleanPath] || routes['/'];
   appRoot.innerHTML = route.render();
   if (typeof route.setup === 'function') {

@@ -1,10 +1,15 @@
 /* PETZY Header Component (Veterinary Platform) */
 import { siteData } from '../data.js';
 import { showToast } from './toast.js';
+import { getCurrentUser } from '../services/auth.js';
+
+let authListenerInitialized = false;
 
 export function renderHeader() {
   const headerEl = document.getElementById('site-header');
   if (!headerEl) return;
+
+  const currentUser = getCurrentUser();
 
   headerEl.innerHTML = `
     <div class="container header-container">
@@ -29,14 +34,15 @@ export function renderHeader() {
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
 
-        <!-- Login -->
-        <a href="#/login" class="header-login-link" data-route="/login">Login</a>
-
-        <!-- Book an Appointment CTA (Deep Teal / Forest Green) -->
-        <a href="#/contact" class="header-book-btn" id="header-book-btn">
-          <i class="fa-solid fa-calendar-check"></i>
-          <span>Book an Appointment</span>
-        </a>
+        <!-- Customer Login / Dashboard Link -->
+        ${currentUser ? `
+          <a href="#/dashboard" class="header-login-link" data-route="/dashboard" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-sage-green-soft);">
+            <img src="${currentUser.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'}" alt="${currentUser.name}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--color-forest-green);">
+            <span style="font-weight: 700;">Dashboard</span>
+          </a>
+        ` : `
+          <a href="#/login" class="header-login-link" data-route="/login">Login</a>
+        `}
 
         <!-- Mobile Hamburger Toggle -->
         <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Navigation">
@@ -54,15 +60,24 @@ export function renderHeader() {
       <a href="#/service-detail" class="nav-link mobile-link" data-route="/service-detail">Service Detail</a>
       <a href="#/faq" class="nav-link mobile-link" data-route="/faq">FAQ</a>
       <a href="#/contact" class="nav-link mobile-link" data-route="/contact">Contact</a>
-      <a href="#/login" class="nav-link mobile-link" data-route="/login">Login</a>
-      <a href="#/contact" class="btn btn-teal" style="margin-top: 1rem;" id="mobile-book-btn">
-        <i class="fa-solid fa-calendar-check"></i>
-        <span>Book an Appointment</span>
-      </a>
+      ${currentUser ? `
+        <a href="#/dashboard" class="nav-link mobile-link" data-route="/dashboard" style="color: var(--color-forest-green); font-weight: 800;">
+          <i class="fa-solid fa-chart-pie" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i> My Dashboard (${currentUser.name.split(' ')[0]})
+        </a>
+      ` : `
+        <a href="#/login" class="nav-link mobile-link" data-route="/login">Login</a>
+      `}
     </div>
   `;
 
   setupHeaderListeners();
+
+  if (!authListenerInitialized) {
+    authListenerInitialized = true;
+    window.addEventListener('petzy-auth-change', () => {
+      renderHeader();
+    });
+  }
 }
 
 function setupHeaderListeners() {

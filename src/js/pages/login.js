@@ -1,9 +1,19 @@
 /* PETZY Login View (Veterinary Platform) */
-import { siteData } from '../data.js';
+import { loginUser, loginAsDemoUser, getCurrentUser, getRememberedEmail } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderLogin() {
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    setTimeout(() => {
+      window.location.hash = '#/dashboard';
+    }, 10);
+    return `<div class="auth-page-wrapper"><p>Redirecting to dashboard...</p></div>`;
+  }
+
+  const rememberedEmail = getRememberedEmail();
+
   return `
     <div class="auth-page-wrapper animate-fade-up">
       <div class="auth-card-box">
@@ -35,18 +45,23 @@ export function renderLogin() {
         <!-- Form -->
         <form id="petzy-login-form">
           <div class="form-group">
-            <label class="form-label" for="login-email">Email Address</label>
-            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com" required value="parent@petzy.com">
+            <label class="form-label" for="login-email">Email Address *</label>
+            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com" required value="${rememberedEmail}">
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="login-password">Password</label>
-            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required value="password123">
+            <label class="form-label" for="login-password">Password *</label>
+            <div class="password-input-wrap">
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required value="password123">
+              <button type="button" class="password-toggle-btn" id="login-pwd-toggle" aria-label="Toggle password visibility">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
           </div>
 
           <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.88rem; margin-bottom: 1.5rem;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--color-charcoal-muted);">
-              <input type="checkbox" checked style="accent-color: var(--color-forest-green);">
+              <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--color-forest-green);">
               <span>Remember me</span>
             </label>
             <a href="javascript:void(0)" style="color: var(--color-soft-coral); font-weight: 700;" id="forgot-password-link">Forgot password?</a>
@@ -58,6 +73,15 @@ export function renderLogin() {
           </button>
         </form>
 
+        <!-- 1-Click Demo Account Quick Access -->
+        <div class="quick-demo-login-box">
+          <p><i class="fa-solid fa-key" style="margin-right: 0.35rem; color: var(--color-forest-green);"></i> Evaluation Mode: Instant 1-Click Demo Login</p>
+          <button type="button" class="demo-login-btn" id="quick-demo-btn">
+            <i class="fa-solid fa-paw"></i>
+            <span>Sign In as Samantha (Demo Parent)</span>
+          </button>
+        </div>
+
         <div style="text-align: center; margin-top: 1.75rem; font-size: 0.92rem; color: var(--color-charcoal-muted);">
           New to PETZY? <a href="#/register" style="color: var(--color-soft-coral); font-weight: 800;">Create Parent Account</a>
         </div>
@@ -68,25 +92,69 @@ export function renderLogin() {
 
 export function setupLoginEvents() {
   const form = document.getElementById('petzy-login-form');
+  const pwdInput = document.getElementById('login-password');
+  const pwdToggle = document.getElementById('login-pwd-toggle');
+  const emailInput = document.getElementById('login-email');
+  const rememberCheckbox = document.getElementById('login-remember-me');
+  const quickDemoBtn = document.getElementById('quick-demo-btn');
+  const googleBtn = document.getElementById('google-auth-btn');
+  const forgotBtn = document.getElementById('forgot-password-link');
+
+  // Password visibility toggle
+  pwdToggle?.addEventListener('click', () => {
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      pwdToggle.querySelector('i').className = 'fa-solid fa-eye-slash';
+    } else {
+      pwdInput.type = 'password';
+      pwdToggle.querySelector('i').className = 'fa-solid fa-eye';
+    }
+  });
+
+  // Login Submit
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email')?.value || 'Pet Parent';
-    showToast(`Welcome back, ${email.split('@')[0]}! Signed in to your patient portal.`, 'coral', 'fa-solid fa-circle-check');
-    setTimeout(() => {
-      window.location.hash = '#/';
-    }, 1200);
+    const email = emailInput?.value.trim();
+    const password = pwdInput?.value;
+    const rememberMe = rememberCheckbox?.checked;
+
+    if (!email || !password) {
+      showToast('Please provide both email and password.', 'coral', 'fa-solid fa-triangle-exclamation');
+      return;
+    }
+
+    try {
+      const user = loginUser(email, password, rememberMe);
+      showToast(`Welcome back, ${user.name}! Signed in to your patient portal.`, 'sage', 'fa-solid fa-circle-check');
+      setTimeout(() => {
+        window.location.hash = '#/dashboard';
+      }, 500);
+    } catch (err) {
+      showToast(err.message || 'Login failed', 'coral', 'fa-solid fa-triangle-exclamation');
+    }
   });
 
-  const googleBtn = document.getElementById('google-auth-btn');
+  // Quick 1-Click Demo Login
+  quickDemoBtn?.addEventListener('click', () => {
+    const user = loginAsDemoUser();
+    showToast(`Welcome back, ${user.name}! Signed in as Demo Pet Parent.`, 'sage', 'fa-solid fa-paw');
+    setTimeout(() => {
+      window.location.hash = '#/dashboard';
+    }, 400);
+  });
+
+  // Google OAuth Demo
   googleBtn?.addEventListener('click', () => {
-    showToast('Signed in via Google successfully!', 'sage', 'fa-brands fa-google');
+    const user = loginAsDemoUser();
+    showToast('Signed in via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = '#/';
-    }, 1200);
+      window.location.hash = '#/dashboard';
+    }, 500);
   });
 
-  const forgotBtn = document.getElementById('forgot-password-link');
+  // Forgot Password
   forgotBtn?.addEventListener('click', () => {
-    showToast('Password recovery instructions sent to your email.', 'coral', 'fa-solid fa-paper-plane');
+    const email = emailInput?.value.trim() || 'your email';
+    showToast(`Password recovery link sent to ${email}. Please check your inbox.`, 'coral', 'fa-solid fa-paper-plane');
   });
 }
