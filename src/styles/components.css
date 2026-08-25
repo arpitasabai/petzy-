@@ -30,47 +30,55 @@
   gap: var(--space-lg);
 }
 
-/* PETZY LOGO (Medical Cross + Paw Heart Concept) */
+/* PETZY BRAND LOGO */
 .brand-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  font-family: var(--font-heading);
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: var(--color-forest-green);
-  letter-spacing: -0.03em;
+  text-decoration: none;
   user-select: none;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
-.brand-logo .logo-icon-wrap {
-  width: 44px;
+.brand-logo:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.brand-logo:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.brand-logo-img {
+  height: 48px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(23, 74, 58, 0.06));
+}
+
+.footer-logo {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.footer-logo .footer-logo-img {
   height: 44px;
-  background-color: var(--color-forest-green);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: transform var(--transition-normal);
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
 }
 
-.brand-logo:hover .logo-icon-wrap {
-  transform: rotate(-4deg) scale(1.05);
-}
-
-.brand-logo .logo-icon-wrap svg {
-  width: 26px;
-  height: 26px;
-}
-
-.brand-logo .logo-text {
-  display: flex;
-  align-items: baseline;
-}
-
-.brand-logo .logo-text .z-accent {
-  color: var(--color-soft-coral);
+@media (max-width: 768px) {
+  .brand-logo-img {
+    height: 40px;
+    max-width: 180px;
+  }
+  
+  .footer-logo .footer-logo-img {
+    height: 38px;
+    max-width: 170px;
+  }
 }
 
 /* Nav Menu */

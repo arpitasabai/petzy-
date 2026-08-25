@@ -8,18 +8,9 @@ export function renderHeader() {
 
   headerEl.innerHTML = `
     <div class="container header-container">
-      <!-- PETZY Logo (Medical Cross + Paw Heart) -->
+      <!-- PETZY Brand Logo -->
       <a href="#/" class="brand-logo" id="brand-logo-link" aria-label="PETZY Home">
-        <div class="logo-icon-wrap">
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="42" y="24" width="16" height="52" rx="8" fill="#FFF9F0"/>
-            <rect x="24" y="42" width="52" height="16" rx="8" fill="#FFF9F0"/>
-            <circle cx="50" cy="50" r="7.5" fill="#F28C7B"/>
-            <circle cx="34" cy="34" r="4.5" fill="#F5D98B"/>
-            <circle cx="66" cy="34" r="4.5" fill="#F5D98B"/>
-          </svg>
-        </div>
-        <span class="logo-text">PET<span class="z-accent">Z</span>Y</span>
+        <img src="/images/logo.png" alt="PETZY Veterinary & Pet Care" class="brand-logo-img">
       </a>
 
       <!-- Desktop Navigation Links -->
