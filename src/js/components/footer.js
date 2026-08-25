@@ -34,27 +34,15 @@ export function renderFooter() {
           </div>
         </div>
 
-        <!-- Services Column -->
+        <!-- Support & Legal Column -->
         <div>
-          <h4 class="footer-heading">Clinical Services</h4>
-          <div class="footer-links-list">
-            <a href="#/service-detail" class="footer-link-item"><i class="fa-solid fa-stethoscope"></i> Consultation</a>
-            <a href="#/services" class="footer-link-item"><i class="fa-solid fa-syringe"></i> Vaccination</a>
-            <a href="#/services" class="footer-link-item"><i class="fa-solid fa-scissors"></i> Spa Grooming</a>
-            <a href="#/services" class="footer-link-item"><i class="fa-solid fa-tooth"></i> Dental Care</a>
-            <a href="#/services" class="footer-link-item"><i class="fa-solid fa-truck-medical"></i> Emergency Care</a>
-          </div>
-        </div>
-
-        <!-- Support Column -->
-        <div>
-          <h4 class="footer-heading">Support & Clinic</h4>
+          <h4 class="footer-heading">Support & Legal</h4>
           <div class="footer-links-list">
             <a href="#/faq" class="footer-link-item"><i class="fa-solid fa-circle-question"></i> Help & FAQ</a>
             <a href="#/contact" class="footer-link-item"><i class="fa-solid fa-phone"></i> +1 (800) 555-PETZY</a>
             <a href="#/contact" class="footer-link-item" style="color: var(--color-soft-coral);"><i class="fa-solid fa-heart-pulse"></i> 24/7 Emergency Hotline</a>
-            <a href="javascript:void(0)" class="footer-link-item"><i class="fa-solid fa-shield-halved"></i> Privacy Policy</a>
-            <a href="javascript:void(0)" class="footer-link-item"><i class="fa-solid fa-file-contract"></i> Terms & Conditions</a>
+            <a href="#/privacy-policy" class="footer-link-item"><i class="fa-solid fa-shield-halved"></i> Privacy Policy</a>
+            <a href="#/terms-conditions" class="footer-link-item"><i class="fa-solid fa-file-contract"></i> Terms & Conditions</a>
           </div>
         </div>
       </div>

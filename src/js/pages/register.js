@@ -64,7 +64,7 @@ export function renderRegister() {
           <div style="margin-bottom: 1.5rem;">
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: var(--color-charcoal-muted);">
               <input type="checkbox" required checked style="accent-color: var(--color-forest-green);">
-              <span>I agree to the <a href="javascript:void(0)" style="color: var(--color-forest-green); text-decoration: underline;">Terms of Care</a> & <a href="javascript:void(0)" style="color: var(--color-forest-green); text-decoration: underline;">Privacy Policy</a></span>
+              <span>I agree to the <a href="#/terms-conditions" target="_blank" style="color: var(--color-forest-green); font-weight: 700; text-decoration: underline;">Terms & Conditions</a> & <a href="#/privacy-policy" target="_blank" style="color: var(--color-forest-green); font-weight: 700; text-decoration: underline;">Privacy Policy</a></span>
             </label>
           </div>
 

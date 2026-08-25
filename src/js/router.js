@@ -9,6 +9,8 @@ import { renderContact, setupContactEvents } from './pages/contact.js';
 import { renderFaq, setupFaqEvents } from './pages/faq.js';
 import { renderLogin, setupLoginEvents } from './pages/login.js';
 import { renderRegister, setupRegisterEvents } from './pages/register.js';
+import { renderPrivacyPolicy, setupPrivacyPolicyEvents } from './pages/privacy-policy.js';
+import { renderTermsConditions, setupTermsConditionsEvents } from './pages/terms-conditions.js';
 import { updateActiveNav } from './components/header.js';
 import { getDoctorById } from './data.js';
 
@@ -22,7 +24,11 @@ const routes = {
   '/contact': { render: renderContact, setup: setupContactEvents, title: 'Contact & Appointments — PETZY Veterinary Hospital' },
   '/faq': { render: renderFaq, setup: setupFaqEvents, title: 'Frequently Asked Questions — PETZY' },
   '/login': { render: renderLogin, setup: setupLoginEvents, title: 'Pet Parent Portal Sign In — PETZY' },
-  '/register': { render: renderRegister, setup: setupRegisterEvents, title: 'Register New Patient Account — PETZY' }
+  '/register': { render: renderRegister, setup: setupRegisterEvents, title: 'Register New Patient Account — PETZY' },
+  '/privacy-policy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
+  '/privacy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
+  '/terms-conditions': { render: renderTermsConditions, setup: setupTermsConditionsEvents, title: 'Terms & Conditions — PETZY Veterinary Care' },
+  '/terms': { render: renderTermsConditions, setup: setupTermsConditionsEvents, title: 'Terms & Conditions — PETZY Veterinary Care' }
 };
 
 export function navigateTo(path) {

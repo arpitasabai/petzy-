@@ -998,8 +998,8 @@
 
 .footer-grid-cols {
   display: grid;
-  grid-template-columns: 1.8fr 1fr 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1.8fr 1fr 1.2fr;
+  gap: 3.5rem;
   margin-bottom: var(--space-3xl);
 }
 
@@ -1008,7 +1008,7 @@
   margin-top: 1rem;
   margin-bottom: 1.5rem;
   font-size: 0.95rem;
-  max-width: 320px;
+  max-width: 380px;
 }
 
 .footer-social-row {
@@ -1262,6 +1262,10 @@
   .footer-grid-cols {
     grid-template-columns: 1fr 1fr;
     gap: 2.5rem;
+  }
+
+  .footer-brand-col {
+    grid-column: 1 / -1;
   }
 
   .pet-care-cta-box {

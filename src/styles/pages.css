@@ -638,3 +638,299 @@
     display: none;
   }
 }
+
+/* ==================================================
+   10. LEGAL & POLICY PAGES (PRIVACY & TERMS)
+   ================================================== */
+.legal-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 3rem;
+  align-items: start;
+  position: relative;
+}
+
+.legal-sidebar {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.legal-toc-card {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.legal-toc-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-forest-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.legal-toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.legal-toc-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-charcoal-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.legal-toc-link:hover {
+  background: var(--color-sage-green-soft);
+  color: var(--color-forest-green);
+  transform: translateX(4px);
+}
+
+.legal-toc-link.active {
+  background: var(--color-forest-green);
+  color: var(--color-warm-cream);
+  font-weight: 700;
+}
+
+.legal-toc-link.active i {
+  color: var(--color-soft-coral);
+}
+
+.legal-quick-actions {
+  background: var(--color-warm-cream-dark);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legal-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-forest-green);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.legal-action-btn:hover {
+  background: var(--color-forest-green);
+  color: var(--color-warm-cream);
+  border-color: var(--color-forest-green);
+  transform: translateY(-2px);
+}
+
+.legal-search-wrapper {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.legal-search-input {
+  width: 100%;
+  padding: 0.95rem 1.25rem 0.95rem 3.25rem;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  background: var(--color-white);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.legal-search-input:focus {
+  border-color: var(--color-forest-green);
+}
+
+.legal-content-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.legal-card {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  padding: 2.25rem 2.5rem;
+  box-shadow: var(--shadow-sm);
+  scroll-margin-top: 100px;
+  transition: border-color var(--transition-fast);
+}
+
+.legal-card:hover {
+  border-color: var(--color-sage-green);
+}
+
+.legal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.legal-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-sage-green-soft);
+  color: var(--color-forest-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.legal-card-header h2 {
+  font-size: 1.35rem;
+  color: var(--color-forest-green);
+  margin: 0;
+}
+
+.legal-card-body {
+  color: var(--color-charcoal);
+  font-size: 0.98rem;
+  line-height: 1.75;
+}
+
+.legal-card-body p {
+  margin-bottom: 1.1rem;
+  color: var(--color-charcoal);
+}
+
+.legal-card-body p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-card-body h3 {
+  font-size: 1.1rem;
+  color: var(--color-forest-green);
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.legal-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.legal-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.legal-list-item i {
+  color: var(--color-forest-green);
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.legal-callout {
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin: 1.25rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.legal-callout.callout-info {
+  background: var(--color-sage-green-soft);
+  border: 1px solid var(--color-sage-green);
+  color: var(--color-forest-green-dark);
+}
+
+.legal-callout.callout-info i {
+  color: var(--color-forest-green);
+  font-size: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.legal-callout.callout-warning {
+  background: var(--color-soft-coral-soft);
+  border: 1px solid var(--color-soft-coral);
+  color: #7a2216;
+}
+
+.legal-callout.callout-warning i {
+  color: var(--color-soft-coral);
+  font-size: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.legal-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-warm-cream);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .legal-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .legal-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .legal-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .legal-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
