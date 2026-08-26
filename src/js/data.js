@@ -654,7 +654,7 @@ export const siteData = {
       { id: "dog", animal: "Happy Dog", src: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=900&q=80" },
       { id: "cat", animal: "Curious Cat", src: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=900&q=80" },
       { id: "rabbit", animal: "Holland Lop Rabbit", src: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=900&q=80" },
-      { id: "bird", animal: "Companion Bird", src: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=900&q=80" }
+      { id: "bird", animal: "Companion Bird", src: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=900&q=80", objectPosition: "center 12%" }
     ],
     aboutVet: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=800&q=80", // Caring veterinarian tenderly examining and holding sweet companion pet
     ctaPet: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80" // Friendly veterinarian consulting with pet owner & companion pet in modern clinic

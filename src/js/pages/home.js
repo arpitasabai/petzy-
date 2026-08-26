@@ -54,15 +54,23 @@ export function renderHome() {
               <div class="hero-carousel-viewport" id="hero-carousel-viewport">
                 <div class="hero-carousel-track" id="hero-carousel-track">
                   ${siteData.images.heroCarousel.map((slide, idx) => `
-                    <div class="hero-pet-slide" data-hero-slide="${idx}">
-                      <img src="${slide.src}" alt="${slide.animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                    <div class="hero-pet-slide" data-hero-slide="${idx}" data-animal="${slide.id}">
+                      <img src="${slide.src}" alt="${slide.animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="${idx === 0 ? 'eager' : 'lazy'}" style="${slide.objectPosition ? `object-position: ${slide.objectPosition};` : (slide.id === 'bird' ? 'object-position: center 12%;' : '')}">
                     </div>
                   `).join('')}
                   <!-- Seamless Infinite Loop Clone of Slide 0 (Dog) -->
-                  <div class="hero-pet-slide hero-pet-clone" data-hero-slide="0">
+                  <div class="hero-pet-slide hero-pet-clone" data-hero-slide="0" data-animal="${siteData.images.heroCarousel[0].id}">
                     <img src="${siteData.images.heroCarousel[0].src}" alt="${siteData.images.heroCarousel[0].animal} at PETZY Veterinary Hospital" class="hero-pet-image" loading="lazy">
                   </div>
                 </div>
+
+                <!-- Left & Right Arrow Navigation -->
+                <button type="button" class="hero-carousel-nav-btn prev" id="hero-carousel-prev-btn" aria-label="Previous Pet Slide">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button type="button" class="hero-carousel-nav-btn next" id="hero-carousel-next-btn" aria-label="Next Pet Slide">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
 
                 <!-- Subtle Hero Indicator Dots -->
                 <div class="hero-carousel-dots" id="hero-carousel-dots">
@@ -506,12 +514,23 @@ export function renderHome() {
 }
 
 export function setupHomeEvents() {
-  // 1. Hero 4-Pet Continuous Sliding Carousel (2s display + 800ms smooth slide)
+  // 1. Hero 4-Pet Interactive & Continuous Sliding Carousel
+  const heroViewport = document.getElementById('hero-carousel-viewport');
   const heroTrack = document.getElementById('hero-carousel-track');
   const heroDots = document.querySelectorAll('.hero-dot');
+  const heroPrevBtn = document.getElementById('hero-carousel-prev-btn');
+  const heroNextBtn = document.getElementById('hero-carousel-next-btn');
+
   let heroTimer = null;
   let heroCurrentIndex = 0;
-  const totalRealSlides = 4; // Dog, Cat, Rabbit, Bird (and index 4 is seamless clone of Dog)
+  const totalRealSlides = 4; // Dog (0), Cat (1), Rabbit (2), Bird (3), clone (4)
+
+  // Drag / Swipe Interaction State
+  let isDragging = false;
+  let startX = 0;
+  let currentTranslate = 0;
+  let prevTranslate = 0;
+  let animationId = null;
 
   function updateHeroDots(activeIdx) {
     heroDots.forEach((dot, i) => {
@@ -522,11 +541,12 @@ export function setupHomeEvents() {
   function slideToHeroIndex(index, withAnimation = true) {
     if (!heroTrack) return;
     if (withAnimation) {
-      heroTrack.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+      heroTrack.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
     } else {
       heroTrack.style.transition = 'none';
     }
     heroTrack.style.transform = `translateX(-${index * 100}%)`;
+    prevTranslate = -index * (heroViewport ? heroViewport.offsetWidth : 480);
     updateHeroDots(index);
   }
 
@@ -534,31 +554,133 @@ export function setupHomeEvents() {
     heroCurrentIndex++;
     slideToHeroIndex(heroCurrentIndex, true);
 
-    // When we reach the clone (index 4), seamlessly reset to index 0 after the 800ms slide completes
-    if (heroCurrentIndex === totalRealSlides) {
+    // When we reach the clone (index 4), seamlessly reset to index 0
+    if (heroCurrentIndex >= totalRealSlides) {
       setTimeout(() => {
         heroCurrentIndex = 0;
         slideToHeroIndex(0, false);
-      }, 800);
+      }, 650);
+    }
+  }
+
+  function previousHeroSlide() {
+    if (heroCurrentIndex === 0) {
+      // Jump to clone position instantly, then animate to last real slide
+      heroCurrentIndex = totalRealSlides;
+      slideToHeroIndex(heroCurrentIndex, false);
+      requestAnimationFrame(() => {
+        heroCurrentIndex = totalRealSlides - 1;
+        slideToHeroIndex(heroCurrentIndex, true);
+      });
+    } else {
+      heroCurrentIndex--;
+      slideToHeroIndex(heroCurrentIndex, true);
     }
   }
 
   function startHeroAutoPlay() {
-    if (heroTimer) clearInterval(heroTimer);
-    // Exactly 2000ms display time + 800ms slide duration = 2800ms loop
+    stopHeroAutoPlay();
     heroTimer = setInterval(() => {
       advanceHeroSlide();
-    }, 2800);
+    }, 3200);
   }
 
+  function stopHeroAutoPlay() {
+    if (heroTimer) {
+      clearInterval(heroTimer);
+      heroTimer = null;
+    }
+  }
+
+  // Arrow navigation buttons
+  heroNextBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    advanceHeroSlide();
+    startHeroAutoPlay();
+  });
+
+  heroPrevBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    previousHeroSlide();
+    startHeroAutoPlay();
+  });
+
+  // Indicator Dots click handlers
   heroDots.forEach(dot => {
-    dot.addEventListener('click', () => {
+    dot.addEventListener('click', (e) => {
+      e.preventDefault();
       const targetIdx = parseInt(dot.getAttribute('data-hero-dot'), 10);
       heroCurrentIndex = targetIdx;
       slideToHeroIndex(heroCurrentIndex, true);
       startHeroAutoPlay();
     });
   });
+
+  // Touch and Mouse Drag / Swipe Handlers
+  function getPositionX(e) {
+    return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+  }
+
+  function dragStart(e) {
+    if (e.target.closest('.hero-carousel-nav-btn') || e.target.closest('.hero-dot')) return;
+    isDragging = true;
+    startX = getPositionX(e);
+    stopHeroAutoPlay();
+    heroViewport?.classList.add('is-dragging');
+    if (heroTrack) heroTrack.style.transition = 'none';
+  }
+
+  function dragMove(e) {
+    if (!isDragging || !heroViewport || !heroTrack) return;
+    const currentX = getPositionX(e);
+    const diffX = currentX - startX;
+    const width = heroViewport.offsetWidth || 480;
+    const baseOffset = -heroCurrentIndex * width;
+    currentTranslate = baseOffset + diffX;
+    heroTrack.style.transform = `translateX(${currentTranslate}px)`;
+  }
+
+  function dragEnd(e) {
+    if (!isDragging || !heroViewport) return;
+    isDragging = false;
+    heroViewport.classList.remove('is-dragging');
+
+    const width = heroViewport.offsetWidth || 480;
+    const baseOffset = -heroCurrentIndex * width;
+    const movedBy = currentTranslate - baseOffset;
+
+    // Threshold of 40px to trigger slide
+    if (movedBy < -40) {
+      advanceHeroSlide();
+    } else if (movedBy > 40) {
+      previousHeroSlide();
+    } else {
+      slideToHeroIndex(heroCurrentIndex, true);
+    }
+
+    startHeroAutoPlay();
+  }
+
+  if (heroViewport) {
+    // Touch Events
+    heroViewport.addEventListener('touchstart', dragStart, { passive: true });
+    heroViewport.addEventListener('touchmove', dragMove, { passive: true });
+    heroViewport.addEventListener('touchend', dragEnd);
+    heroViewport.addEventListener('touchcancel', dragEnd);
+
+    // Mouse Drag Events
+    heroViewport.addEventListener('mousedown', dragStart);
+    window.addEventListener('mousemove', dragMove);
+    window.addEventListener('mouseup', dragEnd);
+
+    // Hover pause
+    heroViewport.addEventListener('mouseenter', stopHeroAutoPlay);
+    heroViewport.addEventListener('mouseleave', () => {
+      if (!isDragging) startHeroAutoPlay();
+    });
+  }
 
   if (heroTrack) {
     startHeroAutoPlay();
