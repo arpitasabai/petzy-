@@ -1,9 +1,60 @@
-/* PETZY Service Detail View (Veterinary Platform) */
-import { siteData } from '../data.js';
+/* PETZY Dynamic Service Detail View (Veterinary Platform) */
+import { siteData, getServiceById } from '../data.js';
 import { renderBackButton } from '../components/back-button.js';
 
-export function renderServiceDetail() {
-  const service = siteData.services[0]; // Veterinary Consultation
+export function renderServiceDetail(serviceId) {
+  // Extract serviceId from parameter or URL hash
+  let targetId = serviceId;
+  if (!targetId) {
+    const hash = window.location.hash || '';
+    if (hash.includes('?id=')) {
+      targetId = hash.split('?id=')[1]?.split('&')[0];
+    } else if (hash.includes('/services/')) {
+      targetId = hash.split('/services/')[1]?.split('?')[0]?.split('#')[0];
+    }
+  }
+
+  const service = getServiceById(targetId);
+
+  // Fallback defaults if not set
+  const inclusions = service.inclusions || [
+    "Comprehensive Physical Examination",
+    "Vital Signs & Clinical Evaluation",
+    "Specialist Consultation & Guidance",
+    "Preventive Health Plan",
+    "Medical Record Documentation",
+    "Patient Monitoring Protocol",
+    "Nutrition & Wellness Assessment",
+    "Post-Visit Home Care Roadmap"
+  ];
+
+  const benefits = service.benefits || [
+    {
+      icon: "fa-solid fa-shield-virus",
+      title: "Clinical Excellence",
+      desc: "Delivered by board-certified veterinarians with low-stress handling protocols."
+    },
+    {
+      icon: "fa-solid fa-heart-pulse",
+      title: "Tailored Patient Care",
+      desc: "Customized specifically to your pet's life stage, breed, and health requirements."
+    }
+  ];
+
+  const faqs = service.faqs || [
+    {
+      question: `How long does ${service.title} take?`,
+      answer: `The average procedure duration is ${service.duration || '30 to 45 minutes'} depending on patient requirements.`
+    },
+    {
+      question: "How should I prepare my pet for this appointment?",
+      answer: "Please bring any previous medical or vaccination records and ensure your pet is secure in a carrier or on a leash."
+    },
+    {
+      question: "Can I book this service online?",
+      answer: "Yes! You can choose your pet, select your preferred veterinarian, and reserve an available time slot instantly online."
+    }
+  ];
 
   return `
     <!-- Service Hero -->
@@ -11,11 +62,11 @@ export function renderServiceDetail() {
       <div class="container">
         ${renderBackButton('#/services')}
         <div class="section-badge coral" style="background: var(--color-soft-coral); color: var(--color-white); border: none;">
-          <i class="fa-solid fa-stethoscope"></i>
-          <span>Clinical Examination</span>
+          <i class="${service.icon || 'fa-solid fa-stethoscope'}"></i>
+          <span>${service.badge || 'Clinical Care'}</span>
         </div>
-        <h1>Veterinary Consultation & Diagnostics</h1>
-        <p>Comprehensive nose-to-tail physical health examinations, diagnostic imaging evaluations, and compassionate care tailored to your pet's life stage.</p>
+        <h1>${service.title}</h1>
+        <p>${service.shortDesc || service.description}</p>
       </div>
     </section>
 
@@ -26,51 +77,33 @@ export function renderServiceDetail() {
           
           <!-- Left Column -->
           <div>
-            <!-- About The Consultation -->
+            <!-- About The Service -->
             <div style="margin-bottom: 2.5rem;">
-              <h2 class="section-title">About the Consultation Experience</h2>
-              <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1rem;">A veterinary consultation at PETZY is designed to be thorough, low-stress, and collaborative. We understand that visiting the clinic can cause anxiety for some pets, which is why our examination rooms are equipped with pheromone diffusers, warm non-slip mats, and gentle positive-reinforcement treats.</p>
-              <p style="font-size: 1.05rem; line-height: 1.7;">Our board-certified veterinarians conduct a complete physical evaluation, review medical history and nutritional habits, and answer every question you have about your pet’s vitality.</p>
+              <h2 class="section-title">About the ${service.title} Experience</h2>
+              <p style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1rem;">${service.description}</p>
+              ${service.procedureDetail ? `
+                <div style="background: var(--color-warm-cream); padding: 1rem 1.25rem; border-radius: var(--radius-md); border-left: 4px solid var(--color-forest-green); margin-top: 1rem;">
+                  <strong style="color: var(--color-forest-green); font-size: 0.95rem;">
+                    <i class="${service.icon || 'fa-solid fa-circle-info'}" style="margin-right: 0.4rem; color: var(--color-soft-coral);"></i>
+                    Clinical Protocol:
+                  </strong>
+                  <span style="font-size: 0.92rem; color: var(--color-charcoal);">${service.procedureDetail}</span>
+                </div>
+              ` : ''}
             </div>
 
             <!-- What's Included (8-Point Checklist) -->
             <div style="margin-bottom: 2.5rem;">
-              <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">What's Included in Every Examination</h3>
-              <p style="color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Our standard comprehensive checkup covers 8 vital clinical points:</p>
+              <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">What's Included in This Service</h3>
+              <p style="color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Our standard protocol covers 8 vital clinical points:</p>
               
               <div class="service-checklist-grid">
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Nose-to-Tail Physical Exam</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Heart & Lung Auscultation</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Oral Health & Dental Grading</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Ophthalmic (Eye) & Ear Otoscopy</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Abdominal Palpation & Organ Check</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Joint Mobility & Musculoskeletal Exam</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Skin & Coat Dermal Analysis</span>
-                </div>
-                <div class="checklist-card">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Customized Diet & Lifestyle Roadmap</span>
-                </div>
+                ${inclusions.map(inc => `
+                  <div class="checklist-card">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>${inc}</span>
+                  </div>
+                `).join('')}
               </div>
             </div>
 
@@ -78,16 +111,13 @@ export function renderServiceDetail() {
             <div style="margin-bottom: 2.5rem;">
               <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--color-forest-green);">Health & Longevity Benefits</h3>
               <div class="benefits-grid-4" style="grid-template-columns: 1fr 1fr;">
-                <div class="benefit-card-box">
-                  <div class="benefit-icon-pill" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-shield-virus"></i></div>
-                  <h4>Early Disease Detection</h4>
-                  <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin: 0;">Catches subtle cardiac, renal, or endocrine changes before symptoms worsen.</p>
-                </div>
-                <div class="benefit-card-box">
-                  <div class="benefit-icon-pill" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-heart-pulse"></i></div>
-                  <h4>Optimal Weight & Nutrition</h4>
-                  <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin: 0;">Preserves joint health and adds years of active vitality to your pet's life.</p>
-                </div>
+                ${benefits.map(b => `
+                  <div class="benefit-card-box">
+                    <div class="benefit-icon-pill" style="margin-bottom: 0.75rem;"><i class="${b.icon}"></i></div>
+                    <h4>${b.title}</h4>
+                    <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin: 0;">${b.desc}</p>
+                  </div>
+                `).join('')}
               </div>
             </div>
 
@@ -95,67 +125,53 @@ export function renderServiceDetail() {
             <div>
               <h3 style="font-size: 1.5rem; margin-bottom: 1.25rem; color: var(--color-forest-green);">Frequently Asked Questions</h3>
               <div class="accordion-wrapper" id="service-faq-accordion">
-                <div class="accordion-item active">
-                  <button class="accordion-header">
-                    <span>How long does a comprehensive consultation take?</span>
-                    <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
-                  </button>
-                  <div class="accordion-content">
-                    <p>Our standard examination visits last between 30 to 45 minutes to ensure plenty of time for thorough evaluations and answering all your questions.</p>
+                ${faqs.map((faq, idx) => `
+                  <div class="accordion-item ${idx === 0 ? 'active' : ''}">
+                    <button class="accordion-header">
+                      <span>${faq.question}</span>
+                      <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
+                    </button>
+                    <div class="accordion-content">
+                      <p>${faq.answer}</p>
+                    </div>
                   </div>
-                </div>
-
-                <div class="accordion-item">
-                  <button class="accordion-header">
-                    <span>What should I bring to my pet's consultation?</span>
-                    <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
-                  </button>
-                  <div class="accordion-content">
-                    <p>Please bring past vaccination history, records of current medications or flea/tick preventatives, and any specific questions you have noted down.</p>
-                  </div>
-                </div>
-
-                <div class="accordion-item">
-                  <button class="accordion-header">
-                    <span>Are diagnostic blood tests done during the same visit?</span>
-                    <span class="accordion-icon"><i class="fa-solid fa-chevron-down"></i></span>
-                  </button>
-                  <div class="accordion-content">
-                    <p>Yes! With our in-house laboratory suite, routine blood chemistry, hematology, and urinalysis results are available within 15–20 minutes.</p>
-                  </div>
-                </div>
+                `).join('')}
               </div>
             </div>
 
           </div>
 
           <!-- Sticky Sidebar Information Box -->
-          <div style="position: sticky; top: 110px; background: var(--color-white); border-radius: var(--radius-xl); padding: 2.25rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-lg);">
+          <div style="position: sticky; top: 110px; background: var(--color-white); border-radius: var(--radius-xl); padding: 2.25rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-lg); align-self: flex-start;">
             <div style="width: 100%; height: 210px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;">
               <img src="${service.image}" alt="${service.title}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
 
-            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">Consultation Details</h3>
-            <p style="font-size: 0.95rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Available for dogs, cats, rabbits, and small companion animals.</p>
+            <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; color: var(--color-forest-green);">${service.title}</h3>
+            <p style="font-size: 0.95rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">Available for dogs, cats, and companion pets.</p>
             
             <div style="border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 1rem 0; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.65rem;">
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                 <span style="color: var(--color-charcoal-muted);">Duration:</span>
-                <strong>30 – 45 mins</strong>
+                <strong>${service.duration || '30 Mins'}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <span style="color: var(--color-charcoal-muted);">Doctor:</span>
-                <strong>Board Certified Vet</strong>
+                <span style="color: var(--color-charcoal-muted);">Price / Fee:</span>
+                <strong style="color: var(--color-forest-green); font-size: 1.05rem;">${service.price || '$55'}</strong>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                <span style="color: var(--color-charcoal-muted);">Standard:</span>
-                <strong>Fear-Free Protocol</strong>
+                <span style="color: var(--color-charcoal-muted);">Location:</span>
+                <strong>${service.room || 'Main Clinical Wing'}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                <span style="color: var(--color-charcoal-muted);">Protocol:</span>
+                <strong>Fear-Free Certified</strong>
               </div>
             </div>
 
-            <a href="#/book-appointment?service=consultation" class="btn btn-teal" style="width: 100%; margin-bottom: 0.75rem;">
+            <a href="#/book-appointment?service=${service.id}" class="btn btn-teal" style="width: 100%; margin-bottom: 0.75rem;">
               <i class="fa-solid fa-calendar-check"></i>
-              <span>Book an Appointment</span>
+              <span>Book This Service</span>
             </a>
 
             <a href="#/services" class="btn btn-outline" style="width: 100%;">

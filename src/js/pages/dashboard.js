@@ -37,12 +37,14 @@ export function renderDashboard() {
   }
 
   // Parse URL tab parameter if present: #/dashboard?tab=pets
-  const fullHash = window.location.hash;
+  const fullHash = window.location.hash || '';
   if (fullHash.includes('tab=')) {
-    const requestedTab = fullHash.split('tab=')[1]?.split('&')[0];
+    const requestedTab = fullHash.split('tab=')[1]?.split('&')[0]?.toLowerCase();
     if (['overview', 'pets', 'appointments', 'profile'].includes(requestedTab)) {
       activeTab = requestedTab;
     }
+  } else if (fullHash === '#/dashboard' || fullHash === '#/dashboard/') {
+    activeTab = 'overview';
   }
 
   const pets = getUserPets(user.id);
@@ -50,7 +52,7 @@ export function renderDashboard() {
 
   // Compute summary stats
   const totalPets = pets.length;
-  const upcomingAppts = appointments.filter(a => a.status === 'Upcoming');
+  const upcomingAppts = appointments.filter(a => a.status === 'Upcoming' || a.status === 'Rescheduled');
   const completedAppts = appointments.filter(a => a.status === 'Completed');
   
   let totalVaccinations = 0;
@@ -86,14 +88,14 @@ export function renderDashboard() {
 
           <!-- Navigation Links -->
           <nav class="dashboard-nav-list" aria-label="Customer Dashboard Navigation">
-            <button class="dashboard-nav-item ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview">
+            <button type="button" class="dashboard-nav-item ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" onclick="window.petzySwitchTab('overview')">
               <div class="dashboard-nav-item-content">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Dashboard</span>
               </div>
             </button>
 
-            <button class="dashboard-nav-item ${activeTab === 'pets' ? 'active' : ''}" data-tab="pets">
+            <button type="button" class="dashboard-nav-item ${activeTab === 'pets' ? 'active' : ''}" data-tab="pets" onclick="window.petzySwitchTab('pets')">
               <div class="dashboard-nav-item-content">
                 <i class="fa-solid fa-paw"></i>
                 <span>My Pets</span>
@@ -101,7 +103,7 @@ export function renderDashboard() {
               <span class="dashboard-nav-pill">${totalPets}</span>
             </button>
 
-            <button class="dashboard-nav-item ${activeTab === 'appointments' ? 'active' : ''}" data-tab="appointments">
+            <button type="button" class="dashboard-nav-item ${activeTab === 'appointments' ? 'active' : ''}" data-tab="appointments" onclick="window.petzySwitchTab('appointments')">
               <div class="dashboard-nav-item-content">
                 <i class="fa-solid fa-calendar-check"></i>
                 <span>Appointments</span>
@@ -109,7 +111,7 @@ export function renderDashboard() {
               ${upcomingAppts.length > 0 ? `<span class="dashboard-nav-pill" style="background: var(--color-soft-coral); color: white;">${upcomingAppts.length}</span>` : ''}
             </button>
 
-            <button class="dashboard-nav-item ${activeTab === 'profile' ? 'active' : ''}" data-tab="profile">
+            <button type="button" class="dashboard-nav-item ${activeTab === 'profile' ? 'active' : ''}" data-tab="profile" onclick="window.petzySwitchTab('profile')">
               <div class="dashboard-nav-item-content">
                 <i class="fa-solid fa-user-gear"></i>
                 <span>Profile & Settings</span>
@@ -780,8 +782,15 @@ export function setupDashboardEvents() {
 
   // Global window helpers for in-tab button clicks
   window.petzySwitchTab = (tabName) => {
-    activeTab = tabName;
-    refreshDashboard();
+    if (['overview', 'pets', 'appointments', 'profile'].includes(tabName)) {
+      activeTab = tabName;
+      const targetHash = `#/dashboard?tab=${tabName}`;
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        refreshDashboard();
+      }
+    }
   };
 
   window.petzyFilterSpecies = (species) => {
@@ -828,11 +837,11 @@ export function setupDashboardEvents() {
 
   // Nav item click handling
   document.querySelectorAll('.dashboard-nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const tab = btn.getAttribute('data-tab');
       if (tab) {
-        activeTab = tab;
-        refreshDashboard();
+        window.petzySwitchTab(tab);
       }
     });
   });

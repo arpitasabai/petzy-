@@ -10,39 +10,49 @@ import {
   findAvailableDoctorForSlot,
   generateAppointmentId
 } from '../services/storage.js';
-import { siteData, getDoctorById } from '../data.js';
+import { siteData, getDoctorById, getServiceById } from '../data.js';
 import { renderBackButton } from '../components/back-button.js';
 import { openPetModal } from '../components/pet-modal.js';
 import { openAppointmentModal } from '../components/appointment-modal.js';
 import { showToast } from '../components/toast.js';
 
-// Wizard state object (persisted during step navigation)
-let wizardState = {
-  currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary, 6: Confirmed
-  serviceId: 'consultation',
-  serviceName: 'Veterinary Consultation',
-  serviceDuration: '30 Mins',
-  servicePrice: '$55',
-  serviceRoom: 'Consultation Suite 2B',
-  serviceIcon: 'fa-stethoscope',
-  serviceImage: '',
-  petId: null,
-  petName: '',
-  petSpecies: '',
-  petBreed: '',
-  petPhoto: '',
-  doctorId: 'any', // 'any' or doctor id
-  doctorName: 'Any Available Veterinarian',
-  doctorTitle: 'Assigned based on schedule',
-  doctorImage: '',
-  date: '',
-  time: '10:30 AM',
-  notes: '',
-  rescheduleId: null,
-  confirmedAppt: null,
-  calendarMonth: new Date().getMonth(),
-  calendarYear: new Date().getFullYear()
-};
+// Helper for initial default state
+function getInitialBookingState() {
+  const tomorrow = new Date(Date.now() + 86400000);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  const defaultSrv = siteData.services[0]; // Veterinary Consultation
+
+  return {
+    currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary, 6: Confirmed
+    appointmentId: null,
+    rescheduleId: null,
+    serviceId: defaultSrv ? defaultSrv.id : 'consultation',
+    serviceName: defaultSrv ? defaultSrv.title : 'Veterinary Consultation',
+    serviceDuration: defaultSrv ? defaultSrv.duration : '30 Mins',
+    servicePrice: defaultSrv ? defaultSrv.price : '$55',
+    serviceRoom: defaultSrv ? defaultSrv.room : 'Consultation Suite 2B',
+    serviceIcon: defaultSrv ? defaultSrv.icon : 'fa-stethoscope',
+    serviceImage: defaultSrv ? defaultSrv.image : '',
+    petId: null,
+    petName: '',
+    petSpecies: '',
+    petBreed: '',
+    petPhoto: '',
+    veterinarianId: 'any',
+    doctorName: 'Any Available Veterinarian',
+    doctorTitle: 'Assigned based on schedule',
+    doctorImage: '',
+    date: tomorrowStr,
+    time: '10:30 AM',
+    notes: '',
+    confirmedAppt: null,
+    calendarMonth: tomorrow.getMonth(),
+    calendarYear: tomorrow.getFullYear()
+  };
+}
+
+// Active wizard booking state
+let bookingState = getInitialBookingState();
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -68,24 +78,24 @@ export function renderScheduleAppointment() {
 
   const pets = getUserPets(user.id);
 
-  // Initialize or check URL params on fresh load
-  parseUrlParameters(user, pets);
+  // Sync state with URL parameters (detect fresh booking vs reschedule)
+  syncStateFromUrl(user, pets);
 
-  // Default date setup if empty (tomorrow)
-  if (!wizardState.date) {
+  // Default date setup if empty
+  if (!bookingState.date) {
     const tom = new Date(Date.now() + 86400000);
-    wizardState.date = tom.toISOString().split('T')[0];
-    wizardState.calendarMonth = tom.getMonth();
-    wizardState.calendarYear = tom.getFullYear();
+    bookingState.date = tom.toISOString().split('T')[0];
+    bookingState.calendarMonth = tom.getMonth();
+    bookingState.calendarYear = tom.getFullYear();
   }
 
   // Ensure selected pet is valid
-  if (!wizardState.petId && pets.length > 0) {
-    wizardState.petId = pets[0].id;
-    wizardState.petName = pets[0].name;
-    wizardState.petSpecies = pets[0].species;
-    wizardState.petBreed = pets[0].breed;
-    wizardState.petPhoto = pets[0].photo;
+  if (!bookingState.petId && pets.length > 0) {
+    bookingState.petId = pets[0].id;
+    bookingState.petName = pets[0].name;
+    bookingState.petSpecies = pets[0].species;
+    bookingState.petBreed = pets[0].breed;
+    bookingState.petPhoto = pets[0].photo;
   }
 
   // Render Step View
@@ -93,12 +103,12 @@ export function renderScheduleAppointment() {
     <div class="container pet-profile-page-wrapper animate-fade-up" style="max-width: 1060px;">
       <!-- Top Back Navigation -->
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        ${renderBackButton(wizardState.rescheduleId ? '#/dashboard?tab=appointments' : '#/dashboard')}
+        ${renderBackButton(bookingState.rescheduleId ? '#/dashboard?tab=appointments' : '#/dashboard')}
         
-        ${wizardState.rescheduleId ? `
+        ${bookingState.rescheduleId ? `
           <div class="section-badge coral" style="font-size: 0.82rem;">
             <i class="fa-solid fa-calendar-days"></i>
-            <span>Rescheduling Appointment: <strong>#${wizardState.rescheduleId}</strong></span>
+            <span>Rescheduling Appointment: <strong>#${bookingState.rescheduleId}</strong></span>
           </div>
         ` : ''}
       </div>
@@ -110,7 +120,7 @@ export function renderScheduleAppointment() {
           <span>Patient Appointment Booking</span>
         </div>
         <h1 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">
-          ${wizardState.rescheduleId ? 'Reschedule Your Appointment' : 'Book a Veterinary Appointment'}
+          ${bookingState.rescheduleId ? 'Reschedule Your Appointment' : 'Book a Veterinary Appointment'}
         </h1>
         <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin: 0;">
           Select your medical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and confirm.
@@ -118,7 +128,7 @@ export function renderScheduleAppointment() {
       </div>
 
       <!-- 5-Step Progress Bar (hidden on Step 6 Confirmed) -->
-      ${wizardState.currentStep <= 5 ? renderProgressBar(wizardState.currentStep) : ''}
+      ${bookingState.currentStep <= 5 ? renderProgressBar(bookingState.currentStep) : ''}
 
       <!-- Step Content Box -->
       <div id="booking-step-container">
@@ -129,88 +139,113 @@ export function renderScheduleAppointment() {
 }
 
 // ----------------------------------------------------
-// URL PARAMETERS PARSER
+// URL PARAMETERS & STATE SYNCHRONIZATION
 // ----------------------------------------------------
-function parseUrlParameters(user, pets) {
+function syncStateFromUrl(user, pets) {
   const hash = window.location.hash || '';
-  if (!hash.includes('?')) return;
-
-  const queryStr = hash.split('?')[1] || '';
+  const hasParams = hash.includes('?');
+  const queryStr = hasParams ? hash.split('?')[1] || '' : '';
   const params = new URLSearchParams(queryStr);
+  const reschedParam = params.get('rescheduleId');
 
-  // Check Reschedule ID
-  const resched = params.get('rescheduleId');
-  if (resched && resched !== wizardState.rescheduleId) {
-    const existing = getUserAppointmentById(user.id, resched);
-    if (existing) {
-      wizardState.rescheduleId = resched;
-      wizardState.serviceName = existing.service;
-      const matchedSrv = siteData.services.find(s => s.title.toLowerCase() === (existing.service || '').toLowerCase());
-      if (matchedSrv) {
-        wizardState.serviceId = matchedSrv.id;
-        wizardState.serviceDuration = matchedSrv.duration;
-        wizardState.servicePrice = matchedSrv.price;
-        wizardState.serviceRoom = matchedSrv.room;
-        wizardState.serviceIcon = matchedSrv.icon;
+  // Case A: User is rescheduling an existing appointment
+  if (reschedParam) {
+    if (bookingState.rescheduleId !== reschedParam) {
+      const existing = getUserAppointmentById(user.id, reschedParam);
+      if (existing) {
+        bookingState.rescheduleId = reschedParam;
+        bookingState.confirmedAppt = null;
+        bookingState.serviceName = existing.service;
+        
+        const matchedSrv = siteData.services.find(s => 
+          s.id === existing.serviceId || 
+          s.title.toLowerCase() === (existing.service || '').toLowerCase()
+        ) || siteData.services[0];
+
+        if (matchedSrv) {
+          bookingState.serviceId = matchedSrv.id;
+          bookingState.serviceName = matchedSrv.title;
+          bookingState.serviceDuration = matchedSrv.duration;
+          bookingState.servicePrice = matchedSrv.price;
+          bookingState.serviceRoom = matchedSrv.room;
+          bookingState.serviceIcon = matchedSrv.icon;
+          bookingState.serviceImage = matchedSrv.image;
+        }
+
+        bookingState.petId = existing.petId;
+        bookingState.petName = existing.petName;
+        bookingState.petSpecies = existing.species;
+        bookingState.petPhoto = existing.petPhoto;
+        bookingState.doctorName = existing.veterinarian;
+        bookingState.doctorTitle = existing.vetTitle;
+        bookingState.doctorImage = existing.vetImage;
+        
+        const matchedDoc = siteData.veterinarians.find(v => 
+          v.id === existing.veterinarianId || 
+          v.name.toLowerCase() === (existing.veterinarian || '').toLowerCase()
+        );
+        if (matchedDoc) {
+          bookingState.veterinarianId = matchedDoc.id;
+        } else {
+          bookingState.veterinarianId = 'any';
+        }
+
+        bookingState.date = existing.date;
+        bookingState.time = existing.time;
+        bookingState.notes = existing.notes || '';
+        bookingState.currentStep = 4; // Start at date/time for reschedule
       }
-      wizardState.petId = existing.petId;
-      wizardState.petName = existing.petName;
-      wizardState.petSpecies = existing.species;
-      wizardState.petPhoto = existing.petPhoto;
-      wizardState.doctorName = existing.veterinarian;
-      wizardState.doctorTitle = existing.vetTitle;
-      wizardState.doctorImage = existing.vetImage;
-      const matchedDoc = siteData.veterinarians.find(v => v.name.toLowerCase() === (existing.veterinarian || '').toLowerCase());
-      if (matchedDoc) {
-        wizardState.doctorId = matchedDoc.id;
-      }
-      wizardState.date = existing.date;
-      wizardState.time = existing.time;
-      wizardState.notes = existing.notes || '';
-      // Default to Date & Time step directly when rescheduling
-      wizardState.currentStep = 4;
     }
+    return;
   }
 
-  // Service parameter
+  // Case B: Fresh New Booking Flow
+  // If previously in confirmed state or reschedule mode, reset to clean state
+  if (bookingState.rescheduleId !== null || bookingState.confirmedAppt !== null) {
+    bookingState = getInitialBookingState();
+  }
+
+  // Check URL query parameters for fresh booking pre-selections
   const srvParam = params.get('service') || params.get('serviceId');
   if (srvParam) {
-    const foundSrv = siteData.services.find(s => s.id === srvParam || s.title.toLowerCase().includes(srvParam.toLowerCase()));
-    if (foundSrv) {
-      wizardState.serviceId = foundSrv.id;
-      wizardState.serviceName = foundSrv.title;
-      wizardState.serviceDuration = foundSrv.duration;
-      wizardState.servicePrice = foundSrv.price;
-      wizardState.serviceRoom = foundSrv.room;
-      wizardState.serviceIcon = foundSrv.icon;
-      wizardState.serviceImage = foundSrv.image;
+    const foundSrv = getServiceById(srvParam);
+    if (foundSrv && bookingState.serviceId !== foundSrv.id) {
+      applyServiceToState(foundSrv);
     }
   }
 
-  // Doctor parameter
   const docParam = params.get('doctor') || params.get('doctorId');
   if (docParam) {
     const foundDoc = getDoctorById(docParam);
-    if (foundDoc) {
-      wizardState.doctorId = foundDoc.id;
-      wizardState.doctorName = foundDoc.name;
-      wizardState.doctorTitle = foundDoc.title;
-      wizardState.doctorImage = foundDoc.image;
+    if (foundDoc && bookingState.veterinarianId !== foundDoc.id) {
+      bookingState.veterinarianId = foundDoc.id;
+      bookingState.doctorName = foundDoc.name;
+      bookingState.doctorTitle = foundDoc.title;
+      bookingState.doctorImage = foundDoc.image;
     }
   }
 
-  // Pet parameter
   const petParam = params.get('petId');
   if (petParam && pets.length > 0) {
     const foundPet = pets.find(p => p.id === petParam);
-    if (foundPet) {
-      wizardState.petId = foundPet.id;
-      wizardState.petName = foundPet.name;
-      wizardState.petSpecies = foundPet.species;
-      wizardState.petBreed = foundPet.breed;
-      wizardState.petPhoto = foundPet.photo;
+    if (foundPet && bookingState.petId !== foundPet.id) {
+      bookingState.petId = foundPet.id;
+      bookingState.petName = foundPet.name;
+      bookingState.petSpecies = foundPet.species;
+      bookingState.petBreed = foundPet.breed;
+      bookingState.petPhoto = foundPet.photo;
     }
   }
+}
+
+function applyServiceToState(srv) {
+  bookingState.serviceId = srv.id;
+  bookingState.serviceName = srv.title;
+  bookingState.serviceDuration = srv.duration;
+  bookingState.servicePrice = srv.price;
+  bookingState.serviceRoom = srv.room;
+  bookingState.serviceIcon = srv.icon;
+  bookingState.serviceImage = srv.image;
 }
 
 // ----------------------------------------------------
@@ -254,7 +289,7 @@ function renderProgressBar(currentStep) {
 // CURRENT STEP DISPATCHER
 // ----------------------------------------------------
 function renderCurrentStep(user, pets) {
-  switch (wizardState.currentStep) {
+  switch (bookingState.currentStep) {
     case 1:
       return renderStep1Service();
     case 2:
@@ -288,7 +323,7 @@ function renderStep1Service() {
 
       <div class="booking-services-grid">
         ${siteData.services.map(srv => {
-          const isSelected = srv.id === wizardState.serviceId || srv.title === wizardState.serviceName;
+          const isSelected = srv.id === bookingState.serviceId;
 
           return `
             <div class="booking-service-card ${isSelected ? 'selected' : ''}" data-service-id="${srv.id}">
@@ -353,6 +388,16 @@ function renderStep2Pet(pets) {
         </button>
       </div>
 
+      <!-- Service Highlight Banner -->
+      <div style="background: var(--color-warm-cream); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border-left: 4px solid var(--color-forest-green); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 0.92rem; color: var(--color-forest-green);">
+          <span>Selected Service: <strong>${bookingState.serviceName}</strong> (${bookingState.serviceDuration} • ${bookingState.servicePrice})</span>
+        </div>
+        <button type="button" class="btn btn-outline" id="step2-change-service-btn" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;">
+          <span>Change</span>
+        </button>
+      </div>
+
       ${pets.length === 0 ? `
         <div style="background: var(--color-warm-cream); padding: 3rem 2rem; border-radius: var(--radius-xl); border: 2px dashed var(--color-sage-green); text-align: center;">
           <i class="fa-solid fa-paw" style="font-size: 3rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
@@ -368,7 +413,7 @@ function renderStep2Pet(pets) {
       ` : `
         <div class="booking-pets-grid">
           ${pets.map(p => {
-            const isSelected = p.id === wizardState.petId;
+            const isSelected = p.id === bookingState.petId;
 
             return `
               <div class="booking-pet-card ${isSelected ? 'selected' : ''}" data-pet-id="${p.id}">
@@ -412,7 +457,7 @@ function renderStep2Pet(pets) {
 // STEP 3: SELECT VETERINARIAN
 // ----------------------------------------------------
 function renderStep3Doctor() {
-  const isAnySelected = wizardState.doctorId === 'any' || wizardState.doctorName.toLowerCase().includes('any available');
+  const isAnySelected = bookingState.veterinarianId === 'any' || bookingState.doctorName.toLowerCase().includes('any available');
 
   return `
     <div class="profile-card-box animate-fade-up">
@@ -446,29 +491,30 @@ function renderStep3Doctor() {
       <!-- Specific Veterinarians Grid -->
       <div class="booking-doctors-grid">
         ${siteData.veterinarians.map(v => {
-          const isSelected = v.id === wizardState.doctorId || v.name === wizardState.doctorName;
+          const isSelected = v.id === bookingState.veterinarianId || v.name === bookingState.doctorName;
 
           return `
             <div class="booking-doctor-card ${isSelected ? 'selected' : ''}" data-doctor-id="${v.id}">
               <img src="${v.image}" alt="${v.name}" class="booking-doctor-avatar">
               
               <div style="flex-grow: 1; overflow: hidden;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.15rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
                   <h3 style="font-size: 1.05rem; color: var(--color-forest-green); margin: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${v.name}</h3>
-                  ${isSelected ? '<i class="fa-solid fa-circle-check" style="color: var(--color-forest-green); font-size: 1.05rem;"></i>' : ''}
+                  ${isSelected ? '<i class="fa-solid fa-circle-check" style="color: var(--color-forest-green); font-size: 1.1rem;"></i>' : ''}
                 </div>
                 
-                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-soft-coral-hover); display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                  ${v.badge || v.title}
+                <span style="font-size: 0.82rem; color: var(--color-charcoal-muted); display: block; margin-bottom: 0.25rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                  ${v.title}
                 </span>
-                
-                <span style="font-size: 0.75rem; color: var(--color-charcoal-light); display: block; margin-top: 0.2rem;">
-                  <i class="fa-solid fa-medal" style="color: #DEB853;"></i> ${v.experience}
-                </span>
-                
-                <span style="font-size: 0.75rem; color: #2E7D32; font-weight: 600; display: block; margin-top: 0.2rem;">
-                  <i class="fa-solid fa-calendar-check"></i> ${v.availability || 'Available Daily'}
-                </span>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem;">
+                  <span style="background: var(--color-warm-cream); color: var(--color-forest-green); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-weight: 600;">
+                    <i class="fa-solid fa-award" style="color: #DEB853;"></i> ${v.experience}
+                  </span>
+                  <span style="color: var(--color-sage-green-dark); font-weight: 600;">
+                    <i class="fa-solid fa-circle" style="font-size: 0.5rem; color: #27AE60;"></i> Available
+                  </span>
+                </div>
               </div>
             </div>
           `;
@@ -491,32 +537,34 @@ function renderStep3Doctor() {
 }
 
 // ----------------------------------------------------
-// STEP 4: DATE & TIME SELECTION
+// STEP 4: SELECT DATE & TIME SLOTS
 // ----------------------------------------------------
 function renderStep4DateTime() {
-  const doctorQuery = wizardState.doctorId === 'any' ? null : wizardState.doctorName;
-  const slotAvailability = getAvailableSlotsForDoctorAndDate(doctorQuery, wizardState.date, wizardState.rescheduleId);
+  const slotAvailability = getAvailableSlotsForDoctorAndDate(
+    bookingState.doctorName,
+    bookingState.date,
+    bookingState.rescheduleId
+  );
 
   return `
     <div class="profile-card-box animate-fade-up">
       <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
         <div class="section-subhead-title">
           <i class="fa-solid fa-calendar-days" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
-          <h2 style="font-size: 1.35rem; margin: 0;">4. Select Date & Available Time Slot</h2>
+          <h2 style="font-size: 1.35rem; margin: 0;">4. Select Date & Time Slot</h2>
         </div>
-        <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Real-time appointment schedule</span>
+        <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Real-time hospital availability</span>
       </div>
 
       <div class="booking-datetime-layout">
-        
         <!-- Left: Interactive Calendar Widget -->
         <div class="petzy-calendar-box">
           <div class="calendar-header">
             <button type="button" class="calendar-nav-btn" id="cal-prev-month" aria-label="Previous Month">
               <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <h3 class="calendar-month-title" id="cal-month-label">
-              ${MONTH_NAMES[wizardState.calendarMonth]} ${wizardState.calendarYear}
+            <h3 class="calendar-title" style="margin: 0;">
+              ${MONTH_NAMES[bookingState.calendarMonth]} ${bookingState.calendarYear}
             </h3>
             <button type="button" class="calendar-nav-btn" id="cal-next-month" aria-label="Next Month">
               <i class="fa-solid fa-chevron-right"></i>
@@ -534,7 +582,7 @@ function renderStep4DateTime() {
           </div>
 
           <div class="calendar-days-grid" id="calendar-days-container">
-            ${renderCalendarDays(wizardState.calendarYear, wizardState.calendarMonth, wizardState.date)}
+            ${renderCalendarDays(bookingState.calendarYear, bookingState.calendarMonth, bookingState.date)}
           </div>
 
           <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--color-charcoal-muted);">
@@ -558,7 +606,7 @@ function renderStep4DateTime() {
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border-subtle);">
             <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-forest-green);">
               <i class="fa-solid fa-clock" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
-              Available Slots for ${formatDateHuman(wizardState.date)}
+              Available Slots for ${formatDateHuman(bookingState.date)}
             </span>
           </div>
 
@@ -608,7 +656,7 @@ function renderStep4DateTime() {
             <label class="form-label" for="booking-notes-input" style="font-size: 0.85rem;">
               Reason for Visit & Symptoms (Optional)
             </label>
-            <textarea id="booking-notes-input" class="form-textarea" rows="2" placeholder="e.g. Annual health checkup, vaccine boosters, routine physical, or check mild ear scratching...">${wizardState.notes}</textarea>
+            <textarea id="booking-notes-input" class="form-textarea" rows="2" placeholder="e.g. Annual health checkup, vaccine boosters, routine physical, or check mild ear scratching...">${bookingState.notes}</textarea>
           </div>
         </div>
 
@@ -620,7 +668,7 @@ function renderStep4DateTime() {
           <span>Back to Veterinarian</span>
         </button>
         
-        <button type="button" class="btn btn-teal btn-lg" id="step4-next-btn" ${!slotAvailability.hasAvailableSlots || !wizardState.time ? 'disabled' : ''}>
+        <button type="button" class="btn btn-teal btn-lg" id="step4-next-btn" ${!slotAvailability.hasAvailableSlots ? 'disabled' : ''}>
           <span>Review Booking Summary</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
@@ -630,7 +678,7 @@ function renderStep4DateTime() {
 }
 
 function renderTimeSlotButton(slot) {
-  const isSelected = slot.time === wizardState.time && !slot.isBooked;
+  const isSelected = slot.time === bookingState.time;
 
   if (slot.isBooked) {
     return `
@@ -688,9 +736,9 @@ function renderCalendarDays(year, month, selectedDateStr) {
 // STEP 5: BOOKING SUMMARY & REVIEW
 // ----------------------------------------------------
 function renderStep5Summary() {
-  const assignedDoc = wizardState.doctorId === 'any'
-    ? findAvailableDoctorForSlot(wizardState.date, wizardState.time, wizardState.rescheduleId)
-    : { name: wizardState.doctorName, title: wizardState.doctorTitle, image: wizardState.doctorImage };
+  const assignedDoc = (bookingState.veterinarianId === 'any' || bookingState.doctorName.toLowerCase().includes('any available'))
+    ? findAvailableDoctorForSlot(bookingState.date, bookingState.time, bookingState.rescheduleId)
+    : { name: bookingState.doctorName, title: bookingState.doctorTitle, image: bookingState.doctorImage };
 
   return `
     <div class="profile-card-box animate-fade-up" style="max-width: 820px; margin: 0 auto;">
@@ -705,11 +753,11 @@ function renderStep5Summary() {
       <!-- Spotlight Header with Pet & Doctor -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; background: var(--color-warm-cream); padding: 1.25rem; border-radius: var(--radius-xl); border: 1px solid var(--color-border);">
         <div style="display: flex; align-items: center; gap: 0.85rem;">
-          <img src="${wizardState.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80'}" alt="${wizardState.petName}" style="width: 52px; height: 52px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green);">
+          <img src="${bookingState.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80'}" alt="${bookingState.petName}" style="width: 52px; height: 52px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green);">
           <div>
             <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Patient</span>
-            <h4 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0;">${wizardState.petName || 'My Pet'}</h4>
-            <span style="font-size: 0.82rem; color: var(--color-charcoal-muted);">${wizardState.petSpecies} • ${wizardState.petBreed}</span>
+            <h4 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0;">${bookingState.petName || 'My Pet'}</h4>
+            <span style="font-size: 0.82rem; color: var(--color-charcoal-muted);">${bookingState.petSpecies} • ${bookingState.petBreed}</span>
           </div>
         </div>
 
@@ -728,32 +776,32 @@ function renderStep5Summary() {
         <tbody>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-stethoscope" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Clinical Service</td>
-            <td><strong>${wizardState.serviceName}</strong></td>
+            <td><strong>${bookingState.serviceName}</strong></td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-clock" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Estimated Duration</td>
-            <td>${wizardState.serviceDuration || '30 Mins'}</td>
+            <td>${bookingState.serviceDuration || '30 Mins'}</td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-calendar" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i> Appointment Date</td>
-            <td><strong>${formatDateHuman(wizardState.date)}</strong></td>
+            <td><strong>${formatDateHuman(bookingState.date)}</strong></td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-clock-rotate-left" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i> Scheduled Time</td>
-            <td><strong style="color: var(--color-soft-coral-hover); font-size: 1.05rem;">${wizardState.time}</strong></td>
+            <td><strong style="color: var(--color-soft-coral-hover); font-size: 1.05rem;">${bookingState.time}</strong></td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-hospital" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Hospital Location</td>
-            <td>PETZY Central Hospital (${wizardState.serviceRoom || 'Suite 2B'})</td>
+            <td>PETZY Central Hospital (${bookingState.serviceRoom || 'Suite 2B'})</td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Consultation Fee</td>
-            <td><strong style="color: var(--color-forest-green); font-size: 1.15rem;">${wizardState.servicePrice || '$55'}</strong></td>
+            <td><strong style="color: var(--color-forest-green); font-size: 1.15rem;">${bookingState.servicePrice || '$55'}</strong></td>
           </tr>
-          ${wizardState.notes ? `
+          ${bookingState.notes ? `
             <tr class="booking-summary-row">
               <td><i class="fa-solid fa-clipboard-question" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Clinical Notes</td>
-              <td style="font-weight: 500; font-size: 0.88rem; color: var(--color-charcoal);">${wizardState.notes}</td>
+              <td style="font-weight: 500; font-size: 0.88rem; color: var(--color-charcoal);">${bookingState.notes}</td>
             </tr>
           ` : ''}
         </tbody>
@@ -773,7 +821,7 @@ function renderStep5Summary() {
         
         <button type="button" class="btn btn-coral btn-lg" id="step5-confirm-btn" style="min-width: 240px; justify-content: center;">
           <i class="fa-solid fa-calendar-check"></i>
-          <span>${wizardState.rescheduleId ? 'Confirm Reschedule' : 'Confirm Appointment'}</span>
+          <span>${bookingState.rescheduleId ? 'Confirm Reschedule' : 'Confirm Appointment'}</span>
         </button>
       </div>
     </div>
@@ -784,14 +832,14 @@ function renderStep5Summary() {
 // STEP 6: CONFIRMATION SUCCESS SCREEN
 // ----------------------------------------------------
 function renderStep6Confirmed() {
-  const appt = wizardState.confirmedAppt || {
+  const appt = bookingState.confirmedAppt || {
     id: generateAppointmentId(),
-    service: wizardState.serviceName,
-    petName: wizardState.petName,
-    veterinarian: wizardState.doctorName,
-    date: wizardState.date,
-    time: wizardState.time,
-    room: wizardState.serviceRoom
+    service: bookingState.serviceName,
+    petName: bookingState.petName,
+    veterinarian: bookingState.doctorName,
+    date: bookingState.date,
+    time: bookingState.time,
+    room: bookingState.serviceRoom
   };
 
   return `
@@ -805,11 +853,11 @@ function renderStep6Confirmed() {
 
       <div class="section-badge" style="margin-bottom: 0.5rem; background: var(--color-sage-green-soft); color: var(--color-forest-green);">
         <i class="fa-solid fa-circle-check"></i>
-        <span>${wizardState.rescheduleId ? 'Appointment Rescheduled' : 'Booking Confirmed'}</span>
+        <span>${bookingState.rescheduleId ? 'Appointment Rescheduled' : 'Booking Confirmed'}</span>
       </div>
 
       <h2 style="font-size: 2.1rem; color: var(--color-forest-green); margin-bottom: 0.4rem;">
-        ${wizardState.rescheduleId ? 'Your Appointment Has Been Rescheduled!' : 'Appointment Confirmed!'}
+        ${bookingState.rescheduleId ? 'Your Appointment Has Been Rescheduled!' : 'Appointment Confirmed!'}
       </h2>
       <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">
         Your veterinary visit has been successfully scheduled. We look forward to welcoming you and <strong>${appt.petName}</strong>.
@@ -847,7 +895,7 @@ function renderStep6Confirmed() {
           <i class="fa-solid fa-circle-info"></i>
           <span>View Appointment</span>
         </button>
-        <a href="#/dashboard?tab=appointments" class="btn btn-teal btn-lg">
+        <a href="#/dashboard?tab=appointments" class="btn btn-teal btn-lg" id="confirmed-back-dashboard-btn">
           <i class="fa-solid fa-table-columns"></i>
           <span>Back to Dashboard</span>
         </a>
@@ -878,8 +926,8 @@ export function setupScheduleAppointmentEvents() {
   document.querySelectorAll('.booking-step-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = parseInt(btn.getAttribute('data-step-target'), 10);
-      if (target && target <= wizardState.currentStep) {
-        wizardState.currentStep = target;
+      if (target && target <= bookingState.currentStep) {
+        bookingState.currentStep = target;
         refreshWizard();
       }
     });
@@ -889,27 +937,25 @@ export function setupScheduleAppointmentEvents() {
   // STEP 1 EVENTS (Service Selection)
   // ----------------------------------------------------
   document.querySelectorAll('.booking-service-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
       const srvId = card.getAttribute('data-service-id');
-      const found = siteData.services.find(s => s.id === srvId);
+      const found = getServiceById(srvId);
       if (found) {
-        wizardState.serviceId = found.id;
-        wizardState.serviceName = found.title;
-        wizardState.serviceDuration = found.duration;
-        wizardState.servicePrice = found.price;
-        wizardState.serviceRoom = found.room;
-        wizardState.serviceIcon = found.icon;
-        wizardState.serviceImage = found.image;
-        
-        // Auto advance to Step 2
-        wizardState.currentStep = 2;
+        applyServiceToState(found);
+        // Advance to Step 2
+        bookingState.currentStep = 2;
         refreshWizard();
       }
     });
   });
 
   document.getElementById('step1-next-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 2;
+    if (!bookingState.serviceId) {
+      const defaultSrv = siteData.services[0];
+      applyServiceToState(defaultSrv);
+    }
+    bookingState.currentStep = 2;
     refreshWizard();
   });
 
@@ -917,31 +963,37 @@ export function setupScheduleAppointmentEvents() {
   // STEP 2 EVENTS (Pet Selection)
   // ----------------------------------------------------
   document.querySelectorAll('.booking-pet-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
       const pId = card.getAttribute('data-pet-id');
       const found = pets.find(p => p.id === pId);
       if (found) {
-        wizardState.petId = found.id;
-        wizardState.petName = found.name;
-        wizardState.petSpecies = found.species;
-        wizardState.petBreed = found.breed;
-        wizardState.petPhoto = found.photo;
+        bookingState.petId = found.id;
+        bookingState.petName = found.name;
+        bookingState.petSpecies = found.species;
+        bookingState.petBreed = found.breed;
+        bookingState.petPhoto = found.photo;
 
         // Auto advance to Step 3
-        wizardState.currentStep = 3;
+        bookingState.currentStep = 3;
         refreshWizard();
       }
     });
   });
 
+  document.getElementById('step2-change-service-btn')?.addEventListener('click', () => {
+    bookingState.currentStep = 1;
+    refreshWizard();
+  });
+
   document.getElementById('step2-back-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 1;
+    bookingState.currentStep = 1;
     refreshWizard();
   });
 
   document.getElementById('step2-next-btn')?.addEventListener('click', () => {
-    if (wizardState.petId) {
-      wizardState.currentStep = 3;
+    if (bookingState.petId) {
+      bookingState.currentStep = 3;
       refreshWizard();
     } else {
       showToast('Please select a pet to continue.', 'coral', 'fa-solid fa-paw');
@@ -951,11 +1003,11 @@ export function setupScheduleAppointmentEvents() {
   const handleAddPetModal = () => {
     openPetModal(null, (newPet) => {
       if (newPet) {
-        wizardState.petId = newPet.id;
-        wizardState.petName = newPet.name;
-        wizardState.petSpecies = newPet.species;
-        wizardState.petBreed = newPet.breed;
-        wizardState.petPhoto = newPet.photo;
+        bookingState.petId = newPet.id;
+        bookingState.petName = newPet.name;
+        bookingState.petSpecies = newPet.species;
+        bookingState.petBreed = newPet.breed;
+        bookingState.petPhoto = newPet.photo;
         showToast(`${newPet.name} added to your account!`, 'sage', 'fa-solid fa-paw');
       }
       refreshWizard();
@@ -969,36 +1021,37 @@ export function setupScheduleAppointmentEvents() {
   // STEP 3 EVENTS (Doctor Selection)
   // ----------------------------------------------------
   document.querySelectorAll('.booking-doctor-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
       const docId = card.getAttribute('data-doctor-id');
       if (docId === 'any') {
-        wizardState.doctorId = 'any';
-        wizardState.doctorName = 'Any Available Veterinarian';
-        wizardState.doctorTitle = 'Assigned based on schedule';
-        wizardState.doctorImage = '';
+        bookingState.veterinarianId = 'any';
+        bookingState.doctorName = 'Any Available Veterinarian';
+        bookingState.doctorTitle = 'Assigned based on schedule';
+        bookingState.doctorImage = '';
       } else {
-        const found = siteData.veterinarians.find(v => v.id === docId);
+        const found = getDoctorById(docId);
         if (found) {
-          wizardState.doctorId = found.id;
-          wizardState.doctorName = found.name;
-          wizardState.doctorTitle = found.title;
-          wizardState.doctorImage = found.image;
+          bookingState.veterinarianId = found.id;
+          bookingState.doctorName = found.name;
+          bookingState.doctorTitle = found.title;
+          bookingState.doctorImage = found.image;
         }
       }
 
       // Auto advance to Step 4
-      wizardState.currentStep = 4;
+      bookingState.currentStep = 4;
       refreshWizard();
     });
   });
 
   document.getElementById('step3-back-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 2;
+    bookingState.currentStep = 2;
     refreshWizard();
   });
 
   document.getElementById('step3-next-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 4;
+    bookingState.currentStep = 4;
     refreshWizard();
   });
 
@@ -1006,21 +1059,21 @@ export function setupScheduleAppointmentEvents() {
   // STEP 4 EVENTS (Date & Time Selection + Calendar Navigation)
   // ----------------------------------------------------
   document.getElementById('cal-prev-month')?.addEventListener('click', () => {
-    if (wizardState.calendarMonth === 0) {
-      wizardState.calendarMonth = 11;
-      wizardState.calendarYear -= 1;
+    if (bookingState.calendarMonth === 0) {
+      bookingState.calendarMonth = 11;
+      bookingState.calendarYear -= 1;
     } else {
-      wizardState.calendarMonth -= 1;
+      bookingState.calendarMonth -= 1;
     }
     refreshWizard();
   });
 
   document.getElementById('cal-next-month')?.addEventListener('click', () => {
-    if (wizardState.calendarMonth === 11) {
-      wizardState.calendarMonth = 0;
-      wizardState.calendarYear += 1;
+    if (bookingState.calendarMonth === 11) {
+      bookingState.calendarMonth = 0;
+      bookingState.calendarYear += 1;
     } else {
-      wizardState.calendarMonth += 1;
+      bookingState.calendarMonth += 1;
     }
     refreshWizard();
   });
@@ -1030,7 +1083,7 @@ export function setupScheduleAppointmentEvents() {
     cell.addEventListener('click', () => {
       const d = cell.getAttribute('data-date');
       if (d) {
-        wizardState.date = d;
+        bookingState.date = d;
         refreshWizard();
       }
     });
@@ -1041,7 +1094,7 @@ export function setupScheduleAppointmentEvents() {
     btn.addEventListener('click', () => {
       const t = btn.getAttribute('data-time');
       if (t) {
-        wizardState.time = t;
+        bookingState.time = t;
         document.querySelectorAll('.time-slot-pill').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         
@@ -1054,24 +1107,24 @@ export function setupScheduleAppointmentEvents() {
 
   // Clinical Notes input sync
   document.getElementById('booking-notes-input')?.addEventListener('input', (e) => {
-    wizardState.notes = e.target.value;
+    bookingState.notes = e.target.value;
   });
 
   document.getElementById('step4-back-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 3;
+    bookingState.currentStep = 3;
     refreshWizard();
   });
 
   document.getElementById('step4-next-btn')?.addEventListener('click', () => {
-    if (!wizardState.date) {
+    if (!bookingState.date) {
       showToast('Please pick a date on the calendar.', 'coral', 'fa-solid fa-calendar');
       return;
     }
-    if (!wizardState.time) {
+    if (!bookingState.time) {
       showToast('Please select an available time slot.', 'coral', 'fa-solid fa-clock');
       return;
     }
-    wizardState.currentStep = 5;
+    bookingState.currentStep = 5;
     refreshWizard();
   });
 
@@ -1079,19 +1132,19 @@ export function setupScheduleAppointmentEvents() {
   // STEP 5 EVENTS (Summary Confirmation)
   // ----------------------------------------------------
   document.getElementById('step5-back-btn')?.addEventListener('click', () => {
-    wizardState.currentStep = 4;
+    bookingState.currentStep = 4;
     refreshWizard();
   });
 
   document.getElementById('step5-confirm-btn')?.addEventListener('click', () => {
     // Resolve doctor if "Any"
-    let finalDocName = wizardState.doctorName;
-    let finalDocTitle = wizardState.doctorTitle;
-    let finalDocImage = wizardState.doctorImage;
-    let finalDocId = wizardState.doctorId;
+    let finalDocName = bookingState.doctorName;
+    let finalDocTitle = bookingState.doctorTitle;
+    let finalDocImage = bookingState.doctorImage;
+    let finalDocId = bookingState.veterinarianId;
 
-    if (wizardState.doctorId === 'any' || finalDocName.toLowerCase().includes('any available')) {
-      const autoAssigned = findAvailableDoctorForSlot(wizardState.date, wizardState.time, wizardState.rescheduleId);
+    if (bookingState.veterinarianId === 'any' || finalDocName.toLowerCase().includes('any available')) {
+      const autoAssigned = findAvailableDoctorForSlot(bookingState.date, bookingState.time, bookingState.rescheduleId);
       finalDocName = autoAssigned.name;
       finalDocTitle = autoAssigned.title;
       finalDocImage = autoAssigned.image;
@@ -1099,43 +1152,43 @@ export function setupScheduleAppointmentEvents() {
     }
 
     const apptPayload = {
-      petId: wizardState.petId,
-      petName: wizardState.petName,
-      petPhoto: wizardState.petPhoto,
-      species: wizardState.petSpecies,
-      serviceId: wizardState.serviceId,
-      service: wizardState.serviceName,
-      duration: wizardState.serviceDuration,
-      price: wizardState.servicePrice,
+      petId: bookingState.petId,
+      petName: bookingState.petName,
+      petPhoto: bookingState.petPhoto,
+      species: bookingState.petSpecies,
+      serviceId: bookingState.serviceId,
+      service: bookingState.serviceName,
+      duration: bookingState.serviceDuration,
+      price: bookingState.servicePrice,
       veterinarianId: finalDocId,
       veterinarian: finalDocName,
       vetTitle: finalDocTitle,
       vetImage: finalDocImage,
-      date: wizardState.date,
-      time: wizardState.time,
-      room: wizardState.serviceRoom || 'Consultation Suite 2B',
-      notes: wizardState.notes || 'Routine examination and wellness consultation.',
+      date: bookingState.date,
+      time: bookingState.time,
+      room: bookingState.serviceRoom || 'Consultation Suite 2B',
+      notes: bookingState.notes || 'Routine examination and wellness consultation.',
       diagnosisSummary: 'Scheduled visit. Awaiting clinical examination.'
     };
 
     let confirmed;
-    if (wizardState.rescheduleId) {
-      confirmed = rescheduleUserAppointment(user.id, wizardState.rescheduleId, {
-        date: wizardState.date,
-        time: wizardState.time,
-        notes: wizardState.notes
+    if (bookingState.rescheduleId) {
+      confirmed = rescheduleUserAppointment(user.id, bookingState.rescheduleId, {
+        date: bookingState.date,
+        time: bookingState.time,
+        notes: bookingState.notes
       });
       if (!confirmed) {
-        confirmed = saveUserAppointment(user.id, { ...apptPayload, id: wizardState.rescheduleId, status: 'Rescheduled' });
+        confirmed = saveUserAppointment(user.id, { ...apptPayload, id: bookingState.rescheduleId, status: 'Rescheduled' });
       }
-      showToast(`Appointment #${wizardState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
+      showToast(`Appointment #${bookingState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
     } else {
       confirmed = saveUserAppointment(user.id, apptPayload);
-      showToast(`Appointment confirmed for ${wizardState.petName} on ${wizardState.date}!`, 'sage', 'fa-solid fa-calendar-check');
+      showToast(`Appointment confirmed for ${bookingState.petName} on ${bookingState.date}!`, 'sage', 'fa-solid fa-calendar-check');
     }
 
-    wizardState.confirmedAppt = confirmed;
-    wizardState.currentStep = 6;
+    bookingState.confirmedAppt = confirmed;
+    bookingState.currentStep = 6;
     refreshWizard();
   });
 
@@ -1143,13 +1196,20 @@ export function setupScheduleAppointmentEvents() {
   // STEP 6 EVENTS (Confirmed Action Handlers)
   // ----------------------------------------------------
   document.getElementById('confirmed-view-details-btn')?.addEventListener('click', () => {
-    if (wizardState.confirmedAppt) {
-      openAppointmentModal(wizardState.confirmedAppt, () => {
+    if (bookingState.confirmedAppt) {
+      openAppointmentModal(bookingState.confirmedAppt, () => {
+        // Reset state and return to appointments tab
+        bookingState = getInitialBookingState();
         window.location.hash = '#/dashboard?tab=appointments';
       });
     } else {
+      bookingState = getInitialBookingState();
       window.location.hash = '#/dashboard?tab=appointments';
     }
+  });
+
+  document.getElementById('confirmed-back-dashboard-btn')?.addEventListener('click', () => {
+    bookingState = getInitialBookingState();
   });
 }
 

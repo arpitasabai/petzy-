@@ -77,7 +77,7 @@ export function renderServices() {
                 </ul>
 
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                  <a href="#/service-detail" class="btn btn-teal">
+                  <a href="#/service-detail?id=${srv.id}" class="btn btn-teal">
                     <span>View Service Inclusions</span>
                     <i class="fa-solid fa-arrow-right"></i>
                   </a>

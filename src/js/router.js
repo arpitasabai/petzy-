@@ -15,7 +15,7 @@ import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
 import { renderPetProfile, setupPetProfileEvents } from './pages/pet-profile.js';
 import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pages/schedule-appointment.js';
 import { updateActiveNav } from './components/header.js';
-import { getDoctorById } from './data.js';
+import { getDoctorById, getServiceById } from './data.js';
 
 const routes = {
   '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Because Every Paw Deserves the Best Care' },
@@ -71,7 +71,28 @@ export function handleRoute() {
     return;
   }
 
-  // 2. Query/Legacy based veterinarian-profile route: /veterinarian-profile?id=...
+  // 2. Dynamic service detail route: /service-detail?id=... or /services/:serviceId
+  if (cleanPath === '/service-detail' || (cleanPath.startsWith('/services/') && cleanPath.length > '/services/'.length)) {
+    let serviceId = null;
+    if (fullHash.includes('?id=')) {
+      serviceId = fullHash.split('?id=')[1]?.split('&')[0];
+    } else if (cleanPath.startsWith('/services/')) {
+      serviceId = cleanPath.replace('/services/', '').replace(/\/$/, '');
+    }
+    const service = getServiceById(serviceId);
+    
+    appRoot.innerHTML = renderServiceDetail(serviceId);
+    if (typeof setupServiceDetailEvents === 'function') {
+      setupServiceDetailEvents();
+    }
+
+    document.title = `${service.title} — PETZY`;
+    updateActiveNav('/services');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+
+  // 3. Query/Legacy based veterinarian-profile route: /veterinarian-profile?id=...
   if (cleanPath === '/veterinarian-profile') {
     let doctorId = null;
     if (fullHash.includes('?id=')) {

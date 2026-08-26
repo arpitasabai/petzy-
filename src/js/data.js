@@ -35,7 +35,7 @@ export const siteData = {
       duration: "30 Mins",
       price: "$55",
       room: "Consultation Suite 2B",
-      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80", // Doctor in medical scrubs with stethoscope performing examination on patient
+      image: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80",
       description: "Our comprehensive veterinary consultations focus on whole-pet health, early symptom detection, preventive lifestyle planning, and open communication with pet parents.",
       procedureDetail: "Physical exam with stethoscope auscultation, palpation, and temperature check.",
       features: [
@@ -43,6 +43,42 @@ export const siteData = {
         "Vital signs, cardiac auscultation, and abdominal palpation",
         "Nutritional counseling & weight management roadmaps",
         "Behavioral evaluations and personalized wellness guidance"
+      ],
+      inclusions: [
+        "Nose-to-Tail Physical Health Examination",
+        "Heart & Lung Auscultation with Stethoscope",
+        "Oral Cavity, Gum & Dental Assessment",
+        "Ophthalmic (Eye) & Otoscopic (Ear) Evaluation",
+        "Abdominal Palpation & Organ Health Check",
+        "Orthopedic Gait & Musculoskeletal Exam",
+        "Dermatological Skin & Coat Health Analysis",
+        "Custom Diet, Nutrition & Lifestyle Roadmap"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-shield-virus",
+          title: "Early Disease Detection",
+          desc: "Catches subtle cardiac, renal, or endocrine changes before symptoms worsen."
+        },
+        {
+          icon: "fa-solid fa-heart-pulse",
+          title: "Optimal Weight & Nutrition",
+          desc: "Preserves joint health and adds years of active vitality to your pet's life."
+        }
+      ],
+      faqs: [
+        {
+          question: "How long does a comprehensive consultation take?",
+          answer: "Our standard examination visits last between 30 to 45 minutes to ensure plenty of time for thorough evaluations and answering all your questions."
+        },
+        {
+          question: "What should I bring to my pet's consultation?",
+          answer: "Please bring past vaccination history, records of current medications, and any specific questions or dietary notes you have."
+        },
+        {
+          question: "Are diagnostic blood tests done during the same visit?",
+          answer: "Yes! With our in-house laboratory suite, routine blood chemistry, hematology, and urinalysis results are available within 15–20 minutes."
+        }
       ]
     },
     {
@@ -57,7 +93,7 @@ export const siteData = {
       duration: "30 Mins",
       price: "$45",
       room: "Immunization Suite 1",
-      image: "https://images.pexels.com/photos/6816869/pexels-photo-6816869.jpeg?auto=compress&cs=tinysrgb&w=800", // A veterinarian holding an injection for a cat (Pexels 6816869)
+      image: "https://images.pexels.com/photos/6816869/pexels-photo-6816869.jpeg?auto=compress&cs=tinysrgb&w=800",
       description: "Customized immunization schedules developed in strict accordance with AAHA and AAFP guidelines, with gentle stress-free administration for puppies, kittens, and companion animals.",
       procedureDetail: "Sterile micro-needle immunization with pre-vaccine temperature and lymph node screening.",
       features: [
@@ -65,6 +101,42 @@ export const siteData = {
         "Lifestyle-based risk assessments (Bordetella, Lyme, Lepto)",
         "Pre-vaccine antibody titer testing available",
         "Complimentary post-vaccine health monitoring log"
+      ],
+      inclusions: [
+        "Pre-Vaccine Physical & Temperature Screening",
+        "Core Canine (DHPP, Rabies) or Feline (FVRCP, Rabies) Vaccine",
+        "Lifestyle Risk Assessment (Bordetella, Lyme, Lepto)",
+        "Sterile Single-Use Ultra-Fine Micro-Needle Injection",
+        "Pre-Vaccine Antibody Titer Testing Available",
+        "Official Certified Vaccination Certificate",
+        "Digital Vaccine Record Synchronized to Parent Portal",
+        "Post-Vaccine 15-Minute Monitoring & Care Protocol"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-shield-halved",
+          title: "Lifetime Disease Immunity",
+          desc: "Protects against life-threatening viral infections like Parvovirus, Distemper, and Rabies."
+        },
+        {
+          icon: "fa-solid fa-passport",
+          title: "Boarding & Travel Compliance",
+          desc: "Meets all legal requirements for boarding kennels, daycares, and interstate/international travel."
+        }
+      ],
+      faqs: [
+        {
+          question: "How often does my pet need booster vaccinations?",
+          answer: "Core vaccines like Rabies and DHPP/FVRCP follow a 1-year or 3-year schedule based on age, lifestyle, and previous medical history."
+        },
+        {
+          question: "Are there any side effects after vaccination?",
+          answer: "Mild sleepiness or slight tenderness at the injection site for 24 hours is normal. Severe reactions are extremely rare and monitored carefully."
+        },
+        {
+          question: "Do strictly indoor cats need vaccinations?",
+          answer: "Yes. Rabies is required by law, and airborne viruses like FVRCP can be tracked indoors on footwear, clothing, or through open window screens."
+        }
       ]
     },
     {
@@ -79,7 +151,7 @@ export const siteData = {
       duration: "60 Mins",
       price: "$65",
       room: "Spa & Grooming Wing",
-      image: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80", // Pet receiving soothing shampoo bath and hydrotherapy in grooming salon
+      image: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80",
       description: "Fear-Free certified grooming sessions utilizing hypoallergenic organic botanicals, non-slip hydraulic tables, and calming aromatics for dogs and cats.",
       procedureDetail: "Warm hydro-surge massage bathing with botanical wash, fluff dry, and paw conditioning.",
       features: [
@@ -87,6 +159,42 @@ export const siteData = {
         "Complete undercoat deshedding and fluff blow-dry",
         "Gentle nail trimming, smoothing, and paw balm massage",
         "Sanitary ear cleansing and breath freshening"
+      ],
+      inclusions: [
+        "Warm Hydro-Surge Therapeutic Bathing",
+        "Hypoallergenic Organic Botanical Shampoo & Conditioning",
+        "Complete Undercoat Deshedding & De-matting",
+        "Gentle High-Velocity Warm Air Fluff Blow-Dry",
+        "Precision Breed-Specific Styling & Sanitary Trim",
+        "Ultrasonic Ear Cleansing & Ear Canal Hygiene",
+        "Gentle Nail Trimming & Smoothing Dremel",
+        "Soothing Organic Paw Balm Massage & Breath Refresh"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-spa",
+          title: "Healthy Skin Barrier & Dermal Relief",
+          desc: "Eliminates trapped allergens, soothes itchy hot spots, and reduces shedding by up to 80%."
+        },
+        {
+          icon: "fa-solid fa-magnifying-glass",
+          title: "Early Detection of Skin Conditions",
+          desc: "Professional groomers inspect skin folds, ears, and paws for early signs of cysts, fleas, or infections."
+        }
+      ],
+      faqs: [
+        {
+          question: "How long does a full spa grooming session take?",
+          answer: "Typically 60 to 90 minutes depending on your pet's breed size, coat density, and specific styling requested."
+        },
+        {
+          question: "How do you handle pets that get anxious during grooming?",
+          answer: "We use Fear-Free certified handling protocols, non-slip hydraulic tables, warm towels, and soothing natural lavender aromatics."
+        },
+        {
+          question: "How frequently should my pet be groomed?",
+          answer: "Most dogs benefit from professional grooming every 4 to 6 weeks, while short-haired companion cats benefit every 8 to 12 weeks."
+        }
       ]
     },
     {
@@ -101,7 +209,7 @@ export const siteData = {
       duration: "45 Mins",
       price: "$85",
       room: "Dental Suite A",
-      image: "https://images.pexels.com/photos/6234622/pexels-photo-6234622.jpeg?auto=compress&cs=tinysrgb&w=800", // A veterinarian checking a dog (Pexels 6234622)
+      image: "https://images.pexels.com/photos/6234622/pexels-photo-6234622.jpeg?auto=compress&cs=tinysrgb&w=800",
       description: "Advanced dental suites equipped with digital oral X-rays and precision ultrasonic scaling to treat plaque, tartar, and maintain healthy gums in companion pets.",
       procedureDetail: "Subgingival plaque removal with ultrasonic scaling and fluoride polishing.",
       features: [
@@ -109,6 +217,42 @@ export const siteData = {
         "Ultrasonic supragingival and subgingival scaling",
         "High-gloss fluoride enamel polishing",
         "Home oral hygiene coaching and safe dental chews"
+      ],
+      inclusions: [
+        "Comprehensive 360° Oral Cavity & Periodontal Grading",
+        "Full-Mouth Digital Dental Radiographs (X-rays)",
+        "Supragingival & Subgingival Ultrasonic Tartar Scaling",
+        "Periodontal Pocket Depth Measurement & Charting",
+        "High-Gloss Fluoride Enamel Buffing & Polishing",
+        "Antibacterial Chlorhexidine Oral Irrigation",
+        "Gingival Barrier Protectant Application",
+        "Personalized Home Dental Care Coaching & Dental Kit"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-tooth",
+          title: "Prevents Systemic Organ Disease",
+          desc: "Untreated oral bacteria can travel through the bloodstream to damage heart valves, kidneys, and liver."
+        },
+        {
+          icon: "fa-solid fa-face-smile",
+          title: "Eliminates Pain & Bad Breath",
+          desc: "Resolves painful gingivitis, inflamed gums, loose teeth, and restores fresh breath."
+        }
+      ],
+      faqs: [
+        {
+          question: "Why is anesthesia required for a thorough dental cleaning?",
+          answer: "Anesthesia allows complete scaling below the gumline and taking full X-rays safely without causing fear, stress, or sudden movement."
+        },
+        {
+          question: "How do I know if my pet has dental disease?",
+          answer: "Common signs include bad breath, yellow-brown tartar, red bleeding gums, dropping kibble, or pawing at the mouth."
+        },
+        {
+          question: "What can I do at home between professional cleanings?",
+          answer: "Daily enzymatic tooth brushing, veterinary dental water additives, and VOHC-approved dental chews help maintain clean teeth."
+        }
       ]
     },
     {
@@ -123,7 +267,7 @@ export const siteData = {
       duration: "90 Mins",
       price: "$250",
       room: "Sterile Surgical Suite 1",
-      image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&q=80", // Board-certified surgeon in surgical scrub suite with operating monitors and sterile lights
+      image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=800&q=80",
       description: "Equipped with multiparameter continuous anesthesia monitoring, warming blankets, and dedicated veterinary surgical nursing teams for all surgical operations.",
       procedureDetail: "Sterile surgical theater with continuous vital signs, ECG, and SpO2 monitoring.",
       features: [
@@ -131,6 +275,42 @@ export const siteData = {
         "Soft tissue surgery (mass removals, gastrointestinal procedures)",
         "Dedicated post-op recovery warming suites",
         "Multimodal pain management and recovery check-ins"
+      ],
+      inclusions: [
+        "Comprehensive Pre-Anesthetic Bloodwork & ECG Screening",
+        "Dedicated Veterinary Anesthetist & Surgical Nurse",
+        "Multiparameter Continuous Vital Signs Monitoring (ECG, SpO2, Blood Pressure)",
+        "Sterile Positive-Pressure Laminar Flow Operating Theater",
+        "Temperature-Controlled Warm Water Blankets (Bair Hugger)",
+        "Intravenous Fluid Support with Precision Infusion Pump",
+        "Multimodal Pre- & Post-Operative Pain Management",
+        "Dedicated Post-Op ICU Recovery Warming Suite"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-shield-heart",
+          title: "Maximum Surgical Safety Protocols",
+          desc: "Strict hospital safety standards and advanced continuous monitoring minimize anesthetic risk for all life stages."
+        },
+        {
+          icon: "fa-solid fa-person-walking",
+          title: "Rapid Low-Pain Recovery",
+          desc: "Advanced pain blocking protocols and therapeutic laser accelerate tissue healing and comfort."
+        }
+      ],
+      faqs: [
+        {
+          question: "How should I prepare my pet the night before surgery?",
+          answer: "Fast your pet from food after 10 PM the evening before; water is permitted until the morning of surgery."
+        },
+        {
+          question: "When can my pet return home after surgery?",
+          answer: "Most routine soft-tissue patients go home the same afternoon once fully awake and ambulatory; complex orthopedic cases may stay overnight in ICU."
+        },
+        {
+          question: "How is post-operative pain managed?",
+          answer: "We utilize multimodal analgesia combining nerve blocks, continuous infusions, and tailored take-home pain medications."
+        }
       ]
     },
     {
@@ -145,7 +325,7 @@ export const siteData = {
       duration: "Immediate / 45 Mins",
       price: "$120",
       room: "Emergency Triage ICU",
-      image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=800&q=80", // Modern hospital emergency trauma intensive care unit and diagnostic equipment
+      image: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=800&q=80",
       description: "Our hospital is staffed 24 hours a day, 365 days a year with intensive care veterinarians ready for urgent medical triage, oxygen support, and trauma stabilization.",
       procedureDetail: "Immediate emergency triage, blood diagnostics in 10 minutes, and intensive overnight hospitalization.",
       features: [
@@ -153,6 +333,42 @@ export const siteData = {
         "Oxygen therapy and intensive care incubators",
         "Complete in-house critical bloodwork results in 10 minutes",
         "Emergency fluid resuscitation and overnight hospitalization"
+      ],
+      inclusions: [
+        "Immediate Zero-Wait Emergency Triage Assessment",
+        "High-Flow Oxygen Therapy & Climate-Controlled Oxygen Cages",
+        "Rapid In-House Critical Blood Chemistry & Blood Gas (10-Min Results)",
+        "Emergency Trauma Ultrasound (FAST Scan) & Digital X-rays",
+        "Intravenous Catheter Placement & Emergency Resuscitation Fluids",
+        "Continuous Cardiopulmonary & Blood Pressure Monitoring",
+        "Emergency Blood Transfusion & Antivenom Availability",
+        "Overnight Critical Care Nursing in Intensive Care Unit (ICU)"
+      ],
+      benefits: [
+        {
+          icon: "fa-solid fa-truck-medical",
+          title: "Immediate Life-Saving Interventions",
+          desc: "Full emergency veterinary and surgical team on-site 24 hours every day with zero appointment necessary."
+        },
+        {
+          icon: "fa-solid fa-hospital-user",
+          title: "Advanced Critical Care ICU",
+          desc: "Equipped with intensive oxygen therapy, trauma ultrasound, blood banks, and continuous supervision."
+        }
+      ],
+      faqs: [
+        {
+          question: "Do I need an appointment for emergency care?",
+          answer: "No appointment is needed. Emergency cases are triaged and evaluated immediately upon arrival."
+        },
+        {
+          question: "What symptoms require immediate emergency evaluation?",
+          answer: "Difficulty breathing, collapse, sudden swollen abdomen, repeated vomiting, seizures, severe trauma, toxin ingestion, or inability to urinate."
+        },
+        {
+          question: "Can my primary veterinarian receive the emergency records?",
+          answer: "Yes, full diagnostic and treatment summaries are sent directly to your family veterinarian within 24 hours."
+        }
       ]
     }
   ],
@@ -455,4 +671,14 @@ export function getDoctorById(slugOrId) {
   });
   return found || siteData.veterinarians[0];
 }
+
+export function getServiceById(slugOrId) {
+  if (!slugOrId) return siteData.services[0];
+  const clean = String(slugOrId).toLowerCase().trim().replace(/\/$/, '');
+  const found = siteData.services.find(s => {
+    return s.id.toLowerCase() === clean || s.title.toLowerCase() === clean;
+  });
+  return found || siteData.services[0];
+}
+
 
