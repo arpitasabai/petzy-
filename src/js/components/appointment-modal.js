@@ -5,7 +5,7 @@ import { showToast } from './toast.js';
 
 let onUpdateCallback = null;
 
-export function openAppointmentModal(appointment, callback = null) {
+export function openAppointmentModal(appointment, callback = null, openCancelDialog = false) {
   if (!appointment) return;
   onUpdateCallback = callback;
 
@@ -16,9 +16,11 @@ export function openAppointmentModal(appointment, callback = null) {
     document.body.appendChild(modalEl);
   }
 
-  const isUpcoming = ['Upcoming', 'Confirmed', 'Rescheduled'].includes(appointment.status);
-  const isCancelled = appointment.status === 'Cancelled';
-  const isRescheduled = appointment.status === 'Rescheduled';
+  const statusLower = (appointment.status || '').toLowerCase();
+  const isUpcoming = ['upcoming', 'confirmed', 'rescheduled'].includes(statusLower);
+  const isCancelled = statusLower === 'cancelled';
+  const isCompleted = statusLower === 'completed';
+  const isRescheduled = statusLower === 'rescheduled';
 
   let badgeColor = 'sage';
   let badgeIcon = 'fa-circle-check';
@@ -35,12 +37,12 @@ export function openAppointmentModal(appointment, callback = null) {
 
   modalEl.innerHTML = `
     <div class="petzy-modal-backdrop" id="appt-modal-backdrop">
-      <div class="petzy-modal-container">
+      <div class="petzy-modal-container" style="position: relative;">
         <!-- Header -->
         <div class="petzy-modal-header">
           <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem;">
-              <span class="appointment-status-badge ${appointment.status.toLowerCase()}">
+              <span class="appointment-status-badge ${statusLower}">
                 <i class="fa-solid ${badgeIcon}" style="font-size: 0.55rem;"></i>
                 <span>${appointment.status}</span>
               </span>
@@ -157,8 +159,8 @@ export function openAppointmentModal(appointment, callback = null) {
           </div>
         </div>
 
-        <!-- Inline Cancel Confirmation Card (Hidden by default) -->
-        <div id="inline-cancel-confirm-box" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.98); border-radius: var(--radius-2xl); z-index: 20; padding: 2.5rem 1.5rem; text-align: center; flex-direction: column; justify-content: center; align-items: center;">
+        <!-- Inline Cancel Confirmation Card -->
+        <div id="inline-cancel-confirm-box" style="display: ${openCancelDialog ? 'flex' : 'none'}; position: absolute; inset: 0; background: rgba(255,255,255,0.98); border-radius: var(--radius-2xl); z-index: 20; padding: 2.5rem 1.5rem; text-align: center; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
           <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: #E74C3C; margin-bottom: 1rem;"></i>
           <h3 style="font-size: 1.4rem; color: var(--color-forest-green); margin: 0 0 0.5rem;">Are you sure you want to cancel this appointment?</h3>
           <p style="color: var(--color-charcoal-muted); max-width: 440px; margin: 0 0 1.75rem; font-size: 0.92rem;">
@@ -179,7 +181,7 @@ export function openAppointmentModal(appointment, callback = null) {
     </div>
   `;
 
-  setupApptModalEvents(modalEl, appointment);
+  setupApptModalEvents(modalEl, appointment, openCancelDialog);
   setTimeout(() => {
     modalEl.querySelector('.petzy-modal-backdrop')?.classList.add('open');
   }, 10);
@@ -196,7 +198,7 @@ export function closeAppointmentModal() {
   }
 }
 
-function setupApptModalEvents(modalEl, appointment) {
+function setupApptModalEvents(modalEl, appointment, openCancelDialog = false) {
   const backdrop = modalEl.querySelector('#appt-modal-backdrop');
   const closeX = modalEl.querySelector('#appt-close-x');
   const closeBtn = modalEl.querySelector('#appt-close-btn');
@@ -206,29 +208,45 @@ function setupApptModalEvents(modalEl, appointment) {
   const keepBtn = modalEl.querySelector('#keep-appointment-btn');
   const confirmCancelBtn = modalEl.querySelector('#confirm-cancel-appointment-btn');
 
-  closeX?.addEventListener('click', closeAppointmentModal);
-  closeBtn?.addEventListener('click', closeAppointmentModal);
+  closeX?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAppointmentModal();
+  });
+
+  closeBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAppointmentModal();
+  });
+
   backdrop?.addEventListener('click', (e) => {
     if (e.target === backdrop) closeAppointmentModal();
   });
 
   // Reschedule button handler
-  rescheduleBtn?.addEventListener('click', () => {
+  rescheduleBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     closeAppointmentModal();
     window.location.hash = `#/book-appointment?rescheduleId=${appointment.id}`;
   });
 
   // Cancel Confirmation Toggle
-  cancelTriggerBtn?.addEventListener('click', () => {
+  cancelTriggerBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     if (cancelBox) cancelBox.style.display = 'flex';
   });
 
-  keepBtn?.addEventListener('click', () => {
-    if (cancelBox) cancelBox.style.display = 'none';
+  keepBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (openCancelDialog) {
+      closeAppointmentModal();
+    } else if (cancelBox) {
+      cancelBox.style.display = 'none';
+    }
   });
 
   // Confirm Cancellation
-  confirmCancelBtn?.addEventListener('click', () => {
+  confirmCancelBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
     const user = getCurrentUser();
     if (!user) return;
 
@@ -238,9 +256,6 @@ function setupApptModalEvents(modalEl, appointment) {
 
     if (typeof onUpdateCallback === 'function') {
       onUpdateCallback();
-    } else {
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
     }
   });
 }
-

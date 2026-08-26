@@ -324,11 +324,21 @@ export function setupPetProfileEvents(petId) {
     }
   });
 
-  // Appointment details modal helper
+  // Appointment details modal helpers
   window.petzyOpenApptModal = (apptId) => {
-    const appts = getUserAppointmentsByPet(user.id, pet.id);
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    const appts = getUserAppointmentsByPet(currentUser.id, petId);
     const appt = appts.find(a => a.id === apptId);
-    if (appt) openAppointmentModal(appt, () => refreshPetProfile(petId));
+    if (appt) openAppointmentModal(appt, () => refreshPetProfile(petId), false);
+  };
+
+  window.petzyCancelApptConfirm = (apptId) => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    const appts = getUserAppointmentsByPet(currentUser.id, petId);
+    const appt = appts.find(a => a.id === apptId);
+    if (appt) openAppointmentModal(appt, () => refreshPetProfile(petId), true);
   };
 }
 

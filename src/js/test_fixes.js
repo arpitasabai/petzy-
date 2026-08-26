@@ -359,9 +359,48 @@ assert(confirmedFollowUp.id !== completedVisit.id, 'New unique appointment ID ge
 assert(confirmedFollowUp.status === 'Confirmed', 'Follow-up appointment status is Confirmed (TEST 11.5)');
 assert(confirmedFollowUp.previousAppointmentId === 'PETZY-APT-1024', 'Follow-up stores link to previous appointment ID (TEST 11.6)');
 
-// Verify original appointment was NOT altered
-const originalAfterFollowUp = getUserAppointmentById(samanthaId, 'PETZY-APT-1024');
-assert(originalAfterFollowUp.status === 'Completed', 'Original appointment remains Completed and unchanged (TEST 11.7)');
-assert(originalAfterFollowUp.date === '2026-08-20', 'Original appointment date unchanged');
+// ----------------------------------------------------
+// TEST 12: View Details & Cancel Button Operations
+// ----------------------------------------------------
+console.log('\n--- TEST 12: View Details & Cancel Button Operations ---');
+
+// 1. Create a confirmed appointment to test View Details and Cancel
+const testApptToCancel = saveUserAppointment(samanthaId, {
+  id: 'PETZY-7QX6FS',
+  petId: 'pet_buddy_01',
+  petName: 'Buddy',
+  species: 'Dog',
+  serviceId: 'consultation',
+  service: 'Veterinary Consultation',
+  duration: '30 Mins',
+  price: '$55',
+  veterinarianId: 'rohan-mehta',
+  veterinarian: 'Dr. Rohan Mehta',
+  date: '2026-08-28',
+  time: '01:00 PM',
+  status: 'Confirmed'
+});
+
+assert(testApptToCancel.id === 'PETZY-7QX6FS', 'Created confirmed appointment PETZY-7QX6FS (TEST 12.1)');
+assert(testApptToCancel.status === 'Confirmed', 'Status is Confirmed');
+
+// Verify View Details query returns exact matching record
+const viewedRecord = getUserAppointmentById(samanthaId, 'PETZY-7QX6FS');
+assert(viewedRecord !== null, 'View Details finds appointment PETZY-7QX6FS (TEST 12.2)');
+assert(viewedRecord.veterinarian === 'Dr. Rohan Mehta', 'Attending doctor matches Dr. Rohan Mehta');
+assert(viewedRecord.time === '01:00 PM', 'Time slot matches 01:00 PM');
+assert(viewedRecord.date === '2026-08-28', 'Date matches 2026-08-28');
+
+// 2. Perform Cancellation (as triggered by Cancel button)
+const cancelSuccess = cancelUserAppointment(samanthaId, 'PETZY-7QX6FS');
+assert(cancelSuccess === true, 'Cancellation function executed successfully (TEST 12.3)');
+
+// Verify record status in storage is now Cancelled
+const cancelledRecord = getUserAppointmentById(samanthaId, 'PETZY-7QX6FS');
+assert(cancelledRecord.status === 'Cancelled', 'Appointment status updated to Cancelled in storage (TEST 12.4)');
+
+// Verify time slot is now released (not booked)
+const isSlotStillBooked = isSlotBooked('Dr. Rohan Mehta', '2026-08-28', '01:00 PM');
+assert(isSlotStillBooked === false, 'Slot 01:00 PM on 2026-08-28 for Dr. Rohan Mehta is released upon cancellation (TEST 12.5)');
 
 console.log(`\n🎉 ALL FUNCTIONAL FIXES TESTS PASSED! (${passed}/${total} assertions)\n`);

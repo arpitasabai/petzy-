@@ -1107,6 +1107,7 @@
 }
 
 .petzy-modal-container {
+  position: relative;
   background: var(--color-white);
   border-radius: var(--radius-2xl);
   width: 100%;

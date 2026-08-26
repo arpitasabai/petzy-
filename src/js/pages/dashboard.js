@@ -52,8 +52,8 @@ export function renderDashboard() {
 
   // Compute summary stats
   const totalPets = pets.length;
-  const upcomingAppts = appointments.filter(a => a.status === 'Upcoming' || a.status === 'Rescheduled');
-  const completedAppts = appointments.filter(a => a.status === 'Completed');
+  const upcomingAppts = appointments.filter(a => ['upcoming', 'confirmed', 'rescheduled'].includes((a.status || '').toLowerCase()));
+  const completedAppts = appointments.filter(a => (a.status || '').toLowerCase() === 'completed');
   
   let totalVaccinations = 0;
   pets.forEach(p => {
@@ -814,9 +814,13 @@ export function setupDashboardEvents() {
   };
 
   window.petzyOpenApptModal = (apptId) => {
-    const appts = getUserAppointments(user.id);
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    const appts = getUserAppointments(currentUser.id);
     const appt = appts.find(a => a.id === apptId);
-    if (appt) openAppointmentModal(appt, () => refreshDashboard());
+    if (appt) {
+      openAppointmentModal(appt, () => refreshDashboard(), false);
+    }
   };
 
   window.petzyRescheduleAppt = (apptId) => {
@@ -824,9 +828,13 @@ export function setupDashboardEvents() {
   };
 
   window.petzyCancelApptConfirm = (apptId) => {
-    const appts = getUserAppointments(user.id);
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    const appts = getUserAppointments(currentUser.id);
     const appt = appts.find(a => a.id === apptId);
-    if (appt) openAppointmentModal(appt, () => refreshDashboard());
+    if (appt) {
+      openAppointmentModal(appt, () => refreshDashboard(), true);
+    }
   };
 
   window.petzyEditPet = (petId) => {
