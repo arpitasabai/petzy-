@@ -97,8 +97,8 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
               <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;"><i class="fa-solid fa-hourglass-half" style="color: var(--color-sage-green); margin-right: 0.3rem;"></i>${appointment.duration || '30 Mins'}</span>
             </div>
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
-              <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Fee / Location</span>
-              <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.85rem;"><i class="fa-solid fa-hospital" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>${appointment.room || 'Suite 2B'}</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Location</span>
+              <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.85rem;"><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>${appointment.room || 'Suite 2B'}</span>
             </div>
           </div>
 
@@ -120,9 +120,9 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
             </div>
           ` : ''}
 
-          <!-- Hospital Information Footer -->
+          <!-- Location Information Footer -->
           <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.65rem; border-top: 1px solid var(--color-border-subtle); font-size: 0.78rem; color: var(--color-charcoal-muted); flex-wrap: wrap; gap: 0.4rem;">
-            <span><i class="fa-solid fa-location-dot"></i> PETZY Central Hospital, SF Suite 400</span>
+            <span><i class="fa-solid fa-location-dot"></i> PETZY Clinic, SF Suite 400</span>
             <span><i class="fa-solid fa-phone"></i> +1 (800) 555-PETZY</span>
           </div>
         </div>

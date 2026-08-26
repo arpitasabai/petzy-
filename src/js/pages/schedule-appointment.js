@@ -881,8 +881,8 @@ function renderStep5Summary() {
             <td><strong style="color: var(--color-soft-coral-hover); font-size: 1.05rem;">${bookingState.time}</strong></td>
           </tr>
           <tr class="booking-summary-row">
-            <td><i class="fa-solid fa-hospital" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Hospital Location</td>
-            <td>PETZY Central Hospital (${bookingState.serviceRoom || 'Suite 2B'})</td>
+            <td><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Location</td>
+            <td>PETZY Clinic (${bookingState.serviceRoom || 'Suite 2B'})</td>
           </tr>
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Consultation Fee</td>
@@ -1023,10 +1023,10 @@ function renderStep6Confirmed() {
         </div>
 
         <!-- Status & Location Row -->
-        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; font-size: 0.85rem;">
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap: 0.75rem; font-size: 0.85rem;">
           <div>
-            <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.35rem;"></i> Hospital:</span>
-            <strong style="color: var(--color-forest-green);">PETZY Central Hospital (${appt.room || 'Suite 2B'})</strong>
+            <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.35rem;"></i> Location:</span>
+            <strong style="color: var(--color-forest-green);">PETZY Clinic (${appt.room || 'Suite 2B'})</strong>
           </div>
           <div>
             <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-circle-check" style="color: #27AE60; margin-right: 0.35rem;"></i> Status:</span>
