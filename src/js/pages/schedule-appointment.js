@@ -943,8 +943,7 @@ export function setupScheduleAppointmentEvents() {
       const found = getServiceById(srvId);
       if (found) {
         applyServiceToState(found);
-        // Advance to Step 2
-        bookingState.currentStep = 2;
+        // Show selection without auto-advancing to next page
         refreshWizard();
       }
     });
@@ -974,8 +973,7 @@ export function setupScheduleAppointmentEvents() {
         bookingState.petBreed = found.breed;
         bookingState.petPhoto = found.photo;
 
-        // Auto advance to Step 3
-        bookingState.currentStep = 3;
+        // Show selection without auto-advancing to next page
         refreshWizard();
       }
     });
@@ -1039,8 +1037,7 @@ export function setupScheduleAppointmentEvents() {
         }
       }
 
-      // Auto advance to Step 4
-      bookingState.currentStep = 4;
+      // Show selection without auto-advancing to next page
       refreshWizard();
     });
   });
