@@ -103,7 +103,7 @@ export function renderAbout() {
             </div>
             <h2>Meet Our Doctors & Tour Our Hospital</h2>
             <p>Schedule a routine wellness exam or consult with our veterinary specialists today.</p>
-            <a href="#/contact" class="btn btn-coral btn-lg">
+            <a href="#/book-appointment" class="btn btn-coral btn-lg">
               <i class="fa-solid fa-calendar-check"></i>
               <span>Book an Appointment</span>
             </a>

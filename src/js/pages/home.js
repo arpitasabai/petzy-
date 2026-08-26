@@ -23,7 +23,7 @@ export function renderHome() {
             <p class="hero-subtitle">Trusted veterinary care, wellness services, and compassionate support for every stage of your pet's life.</p>
             
             <div class="hero-cta-group">
-              <a href="#/contact" class="btn btn-teal btn-lg" id="hero-book-cta">
+              <a href="#/book-appointment" class="btn btn-teal btn-lg" id="hero-book-cta">
                 <i class="fa-solid fa-calendar-check"></i>
                 <span>Book an Appointment</span>
               </a>
@@ -332,7 +332,7 @@ export function renderHome() {
             <h2>Your Pet's Health Starts With One Appointment.</h2>
             <p>Give your furry companion the care, attention, and expertise they deserve from our certified veterinary team.</p>
             
-            <a href="#/contact" class="btn btn-coral btn-lg" id="cta-book-appointment">
+            <a href="#/book-appointment" class="btn btn-coral btn-lg" id="cta-book-appointment">
               <i class="fa-solid fa-calendar-check"></i>
               <span>Book an Appointment</span>
             </a>

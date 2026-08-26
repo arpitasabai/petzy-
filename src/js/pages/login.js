@@ -127,8 +127,8 @@ export function setupLoginEvents() {
       const user = loginUser(email, password, rememberMe);
       showToast(`Welcome back, ${user.name}! Signed in to your patient portal.`, 'sage', 'fa-solid fa-circle-check');
       setTimeout(() => {
-        window.location.hash = '#/dashboard';
-      }, 500);
+        window.location.hash = getRedirectTarget();
+      }, 400);
     } catch (err) {
       showToast(err.message || 'Login failed', 'coral', 'fa-solid fa-triangle-exclamation');
     }
@@ -139,7 +139,7 @@ export function setupLoginEvents() {
     const user = loginAsDemoUser();
     showToast(`Welcome back, ${user.name}! Signed in as Demo Pet Parent.`, 'sage', 'fa-solid fa-paw');
     setTimeout(() => {
-      window.location.hash = '#/dashboard';
+      window.location.hash = getRedirectTarget();
     }, 400);
   });
 
@@ -148,8 +148,8 @@ export function setupLoginEvents() {
     const user = loginAsDemoUser();
     showToast('Signed in via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = '#/dashboard';
-    }, 500);
+      window.location.hash = getRedirectTarget();
+    }, 400);
   });
 
   // Forgot Password
@@ -158,3 +158,13 @@ export function setupLoginEvents() {
     showToast(`Password recovery link sent to ${email}. Please check your inbox.`, 'coral', 'fa-solid fa-paper-plane');
   });
 }
+
+function getRedirectTarget() {
+  const hash = window.location.hash || '';
+  if (hash.includes('?redirect=')) {
+    const r = hash.split('?redirect=')[1]?.split('&')[0];
+    if (r) return `#/${r}`;
+  }
+  return '#/dashboard';
+}
+

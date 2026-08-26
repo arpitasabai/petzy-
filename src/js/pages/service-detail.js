@@ -153,7 +153,7 @@ export function renderServiceDetail() {
               </div>
             </div>
 
-            <a href="#/contact" class="btn btn-teal" style="width: 100%; margin-bottom: 0.75rem;">
+            <a href="#/book-appointment?service=consultation" class="btn btn-teal" style="width: 100%; margin-bottom: 0.75rem;">
               <i class="fa-solid fa-calendar-check"></i>
               <span>Book an Appointment</span>
             </a>

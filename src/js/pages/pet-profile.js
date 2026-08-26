@@ -217,7 +217,7 @@ export function renderPetProfile(petId) {
             <i class="fa-solid fa-calendar-check" style="color: var(--color-soft-coral);"></i>
             <h3 style="font-size: 1.25rem;">Visit & Appointment History for ${pet.name} (${appointments.length})</h3>
           </div>
-          <a href="#/schedule-appointment?petId=${pet.id}" class="btn btn-teal" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+          <a href="#/book-appointment?petId=${pet.id}" class="btn btn-teal" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
             <i class="fa-solid fa-calendar-plus"></i>
             <span>Book Visit</span>
           </a>
@@ -231,27 +231,31 @@ export function renderPetProfile(petId) {
         ` : `
           <div class="appointments-list">
             ${appointments.map(a => `
-              <div class="appointment-item-card">
+              <div class="appointment-item-card" style="align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div class="appointment-left-col">
-                  <div class="stat-icon-wrap ${a.status === 'Upcoming' ? 'coral' : 'teal'}">
-                    <i class="fa-solid ${a.status === 'Upcoming' ? 'fa-calendar-days' : 'fa-clipboard-check'}"></i>
+                  <div class="stat-icon-wrap ${['upcoming', 'confirmed', 'rescheduled'].includes(a.status.toLowerCase()) ? 'coral' : 'teal'}">
+                    <i class="fa-solid ${['upcoming', 'confirmed', 'rescheduled'].includes(a.status.toLowerCase()) ? 'fa-calendar-days' : 'fa-clipboard-check'}"></i>
                   </div>
                   <div class="appointment-info-main">
-                    <h4 class="appointment-service-title">${a.service}</h4>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                      <h4 class="appointment-service-title" style="margin: 0;">${a.service}</h4>
+                      <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-forest-green); background: var(--color-warm-cream); padding: 0.15rem 0.5rem; border-radius: var(--radius-full); border: 1px solid var(--color-border);">ID: ${a.id}</span>
+                    </div>
                     <div class="appointment-meta-row">
                       <span class="appointment-meta-item"><i class="fa-solid fa-user-doctor"></i> ${a.veterinarian}</span>
-                      <span class="appointment-meta-item"><i class="fa-solid fa-calendar"></i> ${a.date}</span>
+                      <span class="appointment-meta-item"><i class="fa-solid fa-calendar" style="color: var(--color-soft-coral);"></i> ${a.date}</span>
                       <span class="appointment-meta-item"><i class="fa-solid fa-clock"></i> ${a.time}</span>
                     </div>
                   </div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
                   <span class="appointment-status-badge ${a.status.toLowerCase()}">
                     <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i>
                     ${a.status}
                   </span>
                   <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${a.id}')">
+                    <i class="fa-solid fa-circle-info"></i>
                     <span>View Details</span>
                   </button>
                 </div>

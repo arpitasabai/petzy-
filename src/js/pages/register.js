@@ -157,8 +157,8 @@ export function setupRegisterEvents() {
       const newUser = registerUser({ name, email, phone, password: pwd });
       showToast(`Welcome to PETZY, ${newUser.name}! Your patient account is created.`, 'sage', 'fa-solid fa-circle-check');
       setTimeout(() => {
-        window.location.hash = '#/dashboard';
-      }, 600);
+        window.location.hash = getRedirectTarget();
+      }, 500);
     } catch (err) {
       showToast(err.message || 'Registration failed', 'coral', 'fa-solid fa-triangle-exclamation');
     }
@@ -169,7 +169,17 @@ export function setupRegisterEvents() {
     const user = loginAsDemoUser();
     showToast('Signed up via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = '#/dashboard';
-    }, 500);
+      window.location.hash = getRedirectTarget();
+    }, 400);
   });
 }
+
+function getRedirectTarget() {
+  const hash = window.location.hash || '';
+  if (hash.includes('?redirect=')) {
+    const r = hash.split('?redirect=')[1]?.split('&')[0];
+    if (r) return `#/${r}`;
+  }
+  return '#/dashboard';
+}
+

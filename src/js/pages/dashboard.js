@@ -350,24 +350,41 @@ function renderOverviewTab(user, pets, appointments, totalPets, upcomingAppts, c
 
         ${nextAppt ? `
           <div style="background: var(--color-warm-cream); border-radius: var(--radius-md); border: 1px solid var(--color-border); padding: 1.25rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
-              <span class="appointment-status-badge upcoming"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Confirmed Upcoming</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="appointment-status-badge ${nextAppt.status.toLowerCase()}"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> ${nextAppt.status}</span>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--color-forest-green); background: white; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); border: 1px solid var(--color-border);">ID: ${nextAppt.id}</span>
+              </div>
               <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-forest-green);"><i class="fa-solid fa-clock"></i> ${nextAppt.time}</span>
             </div>
 
             <h4 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--color-forest-green); margin: 0 0 0.35rem;">${nextAppt.service}</h4>
             <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); margin-bottom: 1rem;">For <strong>${nextAppt.petName}</strong> with <strong>${nextAppt.veterinarian}</strong></p>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid var(--color-border-subtle);">
-              <span style="font-size: 0.82rem; font-weight: 700; color: var(--color-forest-green);"><i class="fa-solid fa-calendar-days" style="color: var(--color-soft-coral);"></i> ${nextAppt.date}</span>
-              <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${nextAppt.id}')">View Details</button>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; border-top: 1px solid var(--color-border-subtle); flex-wrap: wrap; gap: 0.65rem;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--color-forest-green);"><i class="fa-solid fa-calendar-days" style="color: var(--color-soft-coral); margin-right: 0.3rem;"></i> ${nextAppt.date}</span>
+              
+              <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${nextAppt.id}')">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <span>View Details</span>
+                </button>
+                <button class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-color: var(--color-forest-green); color: var(--color-forest-green);" onclick="window.petzyRescheduleAppt('${nextAppt.id}')">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <span>Reschedule</span>
+                </button>
+                <button class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-color: #F5B7B1; color: #C0392B;" onclick="window.petzyCancelApptConfirm('${nextAppt.id}')">
+                  <i class="fa-solid fa-calendar-xmark"></i>
+                  <span>Cancel</span>
+                </button>
+              </div>
             </div>
           </div>
         ` : `
           <div style="text-align: center; padding: 2rem; color: var(--color-charcoal-muted);">
             <i class="fa-solid fa-calendar-days" style="font-size: 2.5rem; color: var(--color-sage-green); margin-bottom: 0.5rem;"></i>
             <p style="font-size: 0.95rem; margin-bottom: 1rem;">No upcoming appointments scheduled.</p>
-            <a href="#/contact" class="btn btn-teal" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
+            <a href="#/book-appointment" class="btn btn-teal" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
               <i class="fa-solid fa-calendar-plus"></i>
               <span>Book Appointment</span>
             </a>
@@ -510,21 +527,39 @@ function getSpeciesIcon(species) {
 // 3. APPOINTMENTS TAB
 // ----------------------------------------------------
 function renderAppointmentsTab(appointments) {
-  const filteredAppts = activeApptFilter === 'all'
-    ? appointments
-    : appointments.filter(a => a.status.toLowerCase() === activeApptFilter.toLowerCase());
+  const upcomingCount = appointments.filter(a => ['upcoming', 'confirmed', 'rescheduled'].includes(a.status.toLowerCase())).length;
+  const completedCount = appointments.filter(a => a.status.toLowerCase() === 'completed').length;
+  const cancelledCount = appointments.filter(a => a.status.toLowerCase() === 'cancelled').length;
+
+  let filteredAppts = appointments;
+  if (activeApptFilter === 'upcoming') {
+    filteredAppts = appointments.filter(a => ['upcoming', 'confirmed', 'rescheduled'].includes(a.status.toLowerCase()));
+  } else if (activeApptFilter === 'completed') {
+    filteredAppts = appointments.filter(a => a.status.toLowerCase() === 'completed');
+  } else if (activeApptFilter === 'cancelled') {
+    filteredAppts = appointments.filter(a => a.status.toLowerCase() === 'cancelled');
+  }
 
   return `
     <div>
       <!-- Filter Bar -->
-      <div class="section-subhead-row">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button class="quick-action-pill ${activeApptFilter === 'all' ? 'primary' : ''}" onclick="window.petzyFilterAppts('all')">All Visits (${appointments.length})</button>
-          <button class="quick-action-pill ${activeApptFilter === 'upcoming' ? 'primary' : ''}" onclick="window.petzyFilterAppts('upcoming')"><i class="fa-solid fa-calendar"></i> Upcoming</button>
-          <button class="quick-action-pill ${activeApptFilter === 'completed' ? 'primary' : ''}" onclick="window.petzyFilterAppts('completed')"><i class="fa-solid fa-circle-check"></i> Completed</button>
+          <button class="quick-action-pill ${activeApptFilter === 'all' ? 'primary' : ''}" onclick="window.petzyFilterAppts('all')">
+            All Visits (${appointments.length})
+          </button>
+          <button class="quick-action-pill ${activeApptFilter === 'upcoming' ? 'primary' : ''}" onclick="window.petzyFilterAppts('upcoming')">
+            <i class="fa-solid fa-calendar"></i> Upcoming (${upcomingCount})
+          </button>
+          <button class="quick-action-pill ${activeApptFilter === 'completed' ? 'primary' : ''}" onclick="window.petzyFilterAppts('completed')">
+            <i class="fa-solid fa-circle-check"></i> Completed (${completedCount})
+          </button>
+          <button class="quick-action-pill ${activeApptFilter === 'cancelled' ? 'primary' : ''}" onclick="window.petzyFilterAppts('cancelled')">
+            <i class="fa-solid fa-calendar-xmark"></i> Cancelled (${cancelledCount})
+          </button>
         </div>
 
-        <a href="#/schedule-appointment" class="btn btn-teal">
+        <a href="#/book-appointment" class="btn btn-teal">
           <i class="fa-solid fa-calendar-plus"></i>
           <span>Schedule New Appointment</span>
         </a>
@@ -536,40 +571,59 @@ function renderAppointmentsTab(appointments) {
           <i class="fa-solid fa-calendar-xmark" style="font-size: 3.5rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
           <h3 style="color: var(--color-forest-green); margin-bottom: 0.5rem;">No Appointments Found</h3>
           <p style="color: var(--color-charcoal-muted); max-width: 450px; margin: 0 auto 1.5rem;">There are no ${activeApptFilter !== 'all' ? activeApptFilter : ''} appointments in your records.</p>
-          <a href="#/schedule-appointment" class="btn btn-teal btn-lg">
+          <a href="#/book-appointment" class="btn btn-teal btn-lg">
             <i class="fa-solid fa-calendar-plus"></i>
             <span>Schedule an Appointment</span>
           </a>
         </div>
       ` : `
         <div class="appointments-list animate-fade-up">
-          ${filteredAppts.map(a => `
-            <div class="appointment-item-card">
-              <div class="appointment-left-col">
-                <img src="${a.petPhoto}" alt="${a.petName}" class="appointment-pet-thumb">
-                <div class="appointment-info-main">
-                  <h4 class="appointment-service-title">${a.service}</h4>
-                  <div class="appointment-meta-row">
-                    <span class="appointment-meta-item"><i class="fa-solid fa-paw"></i> <strong>${a.petName}</strong></span>
-                    <span class="appointment-meta-item"><i class="fa-solid fa-user-doctor"></i> ${a.veterinarian}</span>
-                    <span class="appointment-meta-item"><i class="fa-solid fa-calendar"></i> ${a.date}</span>
-                    <span class="appointment-meta-item"><i class="fa-solid fa-clock"></i> ${a.time}</span>
+          ${filteredAppts.map(a => {
+            const isActionable = ['upcoming', 'confirmed', 'rescheduled'].includes(a.status.toLowerCase());
+
+            return `
+              <div class="appointment-item-card" style="align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div class="appointment-left-col">
+                  <img src="${a.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80'}" alt="${a.petName}" class="appointment-pet-thumb">
+                  <div class="appointment-info-main">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                      <h4 class="appointment-service-title" style="margin: 0;">${a.service}</h4>
+                      <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-forest-green); background: var(--color-warm-cream); padding: 0.15rem 0.5rem; border-radius: var(--radius-full); border: 1px solid var(--color-border);">ID: ${a.id}</span>
+                    </div>
+                    <div class="appointment-meta-row">
+                      <span class="appointment-meta-item"><i class="fa-solid fa-paw"></i> <strong>${a.petName}</strong> (${a.species || 'Pet'})</span>
+                      <span class="appointment-meta-item"><i class="fa-solid fa-user-doctor"></i> ${a.veterinarian}</span>
+                      <span class="appointment-meta-item"><i class="fa-solid fa-calendar" style="color: var(--color-soft-coral);"></i> ${a.date}</span>
+                      <span class="appointment-meta-item"><i class="fa-solid fa-clock"></i> ${a.time}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span class="appointment-status-badge ${a.status.toLowerCase()}">
-                  <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i>
-                  ${a.status}
-                </span>
-                <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${a.id}')">
-                  <i class="fa-solid fa-circle-info"></i>
-                  <span>View Details</span>
-                </button>
+                <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+                  <span class="appointment-status-badge ${a.status.toLowerCase()}">
+                    <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i>
+                    ${a.status}
+                  </span>
+
+                  <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${a.id}')">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>View Details</span>
+                  </button>
+
+                  ${isActionable ? `
+                    <button class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-color: var(--color-forest-green); color: var(--color-forest-green);" onclick="window.petzyRescheduleAppt('${a.id}')">
+                      <i class="fa-solid fa-clock-rotate-left"></i>
+                      <span>Reschedule</span>
+                    </button>
+                    <button class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-color: #F5B7B1; color: #C0392B;" onclick="window.petzyCancelApptConfirm('${a.id}')">
+                      <i class="fa-solid fa-calendar-xmark"></i>
+                      <span>Cancel</span>
+                    </button>
+                  ` : ''}
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `}
     </div>
@@ -741,6 +795,16 @@ export function setupDashboardEvents() {
   };
 
   window.petzyOpenApptModal = (apptId) => {
+    const appts = getUserAppointments(user.id);
+    const appt = appts.find(a => a.id === apptId);
+    if (appt) openAppointmentModal(appt, () => refreshDashboard());
+  };
+
+  window.petzyRescheduleAppt = (apptId) => {
+    window.location.hash = `#/book-appointment?rescheduleId=${apptId}`;
+  };
+
+  window.petzyCancelApptConfirm = (apptId) => {
     const appts = getUserAppointments(user.id);
     const appt = appts.find(a => a.id === apptId);
     if (appt) openAppointmentModal(appt, () => refreshDashboard());

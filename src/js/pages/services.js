@@ -81,7 +81,7 @@ export function renderServices() {
                     <span>View Service Inclusions</span>
                     <i class="fa-solid fa-arrow-right"></i>
                   </a>
-                  <a href="#/contact" class="btn btn-outline">
+                  <a href="#/book-appointment?service=${srv.id}" class="btn btn-outline">
                     <i class="fa-solid fa-calendar-check"></i>
                     <span>Book for This Service</span>
                   </a>
@@ -104,7 +104,7 @@ export function renderServices() {
             </div>
             <h2>Need Advice on the Right Care for Your Pet?</h2>
             <p>Our concierge veterinary desk is available to answer your questions and book the right diagnostic, grooming, or wellness checkup for dogs, cats, birds, and small pets.</p>
-            <a href="#/contact" class="btn btn-coral btn-lg">
+            <a href="#/book-appointment" class="btn btn-coral btn-lg">
               <i class="fa-solid fa-calendar-check"></i>
               <span>Book an Appointment</span>
             </a>

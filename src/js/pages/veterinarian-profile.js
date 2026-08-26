@@ -51,7 +51,7 @@ export function renderVeterinarianProfile(doctorId) {
             </div>
 
             <div style="margin-top: 1.5rem;">
-              <a href="#/contact" class="btn btn-teal" style="width: 100%;">
+              <a href="#/book-appointment?doctorId=${vet.id}" class="btn btn-teal" style="width: 100%;">
                 <i class="fa-solid fa-calendar-check"></i>
                 <span>Book With ${vet.name}</span>
               </a>
@@ -102,7 +102,7 @@ export function renderVeterinarianProfile(doctorId) {
               <a href="#/veterinarians" class="btn btn-outline">
                 <span>← Back to All Veterinarians</span>
               </a>
-              <a href="#/contact" class="btn btn-teal">
+              <a href="#/book-appointment?doctorId=${vet.id}" class="btn btn-teal">
                 <i class="fa-solid fa-calendar-check"></i>
                 <span>Schedule Consultation</span>
               </a>

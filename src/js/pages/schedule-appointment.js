@@ -1,99 +1,106 @@
-/* PETZY Schedule Appointment Dedicated Page (Milestone 2) */
+/* PETZY Multi-Step Appointment Booking System (Milestone 3) */
 import { getCurrentUser } from '../services/auth.js';
-import { getUserPets, saveUserAppointment } from '../services/storage.js';
-import { siteData } from '../data.js';
+import {
+  getUserPets,
+  getUserPetById,
+  saveUserAppointment,
+  rescheduleUserAppointment,
+  getUserAppointmentById,
+  getAvailableSlotsForDoctorAndDate,
+  findAvailableDoctorForSlot,
+  generateAppointmentId
+} from '../services/storage.js';
+import { siteData, getDoctorById } from '../data.js';
 import { renderBackButton } from '../components/back-button.js';
+import { openPetModal } from '../components/pet-modal.js';
+import { openAppointmentModal } from '../components/appointment-modal.js';
 import { showToast } from '../components/toast.js';
 
-let selectedPetId = null;
-let selectedServiceName = 'Veterinary Consultation';
-let selectedDoctorName = 'Dr. Ananya Sharma';
-let selectedDoctorTitle = 'Chief Veterinary Surgeon';
-let selectedDoctorImage = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80';
-let selectedTimeSlot = '10:30 AM';
+// Wizard state object (persisted during step navigation)
+let wizardState = {
+  currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary, 6: Confirmed
+  serviceId: 'consultation',
+  serviceName: 'Veterinary Consultation',
+  serviceDuration: '30 Mins',
+  servicePrice: '$55',
+  serviceRoom: 'Consultation Suite 2B',
+  serviceIcon: 'fa-stethoscope',
+  serviceImage: '',
+  petId: null,
+  petName: '',
+  petSpecies: '',
+  petBreed: '',
+  petPhoto: '',
+  doctorId: 'any', // 'any' or doctor id
+  doctorName: 'Any Available Veterinarian',
+  doctorTitle: 'Assigned based on schedule',
+  doctorImage: '',
+  date: '',
+  time: '10:30 AM',
+  notes: '',
+  rescheduleId: null,
+  confirmedAppt: null,
+  calendarMonth: new Date().getMonth(),
+  calendarYear: new Date().getFullYear()
+};
 
-const TIME_SLOTS = [
-  '09:00 AM',
-  '10:30 AM',
-  '11:45 AM',
-  '02:00 PM',
-  '03:30 PM',
-  '04:45 PM',
-  '06:00 PM'
-];
-
-const SERVICES_LIST = [
-  {
-    name: 'Veterinary Consultation',
-    desc: 'Comprehensive nose-to-tail physical exam, vitals, and preventive assessment.',
-    icon: 'fa-stethoscope',
-    room: 'Consultation Suite 2B'
-  },
-  {
-    name: 'Vaccination & Immunity',
-    desc: 'Core puppy/kitten and adult vaccine protocols (Rabies, DHPP, FVRCP).',
-    icon: 'fa-syringe',
-    room: 'Immunization Suite 1'
-  },
-  {
-    name: 'Dental Care & Hygiene',
-    desc: 'Ultrasonic plaque removal, tartar scaling, subgingival check, and polish.',
-    icon: 'fa-tooth',
-    room: 'Dental Suite A'
-  },
-  {
-    name: 'Spa & Medical Grooming',
-    desc: 'Therapeutic hydro-massage bath, sanitary ear cleaning, and nail trim.',
-    icon: 'fa-scissors',
-    room: 'Spa & Grooming Wing'
-  },
-  {
-    name: 'Soft Tissue & Orthopedic Surgery',
-    desc: 'Sterile surgical suite with continuous anesthesia and vitals monitoring.',
-    icon: 'fa-kit-medical',
-    room: 'Sterile Surgical Suite'
-  },
-  {
-    name: '24/7 Emergency & Urgent Care',
-    desc: 'Rapid triage, trauma stabilization, oxygen therapy, and urgent care.',
-    icon: 'fa-truck-medical',
-    room: 'Emergency Triage ICU'
-  }
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 export function renderScheduleAppointment() {
   const user = getCurrentUser();
   if (!user) {
     setTimeout(() => {
-      window.location.hash = '#/login';
+      window.location.hash = '#/login?redirect=book-appointment';
       showToast('Please sign in to schedule an appointment.', 'coral', 'fa-solid fa-lock');
     }, 10);
-    return `<div class="auth-page-wrapper"><p>Redirecting to login...</p></div>`;
+    return `
+      <div class="auth-page-wrapper">
+        <div class="auth-card-box" style="text-align: center;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--color-forest-green); margin-bottom: 1rem;"></i>
+          <p>Redirecting to login portal...</p>
+        </div>
+      </div>
+    `;
   }
 
   const pets = getUserPets(user.id);
 
-  // Check URL for preselected petId (e.g. #/schedule-appointment?petId=...)
-  const fullHash = window.location.hash;
-  if (fullHash.includes('petId=')) {
-    const urlPetId = fullHash.split('petId=')[1]?.split('&')[0];
-    if (pets.some(p => p.id === urlPetId)) {
-      selectedPetId = urlPetId;
-    }
+  // Initialize or check URL params on fresh load
+  parseUrlParameters(user, pets);
+
+  // Default date setup if empty (tomorrow)
+  if (!wizardState.date) {
+    const tom = new Date(Date.now() + 86400000);
+    wizardState.date = tom.toISOString().split('T')[0];
+    wizardState.calendarMonth = tom.getMonth();
+    wizardState.calendarYear = tom.getFullYear();
   }
 
-  if (!selectedPetId && pets.length > 0) {
-    selectedPetId = pets[0].id;
+  // Ensure selected pet is valid
+  if (!wizardState.petId && pets.length > 0) {
+    wizardState.petId = pets[0].id;
+    wizardState.petName = pets[0].name;
+    wizardState.petSpecies = pets[0].species;
+    wizardState.petBreed = pets[0].breed;
+    wizardState.petPhoto = pets[0].photo;
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
+  // Render Step View
   return `
-    <div class="container pet-profile-page-wrapper animate-fade-up" style="max-width: 1040px;">
-      <!-- Back Link -->
-      <div style="margin-bottom: 1.5rem;">
-        ${renderBackButton('#/dashboard?tab=appointments')}
+    <div class="container pet-profile-page-wrapper animate-fade-up" style="max-width: 1060px;">
+      <!-- Top Back Navigation -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        ${renderBackButton(wizardState.rescheduleId ? '#/dashboard?tab=appointments' : '#/dashboard')}
+        
+        ${wizardState.rescheduleId ? `
+          <div class="section-badge coral" style="font-size: 0.82rem;">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Rescheduling Appointment: <strong>#${wizardState.rescheduleId}</strong></span>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Page Header -->
@@ -102,350 +109,1062 @@ export function renderScheduleAppointment() {
           <i class="fa-solid fa-calendar-plus"></i>
           <span>Patient Appointment Booking</span>
         </div>
-        <h1 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">Schedule a Veterinary Visit</h1>
-        <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin: 0;">Select your registered pet, medical service, preferred veterinary specialist, and appointment time.</p>
+        <h1 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">
+          ${wizardState.rescheduleId ? 'Reschedule Your Appointment' : 'Book a Veterinary Appointment'}
+        </h1>
+        <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin: 0;">
+          Select your medical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and confirm.
+        </p>
       </div>
 
-      <form id="schedule-appointment-form">
-        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start;">
-          
-          <!-- Left Column: Step-by-Step Form Fields -->
-          <div style="display: flex; flex-direction: column; gap: 1.75rem;">
-            
-            <!-- Step 1: Select Patient / Pet -->
-            <div class="profile-card-box">
-              <div class="section-subhead-row" style="margin-bottom: 1rem;">
-                <div class="section-subhead-title">
-                  <i class="fa-solid fa-paw" style="color: var(--color-forest-green);"></i>
-                  <h3 style="font-size: 1.15rem;">1. Select Patient (Pet) *</h3>
-                </div>
-                <a href="#/dashboard?tab=pets" class="btn btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
-                  <i class="fa-solid fa-plus"></i>
-                  <span>Manage Pets</span>
-                </a>
-              </div>
+      <!-- 5-Step Progress Bar (hidden on Step 6 Confirmed) -->
+      ${wizardState.currentStep <= 5 ? renderProgressBar(wizardState.currentStep) : ''}
 
-              ${pets.length === 0 ? `
-                <div style="background: var(--color-warm-cream); padding: 1.25rem; border-radius: var(--radius-md); border: 1px dashed var(--color-sage-green); text-align: center;">
-                  <p style="font-size: 0.92rem; color: var(--color-charcoal-muted); margin-bottom: 0.75rem;">No pets found in your account.</p>
-                  <div class="form-group" style="text-align: left; margin: 0;">
-                    <label class="form-label" for="manual-pet-name">Enter Pet Name *</label>
-                    <input type="text" id="manual-pet-name" class="form-input" placeholder="e.g. Buddy (Dog)" required>
-                  </div>
-                </div>
-              ` : `
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.85rem;">
-                  ${pets.map(p => `
-                    <div class="pet-select-card ${p.id === selectedPetId ? 'selected' : ''}" data-pet-id="${p.id}" data-pet-name="${p.name}" data-pet-species="${p.species}" data-pet-photo="${p.photo}" style="padding: 0.85rem; border-radius: var(--radius-lg); border: 2px solid ${p.id === selectedPetId ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${p.id === selectedPetId ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: all var(--transition-fast);">
-                      <img src="${p.photo}" alt="${p.name}" style="width: 48px; height: 48px; border-radius: var(--radius-md); object-fit: cover; border: 1.5px solid var(--color-forest-green);">
-                      <div style="overflow: hidden;">
-                        <h4 style="font-family: var(--font-heading); font-size: 1rem; color: var(--color-forest-green); margin: 0;">${p.name}</h4>
-                        <span style="font-size: 0.8rem; color: var(--color-charcoal-muted); display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${p.species} • ${p.breed}</span>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-
-            <!-- Step 2: Select Service -->
-            <div class="profile-card-box">
-              <div class="section-subhead-row" style="margin-bottom: 1rem;">
-                <div class="section-subhead-title">
-                  <i class="fa-solid fa-stethoscope" style="color: var(--color-forest-green);"></i>
-                  <h3 style="font-size: 1.15rem;">2. Select Veterinary Service *</h3>
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.85rem;">
-                ${SERVICES_LIST.map(s => `
-                  <div class="service-select-card ${s.name === selectedServiceName ? 'selected' : ''}" data-service-name="${s.name}" data-service-room="${s.room}" style="padding: 1rem; border-radius: var(--radius-lg); border: 2px solid ${s.name === selectedServiceName ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${s.name === selectedServiceName ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; display: flex; align-items: flex-start; gap: 0.75rem; transition: all var(--transition-fast);">
-                    <div style="width: 38px; height: 38px; border-radius: var(--radius-md); background: ${s.name === selectedServiceName ? 'var(--color-forest-green)' : 'var(--color-warm-cream)'}; color: ${s.name === selectedServiceName ? 'var(--color-warm-cream)' : 'var(--color-forest-green)'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem;">
-                      <i class="fa-solid ${s.icon}"></i>
-                    </div>
-                    <div>
-                      <h4 style="font-family: var(--font-heading); font-size: 0.95rem; color: var(--color-forest-green); margin: 0 0 0.2rem;">${s.name}</h4>
-                      <p style="font-size: 0.78rem; color: var(--color-charcoal-muted); margin: 0; line-height: 1.35;">${s.desc}</p>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Step 3: Select Veterinarian -->
-            <div class="profile-card-box">
-              <div class="section-subhead-row" style="margin-bottom: 1rem;">
-                <div class="section-subhead-title">
-                  <i class="fa-solid fa-user-doctor" style="color: var(--color-forest-green);"></i>
-                  <h3 style="font-size: 1.15rem;">3. Select Veterinarian Specialist *</h3>
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.85rem;">
-                ${siteData.veterinarians.map(v => `
-                  <div class="doctor-select-card ${v.name === selectedDoctorName ? 'selected' : ''}" data-doctor-name="${v.name}" data-doctor-title="${v.title}" data-doctor-image="${v.image}" style="padding: 0.85rem; border-radius: var(--radius-lg); border: 2px solid ${v.name === selectedDoctorName ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${v.name === selectedDoctorName ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; transition: all var(--transition-fast);">
-                    <img src="${v.image}" alt="${v.name}" style="width: 46px; height: 46px; border-radius: var(--radius-full); object-fit: cover; border: 2px solid var(--color-forest-green);">
-                    <div style="overflow: hidden;">
-                      <h4 style="font-family: var(--font-heading); font-size: 0.95rem; color: var(--color-forest-green); margin: 0;">${v.name}</h4>
-                      <span style="font-size: 0.75rem; color: var(--color-soft-coral-hover); font-weight: 700; display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${v.badge || v.title}</span>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Step 4: Date, Time & Location -->
-            <div class="profile-card-box">
-              <div class="section-subhead-row" style="margin-bottom: 1rem;">
-                <div class="section-subhead-title">
-                  <i class="fa-solid fa-calendar-days" style="color: var(--color-forest-green);"></i>
-                  <h3 style="font-size: 1.15rem;">4. Date & Time Selection *</h3>
-                </div>
-              </div>
-
-              <div class="form-row-2" style="margin-bottom: 1.25rem;">
-                <div class="form-group">
-                  <label class="form-label" for="appt-date-input">Appointment Date *</label>
-                  <input type="date" id="appt-date-input" class="form-input" required min="${today}" value="${tomorrow}">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="appt-room-input">Hospital Suite / Room</label>
-                  <input type="text" id="appt-room-input" class="form-input" value="Consultation Suite 2B" readonly>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Available Time Slots *</label>
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="time-slots-container">
-                  ${TIME_SLOTS.map(t => `
-                    <button type="button" class="quick-action-pill time-slot-btn ${t === selectedTimeSlot ? 'primary' : ''}" data-time="${t}">
-                      <i class="fa-solid fa-clock"></i>
-                      <span>${t}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 5: Clinical Notes & Reason for Visit -->
-            <div class="profile-card-box">
-              <div class="section-subhead-row" style="margin-bottom: 1rem;">
-                <div class="section-subhead-title">
-                  <i class="fa-solid fa-clipboard-question" style="color: var(--color-forest-green);"></i>
-                  <h3 style="font-size: 1.15rem;">5. Reason for Visit & Clinical Notes</h3>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="appt-notes-input">Describe reason for consultation or symptoms (Optional)</label>
-                <textarea id="appt-notes-input" class="form-textarea" rows="3" placeholder="e.g. Annual health checkup, vaccination booster, routine physical, or check slight limp on left paw..."></textarea>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Right Column: Live Booking Summary Sticky Card -->
-          <div style="position: sticky; top: 100px;">
-            <div class="profile-card-box" style="border: 2px solid var(--color-forest-green); box-shadow: var(--shadow-lg);">
-              <div class="section-badge" style="margin-bottom: 0.75rem;">
-                <i class="fa-solid fa-clipboard-check"></i>
-                <span>Booking Summary</span>
-              </div>
-
-              <h3 style="font-size: 1.25rem; color: var(--color-forest-green); margin: 0 0 1.25rem;">Visit Overview</h3>
-
-              <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem; margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border-subtle);">
-                  <span style="color: var(--color-charcoal-light);">Patient:</span>
-                  <strong style="color: var(--color-forest-green);" id="summary-pet-name">${pets.length > 0 ? pets.find(p => p.id === selectedPetId)?.name || 'Selected Pet' : 'Your Pet'}</strong>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border-subtle);">
-                  <span style="color: var(--color-charcoal-light);">Service:</span>
-                  <strong style="color: var(--color-forest-green); text-align: right;" id="summary-service-name">${selectedServiceName}</strong>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border-subtle);">
-                  <span style="color: var(--color-charcoal-light);">Doctor:</span>
-                  <strong style="color: var(--color-forest-green);" id="summary-doctor-name">${selectedDoctorName}</strong>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border-subtle);">
-                  <span style="color: var(--color-charcoal-light);">Date:</span>
-                  <strong style="color: var(--color-forest-green);" id="summary-date">${tomorrow}</strong>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border-subtle);">
-                  <span style="color: var(--color-charcoal-light);">Time:</span>
-                  <strong style="color: var(--color-soft-coral-hover);" id="summary-time">${selectedTimeSlot}</strong>
-                </div>
-
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: var(--color-charcoal-light);">Location:</span>
-                  <span style="font-weight: 600; color: var(--color-forest-green); font-size: 0.82rem;">PETZY Hospital (Suite 2B)</span>
-                </div>
-              </div>
-
-              <button type="submit" class="btn btn-teal btn-lg" style="width: 100%; justify-content: center;" id="confirm-booking-btn">
-                <i class="fa-solid fa-calendar-check"></i>
-                <span>Confirm & Schedule</span>
-              </button>
-
-              <div style="margin-top: 1rem; text-align: center; font-size: 0.78rem; color: var(--color-charcoal-light);">
-                <i class="fa-solid fa-shield-heart" style="color: var(--color-forest-green);"></i>
-                Free cancellation up to 2 hours prior to scheduled visit.
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </form>
+      <!-- Step Content Box -->
+      <div id="booking-step-container">
+        ${renderCurrentStep(user, pets)}
+      </div>
     </div>
   `;
 }
 
+// ----------------------------------------------------
+// URL PARAMETERS PARSER
+// ----------------------------------------------------
+function parseUrlParameters(user, pets) {
+  const hash = window.location.hash || '';
+  if (!hash.includes('?')) return;
+
+  const queryStr = hash.split('?')[1] || '';
+  const params = new URLSearchParams(queryStr);
+
+  // Check Reschedule ID
+  const resched = params.get('rescheduleId');
+  if (resched && resched !== wizardState.rescheduleId) {
+    const existing = getUserAppointmentById(user.id, resched);
+    if (existing) {
+      wizardState.rescheduleId = resched;
+      wizardState.serviceName = existing.service;
+      const matchedSrv = siteData.services.find(s => s.title.toLowerCase() === (existing.service || '').toLowerCase());
+      if (matchedSrv) {
+        wizardState.serviceId = matchedSrv.id;
+        wizardState.serviceDuration = matchedSrv.duration;
+        wizardState.servicePrice = matchedSrv.price;
+        wizardState.serviceRoom = matchedSrv.room;
+        wizardState.serviceIcon = matchedSrv.icon;
+      }
+      wizardState.petId = existing.petId;
+      wizardState.petName = existing.petName;
+      wizardState.petSpecies = existing.species;
+      wizardState.petPhoto = existing.petPhoto;
+      wizardState.doctorName = existing.veterinarian;
+      wizardState.doctorTitle = existing.vetTitle;
+      wizardState.doctorImage = existing.vetImage;
+      const matchedDoc = siteData.veterinarians.find(v => v.name.toLowerCase() === (existing.veterinarian || '').toLowerCase());
+      if (matchedDoc) {
+        wizardState.doctorId = matchedDoc.id;
+      }
+      wizardState.date = existing.date;
+      wizardState.time = existing.time;
+      wizardState.notes = existing.notes || '';
+      // Default to Date & Time step directly when rescheduling
+      wizardState.currentStep = 4;
+    }
+  }
+
+  // Service parameter
+  const srvParam = params.get('service') || params.get('serviceId');
+  if (srvParam) {
+    const foundSrv = siteData.services.find(s => s.id === srvParam || s.title.toLowerCase().includes(srvParam.toLowerCase()));
+    if (foundSrv) {
+      wizardState.serviceId = foundSrv.id;
+      wizardState.serviceName = foundSrv.title;
+      wizardState.serviceDuration = foundSrv.duration;
+      wizardState.servicePrice = foundSrv.price;
+      wizardState.serviceRoom = foundSrv.room;
+      wizardState.serviceIcon = foundSrv.icon;
+      wizardState.serviceImage = foundSrv.image;
+    }
+  }
+
+  // Doctor parameter
+  const docParam = params.get('doctor') || params.get('doctorId');
+  if (docParam) {
+    const foundDoc = getDoctorById(docParam);
+    if (foundDoc) {
+      wizardState.doctorId = foundDoc.id;
+      wizardState.doctorName = foundDoc.name;
+      wizardState.doctorTitle = foundDoc.title;
+      wizardState.doctorImage = foundDoc.image;
+    }
+  }
+
+  // Pet parameter
+  const petParam = params.get('petId');
+  if (petParam && pets.length > 0) {
+    const foundPet = pets.find(p => p.id === petParam);
+    if (foundPet) {
+      wizardState.petId = foundPet.id;
+      wizardState.petName = foundPet.name;
+      wizardState.petSpecies = foundPet.species;
+      wizardState.petBreed = foundPet.breed;
+      wizardState.petPhoto = foundPet.photo;
+    }
+  }
+}
+
+// ----------------------------------------------------
+// PROGRESS BAR COMPONENT
+// ----------------------------------------------------
+function renderProgressBar(currentStep) {
+  const steps = [
+    { num: 1, label: 'Service', icon: 'fa-stethoscope' },
+    { num: 2, label: 'Pet', icon: 'fa-paw' },
+    { num: 3, label: 'Veterinarian', icon: 'fa-user-doctor' },
+    { num: 4, label: 'Date & Time', icon: 'fa-calendar-days' },
+    { num: 5, label: 'Confirmation', icon: 'fa-clipboard-check' }
+  ];
+
+  const fillPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
+
+  return `
+    <div class="booking-progress-bar" aria-label="Appointment Booking Progress">
+      <div class="booking-progress-track"></div>
+      <div class="booking-progress-fill" style="width: calc(${fillPercent}% * 0.9);"></div>
+
+      ${steps.map(s => {
+        let statusClass = '';
+        if (s.num === currentStep) statusClass = 'active';
+        else if (s.num < currentStep) statusClass = 'completed';
+
+        return `
+          <button type="button" class="booking-step-item ${statusClass}" data-step-target="${s.num}" ${s.num > currentStep ? 'disabled' : ''}>
+            <div class="booking-step-circle">
+              ${s.num < currentStep ? '<i class="fa-solid fa-check"></i>' : s.num}
+            </div>
+            <span class="booking-step-label">${s.label}</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// CURRENT STEP DISPATCHER
+// ----------------------------------------------------
+function renderCurrentStep(user, pets) {
+  switch (wizardState.currentStep) {
+    case 1:
+      return renderStep1Service();
+    case 2:
+      return renderStep2Pet(pets);
+    case 3:
+      return renderStep3Doctor();
+    case 4:
+      return renderStep4DateTime();
+    case 5:
+      return renderStep5Summary();
+    case 6:
+      return renderStep6Confirmed();
+    default:
+      return renderStep1Service();
+  }
+}
+
+// ----------------------------------------------------
+// STEP 1: SELECT SERVICE
+// ----------------------------------------------------
+function renderStep1Service() {
+  return `
+    <div class="profile-card-box animate-fade-up">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-stethoscope" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
+          <h2 style="font-size: 1.35rem; margin: 0;">1. Select Clinical or Wellness Service</h2>
+        </div>
+        <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Choose required veterinary care</span>
+      </div>
+
+      <div class="booking-services-grid">
+        ${siteData.services.map(srv => {
+          const isSelected = srv.id === wizardState.serviceId || srv.title === wizardState.serviceName;
+
+          return `
+            <div class="booking-service-card ${isSelected ? 'selected' : ''}" data-service-id="${srv.id}">
+              <img src="${srv.image}" alt="${srv.title}" class="booking-service-thumb" loading="lazy">
+              
+              <div class="booking-service-body">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                    <span class="section-badge" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; margin: 0;">
+                      <i class="${srv.icon}"></i>
+                      <span>${srv.badge}</span>
+                    </span>
+                    <span class="booking-service-duration">
+                      <i class="fa-solid fa-clock"></i> ${srv.duration || '30 Mins'}
+                    </span>
+                  </div>
+
+                  <h3 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0.4rem 0 0.35rem;">${srv.title}</h3>
+                  <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); line-height: 1.45; margin: 0 0 0.75rem;">
+                    ${srv.shortDesc}
+                  </p>
+                </div>
+
+                <div class="booking-service-meta">
+                  <span class="booking-service-price">${srv.price || '$55'}</span>
+                  <button type="button" class="btn ${isSelected ? 'btn-teal' : 'btn-outline'}" style="padding: 0.45rem 1rem; font-size: 0.82rem;">
+                    <span>${isSelected ? 'Selected ✓' : 'Select Service'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div class="wizard-footer-nav">
+        <div></div>
+        <button type="button" class="btn btn-teal btn-lg" id="step1-next-btn">
+          <span>Continue to Select Pet</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// STEP 2: SELECT PET
+// ----------------------------------------------------
+function renderStep2Pet(pets) {
+  return `
+    <div class="profile-card-box animate-fade-up">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-paw" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
+          <h2 style="font-size: 1.35rem; margin: 0;">2. Select Patient (Your Pet)</h2>
+        </div>
+        
+        <button type="button" class="btn btn-outline" id="booking-add-pet-btn" style="padding: 0.4rem 0.9rem; font-size: 0.82rem;">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add a Pet</span>
+        </button>
+      </div>
+
+      ${pets.length === 0 ? `
+        <div style="background: var(--color-warm-cream); padding: 3rem 2rem; border-radius: var(--radius-xl); border: 2px dashed var(--color-sage-green); text-align: center;">
+          <i class="fa-solid fa-paw" style="font-size: 3rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
+          <h3 style="color: var(--color-forest-green); margin-bottom: 0.4rem;">No pets added yet.</h3>
+          <p style="color: var(--color-charcoal-muted); max-width: 420px; margin: 0 auto 1.5rem;">
+            Please register your pet to link their medical charts, vaccine schedules, and appointments.
+          </p>
+          <button type="button" class="btn btn-teal btn-lg" id="empty-state-add-pet-btn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add a Pet</span>
+          </button>
+        </div>
+      ` : `
+        <div class="booking-pets-grid">
+          ${pets.map(p => {
+            const isSelected = p.id === wizardState.petId;
+
+            return `
+              <div class="booking-pet-card ${isSelected ? 'selected' : ''}" data-pet-id="${p.id}">
+                <img src="${p.photo}" alt="${p.name}" class="booking-pet-avatar">
+                
+                <div style="flex-grow: 1; overflow: hidden;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
+                    <h3 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${p.name}</h3>
+                    ${isSelected ? '<i class="fa-solid fa-circle-check" style="color: var(--color-forest-green); font-size: 1.1rem;"></i>' : ''}
+                  </div>
+                  
+                  <span style="font-size: 0.85rem; color: var(--color-charcoal-muted); display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                    ${p.species} • ${p.breed}
+                  </span>
+                  <span style="font-size: 0.78rem; font-weight: 700; color: var(--color-soft-coral-hover); display: block; margin-top: 0.25rem;">
+                    <i class="fa-solid fa-cake-candles"></i> ${p.age}
+                  </span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
+
+      <div class="wizard-footer-nav">
+        <button type="button" class="btn btn-outline" id="step2-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Service</span>
+        </button>
+        
+        <button type="button" class="btn btn-teal btn-lg" id="step2-next-btn" ${pets.length === 0 ? 'disabled' : ''}>
+          <span>Continue to Veterinarian</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// STEP 3: SELECT VETERINARIAN
+// ----------------------------------------------------
+function renderStep3Doctor() {
+  const isAnySelected = wizardState.doctorId === 'any' || wizardState.doctorName.toLowerCase().includes('any available');
+
+  return `
+    <div class="profile-card-box animate-fade-up">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-user-doctor" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
+          <h2 style="font-size: 1.35rem; margin: 0;">3. Select Attending Veterinarian</h2>
+        </div>
+        <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Board-certified clinical specialists</span>
+      </div>
+
+      <!-- "Any Available Veterinarian" Card -->
+      <div class="booking-doctor-card ${isAnySelected ? 'selected' : ''}" data-doctor-id="any" style="margin-bottom: 1.25rem; border: 2px solid ${isAnySelected ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${isAnySelected ? 'var(--color-sage-green-soft)' : 'var(--color-warm-cream)'};">
+        <div style="width: 58px; height: 58px; border-radius: var(--radius-full); background: var(--color-forest-green); color: var(--color-warm-cream); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; box-shadow: var(--shadow-sm);">
+          <i class="fa-solid fa-user-doctor"></i>
+        </div>
+        
+        <div style="flex-grow: 1;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
+            <h3 style="font-size: 1.15rem; color: var(--color-forest-green); margin: 0;">Any Available Veterinarian</h3>
+            <span class="section-badge" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; margin: 0; background: var(--color-forest-green); color: var(--color-warm-cream);">
+              Auto-Assign
+            </span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); margin: 0;">
+            PETZY will automatically assign the earliest available specialist for your chosen date and time slot.
+          </p>
+        </div>
+      </div>
+
+      <!-- Specific Veterinarians Grid -->
+      <div class="booking-doctors-grid">
+        ${siteData.veterinarians.map(v => {
+          const isSelected = v.id === wizardState.doctorId || v.name === wizardState.doctorName;
+
+          return `
+            <div class="booking-doctor-card ${isSelected ? 'selected' : ''}" data-doctor-id="${v.id}">
+              <img src="${v.image}" alt="${v.name}" class="booking-doctor-avatar">
+              
+              <div style="flex-grow: 1; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.15rem;">
+                  <h3 style="font-size: 1.05rem; color: var(--color-forest-green); margin: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${v.name}</h3>
+                  ${isSelected ? '<i class="fa-solid fa-circle-check" style="color: var(--color-forest-green); font-size: 1.05rem;"></i>' : ''}
+                </div>
+                
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--color-soft-coral-hover); display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                  ${v.badge || v.title}
+                </span>
+                
+                <span style="font-size: 0.75rem; color: var(--color-charcoal-light); display: block; margin-top: 0.2rem;">
+                  <i class="fa-solid fa-medal" style="color: #DEB853;"></i> ${v.experience}
+                </span>
+                
+                <span style="font-size: 0.75rem; color: #2E7D32; font-weight: 600; display: block; margin-top: 0.2rem;">
+                  <i class="fa-solid fa-calendar-check"></i> ${v.availability || 'Available Daily'}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div class="wizard-footer-nav">
+        <button type="button" class="btn btn-outline" id="step3-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Pet</span>
+        </button>
+        
+        <button type="button" class="btn btn-teal btn-lg" id="step3-next-btn">
+          <span>Continue to Date & Time</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// STEP 4: DATE & TIME SELECTION
+// ----------------------------------------------------
+function renderStep4DateTime() {
+  const doctorQuery = wizardState.doctorId === 'any' ? null : wizardState.doctorName;
+  const slotAvailability = getAvailableSlotsForDoctorAndDate(doctorQuery, wizardState.date, wizardState.rescheduleId);
+
+  return `
+    <div class="profile-card-box animate-fade-up">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-calendar-days" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
+          <h2 style="font-size: 1.35rem; margin: 0;">4. Select Date & Available Time Slot</h2>
+        </div>
+        <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Real-time appointment schedule</span>
+      </div>
+
+      <div class="booking-datetime-layout">
+        
+        <!-- Left: Interactive Calendar Widget -->
+        <div class="petzy-calendar-box">
+          <div class="calendar-header">
+            <button type="button" class="calendar-nav-btn" id="cal-prev-month" aria-label="Previous Month">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <h3 class="calendar-month-title" id="cal-month-label">
+              ${MONTH_NAMES[wizardState.calendarMonth]} ${wizardState.calendarYear}
+            </h3>
+            <button type="button" class="calendar-nav-btn" id="cal-next-month" aria-label="Next Month">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="calendar-weekdays">
+            <span>Su</span>
+            <span>Mo</span>
+            <span>Tu</span>
+            <span>We</span>
+            <span>Th</span>
+            <span>Fr</span>
+            <span>Sa</span>
+          </div>
+
+          <div class="calendar-days-grid" id="calendar-days-container">
+            ${renderCalendarDays(wizardState.calendarYear, wizardState.calendarMonth, wizardState.date)}
+          </div>
+
+          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--color-charcoal-muted);">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; background: var(--color-soft-coral); display: inline-block;"></span>
+              <span>Selected Date</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--color-forest-green); display: inline-block;"></span>
+              <span>Today</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="width: 12px; height: 12px; border-radius: 3px; background: #e0e0e0; display: inline-block;"></span>
+              <span>Unavailable</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Time Slots & Notes -->
+        <div class="time-slots-box">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border-subtle);">
+            <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-forest-green);">
+              <i class="fa-solid fa-clock" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
+              Available Slots for ${formatDateHuman(wizardState.date)}
+            </span>
+          </div>
+
+          ${!slotAvailability.hasAvailableSlots ? `
+            <div style="background: #FDEDEC; border: 1px solid #F5B7B1; color: #C0392B; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; margin-bottom: 1.25rem;">
+              <i class="fa-solid fa-calendar-xmark" style="font-size: 1.75rem; margin-bottom: 0.5rem;"></i>
+              <p style="font-weight: 700; margin: 0 0 0.25rem;">No appointments are available for this date.</p>
+              <p style="font-size: 0.85rem; margin: 0;">Please choose another date on the calendar.</p>
+            </div>
+          ` : `
+            <!-- Morning Slots -->
+            <div class="time-slots-group">
+              <div class="time-group-title">
+                <i class="fa-solid fa-sun" style="color: #F39C12;"></i>
+                <span>Morning</span>
+              </div>
+              <div class="time-slots-grid">
+                ${slotAvailability.morning.map(s => renderTimeSlotButton(s)).join('')}
+              </div>
+            </div>
+
+            <!-- Afternoon Slots -->
+            <div class="time-slots-group">
+              <div class="time-group-title">
+                <i class="fa-solid fa-cloud-sun" style="color: var(--color-forest-green);"></i>
+                <span>Afternoon</span>
+              </div>
+              <div class="time-slots-grid">
+                ${slotAvailability.afternoon.map(s => renderTimeSlotButton(s)).join('')}
+              </div>
+            </div>
+
+            <!-- Evening Slots -->
+            <div class="time-slots-group">
+              <div class="time-group-title">
+                <i class="fa-solid fa-moon" style="color: var(--color-soft-coral);"></i>
+                <span>Evening</span>
+              </div>
+              <div class="time-slots-grid">
+                ${slotAvailability.evening.map(s => renderTimeSlotButton(s)).join('')}
+              </div>
+            </div>
+          `}
+
+          <!-- Clinical Notes / Reason for Visit -->
+          <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
+            <label class="form-label" for="booking-notes-input" style="font-size: 0.85rem;">
+              Reason for Visit & Symptoms (Optional)
+            </label>
+            <textarea id="booking-notes-input" class="form-textarea" rows="2" placeholder="e.g. Annual health checkup, vaccine boosters, routine physical, or check mild ear scratching...">${wizardState.notes}</textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="wizard-footer-nav">
+        <button type="button" class="btn btn-outline" id="step4-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Veterinarian</span>
+        </button>
+        
+        <button type="button" class="btn btn-teal btn-lg" id="step4-next-btn" ${!slotAvailability.hasAvailableSlots || !wizardState.time ? 'disabled' : ''}>
+          <span>Review Booking Summary</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTimeSlotButton(slot) {
+  const isSelected = slot.time === wizardState.time && !slot.isBooked;
+
+  if (slot.isBooked) {
+    return `
+      <button type="button" class="time-slot-pill booked" disabled title="Slot already booked by another patient">
+        <span>${slot.time}</span>
+      </button>
+    `;
+  }
+
+  return `
+    <button type="button" class="time-slot-pill ${isSelected ? 'selected' : ''}" data-time="${slot.time}">
+      <span>${slot.time}</span>
+    </button>
+  `;
+}
+
+function renderCalendarDays(year, month, selectedDateStr) {
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let html = '';
+
+  // Empty leading days
+  for (let i = 0; i < firstDayIndex; i++) {
+    html += `<div class="calendar-day-cell empty"></div>`;
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDayDate = new Date(year, month, day);
+    currentDayDate.setHours(0, 0, 0, 0);
+
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const isPast = currentDayDate < today;
+    const isToday = currentDayDate.getTime() === today.getTime();
+    const isSelected = dateStr === selectedDateStr;
+
+    let cellClass = 'calendar-day-cell';
+    if (isPast) cellClass += ' disabled';
+    if (isToday) cellClass += ' today';
+    if (isSelected) cellClass += ' selected';
+
+    html += `
+      <div class="${cellClass}" data-date="${dateStr}">
+        ${day}
+      </div>
+    `;
+  }
+
+  return html;
+}
+
+// ----------------------------------------------------
+// STEP 5: BOOKING SUMMARY & REVIEW
+// ----------------------------------------------------
+function renderStep5Summary() {
+  const assignedDoc = wizardState.doctorId === 'any'
+    ? findAvailableDoctorForSlot(wizardState.date, wizardState.time, wizardState.rescheduleId)
+    : { name: wizardState.doctorName, title: wizardState.doctorTitle, image: wizardState.doctorImage };
+
+  return `
+    <div class="profile-card-box animate-fade-up" style="max-width: 820px; margin: 0 auto;">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-clipboard-check" style="color: var(--color-forest-green); font-size: 1.35rem;"></i>
+          <h2 style="font-size: 1.45rem; margin: 0;">5. Review Appointment Summary</h2>
+        </div>
+        <span class="section-badge coral" style="margin: 0;">Ready to Confirm</span>
+      </div>
+
+      <!-- Spotlight Header with Pet & Doctor -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; background: var(--color-warm-cream); padding: 1.25rem; border-radius: var(--radius-xl); border: 1px solid var(--color-border);">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="${wizardState.petPhoto || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80'}" alt="${wizardState.petName}" style="width: 52px; height: 52px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green);">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Patient</span>
+            <h4 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0;">${wizardState.petName || 'My Pet'}</h4>
+            <span style="font-size: 0.82rem; color: var(--color-charcoal-muted);">${wizardState.petSpecies} • ${wizardState.petBreed}</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="${assignedDoc.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80'}" alt="${assignedDoc.name}" style="width: 52px; height: 52px; border-radius: var(--radius-full); object-fit: cover; border: 2px solid var(--color-soft-coral);">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Veterinarian</span>
+            <h4 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0;">${assignedDoc.name}</h4>
+            <span style="font-size: 0.82rem; color: var(--color-charcoal-muted);">${assignedDoc.title}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Structured Summary Table -->
+      <table class="booking-summary-table" aria-label="Appointment Confirmation Summary">
+        <tbody>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-stethoscope" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Clinical Service</td>
+            <td><strong>${wizardState.serviceName}</strong></td>
+          </tr>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-clock" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Estimated Duration</td>
+            <td>${wizardState.serviceDuration || '30 Mins'}</td>
+          </tr>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-calendar" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i> Appointment Date</td>
+            <td><strong>${formatDateHuman(wizardState.date)}</strong></td>
+          </tr>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-clock-rotate-left" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i> Scheduled Time</td>
+            <td><strong style="color: var(--color-soft-coral-hover); font-size: 1.05rem;">${wizardState.time}</strong></td>
+          </tr>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-hospital" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Hospital Location</td>
+            <td>PETZY Central Hospital (${wizardState.serviceRoom || 'Suite 2B'})</td>
+          </tr>
+          <tr class="booking-summary-row">
+            <td><i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Consultation Fee</td>
+            <td><strong style="color: var(--color-forest-green); font-size: 1.15rem;">${wizardState.servicePrice || '$55'}</strong></td>
+          </tr>
+          ${wizardState.notes ? `
+            <tr class="booking-summary-row">
+              <td><i class="fa-solid fa-clipboard-question" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Clinical Notes</td>
+              <td style="font-weight: 500; font-size: 0.88rem; color: var(--color-charcoal);">${wizardState.notes}</td>
+            </tr>
+          ` : ''}
+        </tbody>
+      </table>
+
+      <!-- Policy notice -->
+      <div style="background: var(--color-sage-green-soft); border-left: 4px solid var(--color-forest-green); padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--color-forest-green); margin-top: 1.25rem;">
+        <i class="fa-solid fa-shield-heart" style="margin-right: 0.35rem;"></i>
+        <strong>Peace of Mind Guarantee:</strong> Free cancellation and instant rescheduling up to 2 hours prior to scheduled visit.
+      </div>
+
+      <div class="wizard-footer-nav">
+        <button type="button" class="btn btn-outline btn-lg" id="step5-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back & Edit</span>
+        </button>
+        
+        <button type="button" class="btn btn-coral btn-lg" id="step5-confirm-btn" style="min-width: 240px; justify-content: center;">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>${wizardState.rescheduleId ? 'Confirm Reschedule' : 'Confirm Appointment'}</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// STEP 6: CONFIRMATION SUCCESS SCREEN
+// ----------------------------------------------------
+function renderStep6Confirmed() {
+  const appt = wizardState.confirmedAppt || {
+    id: generateAppointmentId(),
+    service: wizardState.serviceName,
+    petName: wizardState.petName,
+    veterinarian: wizardState.doctorName,
+    date: wizardState.date,
+    time: wizardState.time,
+    room: wizardState.serviceRoom
+  };
+
+  return `
+    <div class="booking-confirmed-card animate-fade-up">
+      <!-- Animated Checkmark Icon -->
+      <div class="checkmark-circle-wrap">
+        <svg class="checkmark-svg" viewBox="0 0 52 52">
+          <polyline points="14 27 22 35 38 19"/>
+        </svg>
+      </div>
+
+      <div class="section-badge" style="margin-bottom: 0.5rem; background: var(--color-sage-green-soft); color: var(--color-forest-green);">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>${wizardState.rescheduleId ? 'Appointment Rescheduled' : 'Booking Confirmed'}</span>
+      </div>
+
+      <h2 style="font-size: 2.1rem; color: var(--color-forest-green); margin-bottom: 0.4rem;">
+        ${wizardState.rescheduleId ? 'Your Appointment Has Been Rescheduled!' : 'Appointment Confirmed!'}
+      </h2>
+      <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin-bottom: 1.25rem;">
+        Your veterinary visit has been successfully scheduled. We look forward to welcoming you and <strong>${appt.petName}</strong>.
+      </p>
+
+      <div class="appointment-id-pill">
+        <span>Appointment ID:</span>
+        <strong id="confirmed-appt-id">${appt.id}</strong>
+      </div>
+
+      <!-- Visit Overview Box -->
+      <div style="background: var(--color-warm-cream); border-radius: var(--radius-xl); border: 1px solid var(--color-border); padding: 1.5rem; text-align: left; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Service</span>
+            <h4 style="font-size: 0.98rem; color: var(--color-forest-green); margin: 0.2rem 0 0;">${appt.service}</h4>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Patient</span>
+            <h4 style="font-size: 0.98rem; color: var(--color-forest-green); margin: 0.2rem 0 0;">${appt.petName}</h4>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Attending Doctor</span>
+            <h4 style="font-size: 0.98rem; color: var(--color-forest-green); margin: 0.2rem 0 0;">${appt.veterinarian}</h4>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Date & Time</span>
+            <h4 style="font-size: 0.98rem; color: var(--color-soft-coral-hover); margin: 0.2rem 0 0;">${formatDateHuman(appt.date)} • ${appt.time}</h4>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline btn-lg" id="confirmed-view-details-btn">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>View Appointment</span>
+        </button>
+        <a href="#/dashboard?tab=appointments" class="btn btn-teal btn-lg">
+          <i class="fa-solid fa-table-columns"></i>
+          <span>Back to Dashboard</span>
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// EVENT LISTENERS & LIFECYCLE
+// ----------------------------------------------------
 export function setupScheduleAppointmentEvents() {
   const user = getCurrentUser();
   if (!user) return;
 
   const pets = getUserPets(user.id);
-  const form = document.getElementById('schedule-appointment-form');
 
-  // 1. Pet selection cards
-  const petCards = document.querySelectorAll('.pet-select-card');
-  petCards.forEach(card => {
-    card.addEventListener('click', () => {
-      petCards.forEach(c => {
-        c.style.borderColor = 'var(--color-border)';
-        c.style.background = 'var(--color-white)';
-      });
-      card.style.borderColor = 'var(--color-forest-green)';
-      card.style.background = 'var(--color-sage-green-soft)';
+  // Helper to re-render wizard
+  const refreshWizard = () => {
+    const root = document.getElementById('app-root');
+    if (root) {
+      root.innerHTML = renderScheduleAppointment();
+      setupScheduleAppointmentEvents();
+    }
+  };
 
-      selectedPetId = card.getAttribute('data-pet-id');
-      const petName = card.getAttribute('data-pet-name');
-      const summaryPetName = document.getElementById('summary-pet-name');
-      if (summaryPetName && petName) summaryPetName.textContent = petName;
+  // Step Bar direct navigation (to completed or current step)
+  document.querySelectorAll('.booking-step-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = parseInt(btn.getAttribute('data-step-target'), 10);
+      if (target && target <= wizardState.currentStep) {
+        wizardState.currentStep = target;
+        refreshWizard();
+      }
     });
   });
 
-  // 2. Service selection cards
-  const serviceCards = document.querySelectorAll('.service-select-card');
-  serviceCards.forEach(card => {
+  // ----------------------------------------------------
+  // STEP 1 EVENTS (Service Selection)
+  // ----------------------------------------------------
+  document.querySelectorAll('.booking-service-card').forEach(card => {
     card.addEventListener('click', () => {
-      serviceCards.forEach(c => {
-        c.style.borderColor = 'var(--color-border)';
-        c.style.background = 'var(--color-white)';
-        const iconWrap = c.querySelector('div:first-child');
-        if (iconWrap) {
-          iconWrap.style.background = 'var(--color-warm-cream)';
-          iconWrap.style.color = 'var(--color-forest-green)';
+      const srvId = card.getAttribute('data-service-id');
+      const found = siteData.services.find(s => s.id === srvId);
+      if (found) {
+        wizardState.serviceId = found.id;
+        wizardState.serviceName = found.title;
+        wizardState.serviceDuration = found.duration;
+        wizardState.servicePrice = found.price;
+        wizardState.serviceRoom = found.room;
+        wizardState.serviceIcon = found.icon;
+        wizardState.serviceImage = found.image;
+        
+        // Auto advance to Step 2
+        wizardState.currentStep = 2;
+        refreshWizard();
+      }
+    });
+  });
+
+  document.getElementById('step1-next-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 2;
+    refreshWizard();
+  });
+
+  // ----------------------------------------------------
+  // STEP 2 EVENTS (Pet Selection)
+  // ----------------------------------------------------
+  document.querySelectorAll('.booking-pet-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const pId = card.getAttribute('data-pet-id');
+      const found = pets.find(p => p.id === pId);
+      if (found) {
+        wizardState.petId = found.id;
+        wizardState.petName = found.name;
+        wizardState.petSpecies = found.species;
+        wizardState.petBreed = found.breed;
+        wizardState.petPhoto = found.photo;
+
+        // Auto advance to Step 3
+        wizardState.currentStep = 3;
+        refreshWizard();
+      }
+    });
+  });
+
+  document.getElementById('step2-back-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 1;
+    refreshWizard();
+  });
+
+  document.getElementById('step2-next-btn')?.addEventListener('click', () => {
+    if (wizardState.petId) {
+      wizardState.currentStep = 3;
+      refreshWizard();
+    } else {
+      showToast('Please select a pet to continue.', 'coral', 'fa-solid fa-paw');
+    }
+  });
+
+  const handleAddPetModal = () => {
+    openPetModal(null, (newPet) => {
+      if (newPet) {
+        wizardState.petId = newPet.id;
+        wizardState.petName = newPet.name;
+        wizardState.petSpecies = newPet.species;
+        wizardState.petBreed = newPet.breed;
+        wizardState.petPhoto = newPet.photo;
+        showToast(`${newPet.name} added to your account!`, 'sage', 'fa-solid fa-paw');
+      }
+      refreshWizard();
+    });
+  };
+
+  document.getElementById('booking-add-pet-btn')?.addEventListener('click', handleAddPetModal);
+  document.getElementById('empty-state-add-pet-btn')?.addEventListener('click', handleAddPetModal);
+
+  // ----------------------------------------------------
+  // STEP 3 EVENTS (Doctor Selection)
+  // ----------------------------------------------------
+  document.querySelectorAll('.booking-doctor-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const docId = card.getAttribute('data-doctor-id');
+      if (docId === 'any') {
+        wizardState.doctorId = 'any';
+        wizardState.doctorName = 'Any Available Veterinarian';
+        wizardState.doctorTitle = 'Assigned based on schedule';
+        wizardState.doctorImage = '';
+      } else {
+        const found = siteData.veterinarians.find(v => v.id === docId);
+        if (found) {
+          wizardState.doctorId = found.id;
+          wizardState.doctorName = found.name;
+          wizardState.doctorTitle = found.title;
+          wizardState.doctorImage = found.image;
         }
-      });
-      card.style.borderColor = 'var(--color-forest-green)';
-      card.style.background = 'var(--color-sage-green-soft)';
-      const iconWrap = card.querySelector('div:first-child');
-      if (iconWrap) {
-        iconWrap.style.background = 'var(--color-forest-green)';
-        iconWrap.style.color = 'var(--color-warm-cream)';
       }
 
-      selectedServiceName = card.getAttribute('data-service-name') || 'Veterinary Consultation';
-      const room = card.getAttribute('data-service-room') || 'Consultation Suite 2B';
-      
-      const roomInput = document.getElementById('appt-room-input');
-      if (roomInput) roomInput.value = room;
-
-      const summaryService = document.getElementById('summary-service-name');
-      if (summaryService) summaryService.textContent = selectedServiceName;
+      // Auto advance to Step 4
+      wizardState.currentStep = 4;
+      refreshWizard();
     });
   });
 
-  // 3. Doctor selection cards
-  const doctorCards = document.querySelectorAll('.doctor-select-card');
-  doctorCards.forEach(card => {
-    card.addEventListener('click', () => {
-      doctorCards.forEach(c => {
-        c.style.borderColor = 'var(--color-border)';
-        c.style.background = 'var(--color-white)';
-      });
-      card.style.borderColor = 'var(--color-forest-green)';
-      card.style.background = 'var(--color-sage-green-soft)';
-
-      selectedDoctorName = card.getAttribute('data-doctor-name') || 'Dr. Ananya Sharma';
-      selectedDoctorTitle = card.getAttribute('data-doctor-title') || 'Veterinary Specialist';
-      selectedDoctorImage = card.getAttribute('data-doctor-image') || '';
-
-      const summaryDoctor = document.getElementById('summary-doctor-name');
-      if (summaryDoctor) summaryDoctor.textContent = selectedDoctorName;
-    });
+  document.getElementById('step3-back-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 2;
+    refreshWizard();
   });
 
-  // 4. Date change handler
-  const dateInput = document.getElementById('appt-date-input');
-  dateInput?.addEventListener('input', (e) => {
-    const summaryDate = document.getElementById('summary-date');
-    if (summaryDate) summaryDate.textContent = e.target.value;
+  document.getElementById('step3-next-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 4;
+    refreshWizard();
   });
 
-  // 5. Time slot button handler
-  const timeBtns = document.querySelectorAll('.time-slot-btn');
-  timeBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      timeBtns.forEach(b => b.classList.remove('primary'));
-      btn.classList.add('primary');
-      selectedTimeSlot = btn.getAttribute('data-time') || '10:30 AM';
-
-      const summaryTime = document.getElementById('summary-time');
-      if (summaryTime) summaryTime.textContent = selectedTimeSlot;
-    });
-  });
-
-  // 6. Form Submission
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    let targetPet = null;
-    if (pets.length > 0 && selectedPetId) {
-      targetPet = pets.find(p => p.id === selectedPetId);
+  // ----------------------------------------------------
+  // STEP 4 EVENTS (Date & Time Selection + Calendar Navigation)
+  // ----------------------------------------------------
+  document.getElementById('cal-prev-month')?.addEventListener('click', () => {
+    if (wizardState.calendarMonth === 0) {
+      wizardState.calendarMonth = 11;
+      wizardState.calendarYear -= 1;
+    } else {
+      wizardState.calendarMonth -= 1;
     }
+    refreshWizard();
+  });
 
-    const manualName = document.getElementById('manual-pet-name')?.value.trim();
-    const petName = targetPet ? targetPet.name : (manualName || 'My Pet');
-    const petPhoto = targetPet ? targetPet.photo : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80';
-    const petSpecies = targetPet ? targetPet.species : 'Pet';
+  document.getElementById('cal-next-month')?.addEventListener('click', () => {
+    if (wizardState.calendarMonth === 11) {
+      wizardState.calendarMonth = 0;
+      wizardState.calendarYear += 1;
+    } else {
+      wizardState.calendarMonth += 1;
+    }
+    refreshWizard();
+  });
 
-    const date = document.getElementById('appt-date-input')?.value;
-    const room = document.getElementById('appt-room-input')?.value || 'Consultation Suite 2B';
-    const notes = document.getElementById('appt-notes-input')?.value.trim() || 'Routine checkup and physical evaluation.';
+  // Calendar Day Selection
+  document.querySelectorAll('.calendar-day-cell:not(.disabled):not(.empty)').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const d = cell.getAttribute('data-date');
+      if (d) {
+        wizardState.date = d;
+        refreshWizard();
+      }
+    });
+  });
 
-    if (!date) {
-      showToast('Please choose an appointment date.', 'coral', 'fa-solid fa-calendar');
+  // Time Slot Selection
+  document.querySelectorAll('.time-slot-pill:not(.booked)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.getAttribute('data-time');
+      if (t) {
+        wizardState.time = t;
+        document.querySelectorAll('.time-slot-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        
+        // Enable next button if disabled
+        const nextBtn = document.getElementById('step4-next-btn');
+        if (nextBtn) nextBtn.removeAttribute('disabled');
+      }
+    });
+  });
+
+  // Clinical Notes input sync
+  document.getElementById('booking-notes-input')?.addEventListener('input', (e) => {
+    wizardState.notes = e.target.value;
+  });
+
+  document.getElementById('step4-back-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 3;
+    refreshWizard();
+  });
+
+  document.getElementById('step4-next-btn')?.addEventListener('click', () => {
+    if (!wizardState.date) {
+      showToast('Please pick a date on the calendar.', 'coral', 'fa-solid fa-calendar');
       return;
     }
+    if (!wizardState.time) {
+      showToast('Please select an available time slot.', 'coral', 'fa-solid fa-clock');
+      return;
+    }
+    wizardState.currentStep = 5;
+    refreshWizard();
+  });
 
-    const newAppt = {
-      petId: targetPet ? targetPet.id : `pet_custom_${Date.now()}`,
-      petName,
-      petPhoto,
-      species: petSpecies,
-      service: selectedServiceName,
-      veterinarian: selectedDoctorName,
-      vetTitle: selectedDoctorTitle,
-      vetImage: selectedDoctorImage,
-      date,
-      time: selectedTimeSlot,
-      status: 'Upcoming',
-      room,
-      notes,
+  // ----------------------------------------------------
+  // STEP 5 EVENTS (Summary Confirmation)
+  // ----------------------------------------------------
+  document.getElementById('step5-back-btn')?.addEventListener('click', () => {
+    wizardState.currentStep = 4;
+    refreshWizard();
+  });
+
+  document.getElementById('step5-confirm-btn')?.addEventListener('click', () => {
+    // Resolve doctor if "Any"
+    let finalDocName = wizardState.doctorName;
+    let finalDocTitle = wizardState.doctorTitle;
+    let finalDocImage = wizardState.doctorImage;
+    let finalDocId = wizardState.doctorId;
+
+    if (wizardState.doctorId === 'any' || finalDocName.toLowerCase().includes('any available')) {
+      const autoAssigned = findAvailableDoctorForSlot(wizardState.date, wizardState.time, wizardState.rescheduleId);
+      finalDocName = autoAssigned.name;
+      finalDocTitle = autoAssigned.title;
+      finalDocImage = autoAssigned.image;
+      finalDocId = autoAssigned.id;
+    }
+
+    const apptPayload = {
+      petId: wizardState.petId,
+      petName: wizardState.petName,
+      petPhoto: wizardState.petPhoto,
+      species: wizardState.petSpecies,
+      serviceId: wizardState.serviceId,
+      service: wizardState.serviceName,
+      duration: wizardState.serviceDuration,
+      price: wizardState.servicePrice,
+      veterinarianId: finalDocId,
+      veterinarian: finalDocName,
+      vetTitle: finalDocTitle,
+      vetImage: finalDocImage,
+      date: wizardState.date,
+      time: wizardState.time,
+      room: wizardState.serviceRoom || 'Consultation Suite 2B',
+      notes: wizardState.notes || 'Routine examination and wellness consultation.',
       diagnosisSummary: 'Scheduled visit. Awaiting clinical examination.'
     };
 
-    saveUserAppointment(user.id, newAppt);
-    showToast(`Appointment confirmed for ${petName} on ${date} at ${selectedTimeSlot}!`, 'sage', 'fa-solid fa-calendar-check');
+    let confirmed;
+    if (wizardState.rescheduleId) {
+      confirmed = rescheduleUserAppointment(user.id, wizardState.rescheduleId, {
+        date: wizardState.date,
+        time: wizardState.time,
+        notes: wizardState.notes
+      });
+      if (!confirmed) {
+        confirmed = saveUserAppointment(user.id, { ...apptPayload, id: wizardState.rescheduleId, status: 'Rescheduled' });
+      }
+      showToast(`Appointment #${wizardState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
+    } else {
+      confirmed = saveUserAppointment(user.id, apptPayload);
+      showToast(`Appointment confirmed for ${wizardState.petName} on ${wizardState.date}!`, 'sage', 'fa-solid fa-calendar-check');
+    }
 
-    setTimeout(() => {
-      window.location.hash = '#/dashboard?tab=appointments';
-    }, 600);
+    wizardState.confirmedAppt = confirmed;
+    wizardState.currentStep = 6;
+    refreshWizard();
   });
+
+  // ----------------------------------------------------
+  // STEP 6 EVENTS (Confirmed Action Handlers)
+  // ----------------------------------------------------
+  document.getElementById('confirmed-view-details-btn')?.addEventListener('click', () => {
+    if (wizardState.confirmedAppt) {
+      openAppointmentModal(wizardState.confirmedAppt, () => {
+        window.location.hash = '#/dashboard?tab=appointments';
+      });
+    } else {
+      window.location.hash = '#/dashboard?tab=appointments';
+    }
+  });
+}
+
+function formatDateHuman(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    return dateObj.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateStr;
+  }
 }

@@ -32,6 +32,35 @@ export const PET_IMAGE_PRESETS = {
   ]
 };
 
+// ----------------------------------------------------
+// TIME SLOTS & AVAILABILITY CONSTANTS
+// ----------------------------------------------------
+
+export const TIME_PERIODS = {
+  morning: ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'],
+  afternoon: ['01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM'],
+  evening: ['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM']
+};
+
+export const ALL_TIME_SLOTS = [
+  ...TIME_PERIODS.morning,
+  ...TIME_PERIODS.afternoon,
+  ...TIME_PERIODS.evening
+];
+
+export function generateAppointmentId() {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `PETZY-${result}`;
+}
+
+// ----------------------------------------------------
+// SEED INITIAL DEMO DATA
+// ----------------------------------------------------
+
 // Seed initial data for demo customer (Samantha Hayes)
 export function seedDemoData(userId) {
   if (!userId) return;
@@ -144,12 +173,15 @@ export function seedDemoData(userId) {
   if (!localStorage.getItem(apptsKey)) {
     const demoAppointments = [
       {
-        id: 'appt_101',
+        id: 'PETZY-948201',
         petId: 'pet_buddy_01',
         petName: 'Buddy',
         petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
         species: 'Dog',
-        service: 'Comprehensive Physical Exam & Wellness',
+        serviceId: 'consultation',
+        service: 'Veterinary Consultation',
+        duration: '30 Mins',
+        price: '$55',
         veterinarian: 'Dr. Ananya Sharma',
         vetTitle: 'Chief Veterinary Surgeon',
         vetImage: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80',
@@ -158,32 +190,40 @@ export function seedDemoData(userId) {
         status: 'Upcoming',
         room: 'Consultation Suite 2B',
         notes: 'Annual comprehensive wellness physical, heart auscultation, weight check, and routine preventative blood panel.',
-        diagnosisSummary: 'Scheduled routine annual examination.'
+        diagnosisSummary: 'Scheduled routine annual examination.',
+        createdAt: '2026-08-20T10:00:00.000Z'
       },
       {
-        id: 'appt_102',
+        id: 'PETZY-832104',
         petId: 'pet_buddy_01',
         petName: 'Buddy',
         petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
         species: 'Dog',
-        service: 'Vaccination Booster & Allergy Consult',
+        serviceId: 'vaccination',
+        service: 'Vaccination & Immunity',
+        duration: '30 Mins',
+        price: '$45',
         veterinarian: 'Dr. Rohan Mehta',
         vetTitle: 'Pet Wellness & Nutrition Specialist',
         vetImage: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80',
         date: '2025-08-14',
         time: '02:15 PM',
         status: 'Completed',
-        room: 'Wellness Suite 1',
+        room: 'Immunization Suite 1',
         notes: 'Administered DHPP and Lepto boosters. Checked skin barrier for seasonal allergy signs. Recommended omega-3 fish oil supplement.',
-        diagnosisSummary: 'Healthy coat, all vitals normal. Prescribed Derma-Care Omega Drops.'
+        diagnosisSummary: 'Healthy coat, all vitals normal. Prescribed Derma-Care Omega Drops.',
+        createdAt: '2025-08-10T14:00:00.000Z'
       },
       {
-        id: 'appt_103',
+        id: 'PETZY-719302',
         petId: 'pet_mimi_02',
         petName: 'Mimi',
         petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
         species: 'Cat',
-        service: 'Dental Examination & Ultrasonic Polish',
+        serviceId: 'dental-care',
+        service: 'Dental Care & Hygiene',
+        duration: '45 Mins',
+        price: '$85',
         veterinarian: 'Dr. Sarah Kapoor',
         vetTitle: 'Senior Veterinary Physician',
         vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
@@ -192,24 +232,29 @@ export function seedDemoData(userId) {
         status: 'Completed',
         room: 'Dental Suite A',
         notes: 'Ultrasonic cleaning of mild tartar. Gingival tissue healthy with zero pocketing. Fluoride polish applied.',
-        diagnosisSummary: 'Grade 1 mild gingivitis resolved post-cleaning. Home oral gel provided.'
+        diagnosisSummary: 'Grade 1 mild gingivitis resolved post-cleaning. Home oral gel provided.',
+        createdAt: '2025-10-12T11:00:00.000Z'
       },
       {
-        id: 'appt_104',
+        id: 'PETZY-605821',
         petId: 'pet_mimi_02',
         petName: 'Mimi',
         petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
         species: 'Cat',
-        service: 'Annual Feline Immunization & Microchip Verification',
+        serviceId: 'vaccination',
+        service: 'Vaccination & Immunity',
+        duration: '30 Mins',
+        price: '$45',
         veterinarian: 'Dr. Sarah Kapoor',
         vetTitle: 'Senior Veterinary Physician',
         vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
         date: '2025-06-20',
         time: '03:45 PM',
         status: 'Completed',
-        room: 'Quiet Feline Room 3',
+        room: 'Immunization Suite 1',
         notes: 'FVRCP and PureVax Rabies administered with zero stress. Weight steady at 4.2 kg.',
-        diagnosisSummary: 'Excellent feline vitals. Heart clear, clear lungs, bright alert response.'
+        diagnosisSummary: 'Excellent feline vitals. Heart clear, clear lungs, bright alert response.',
+        createdAt: '2025-06-15T15:00:00.000Z'
       }
     ];
     localStorage.setItem(apptsKey, JSON.stringify(demoAppointments));
@@ -289,7 +334,120 @@ export function addVaccinationRecord(userId, petId, record) {
 }
 
 // ----------------------------------------------------
-// APPOINTMENTS CRUD OPERATIONS
+// CROSS-ACCOUNT DOUBLE-BOOKING PREVENTION & APPOINTMENT QUERIES
+// ----------------------------------------------------
+
+export function getAllGlobalAppointments() {
+  const allAppts = [];
+  try {
+    if (typeof localStorage !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(APPOINTMENTS_KEY_PREFIX)) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              allAppts.push(...parsed);
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error reading global appointments:', e);
+  }
+  return allAppts;
+}
+
+export function isSlotBooked(doctorNameOrId, dateStr, timeSlot, excludeApptId = null) {
+  if (!dateStr || !timeSlot) return false;
+  const allAppts = getAllGlobalAppointments();
+  const docLower = doctorNameOrId ? doctorNameOrId.toLowerCase().trim() : '';
+
+  return allAppts.some(appt => {
+    if (excludeApptId && appt.id === excludeApptId) return false;
+    if (appt.status === 'Cancelled') return false; // Cancelled appointments free the slot
+    if (appt.date !== dateStr) return false;
+    if (appt.time !== timeSlot) return false;
+
+    if (!docLower || docLower === 'any' || docLower.includes('any available')) {
+      return false;
+    }
+
+    const apptDoc = (appt.veterinarian || '').toLowerCase();
+    const apptDocId = (appt.veterinarianId || '').toLowerCase();
+    return apptDoc.includes(docLower) || docLower.includes(apptDoc) || apptDocId === docLower;
+  });
+}
+
+export function isAllDoctorsBookedAtSlot(dateStr, timeSlot, excludeApptId = null) {
+  const docs = [
+    'Dr. Ananya Sharma',
+    'Dr. Rohan Mehta',
+    'Dr. Sarah Kapoor',
+    'Dr. David Chen',
+    'Dr. Maya Patel',
+    'Dr. Priya Rao'
+  ];
+  return docs.every(doc => isSlotBooked(doc, dateStr, timeSlot, excludeApptId));
+}
+
+export function findAvailableDoctorForSlot(dateStr, timeSlot, excludeApptId = null) {
+  const docs = [
+    { name: 'Dr. Ananya Sharma', id: 'ananya-sharma', title: 'Chief Veterinary Surgeon', image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80' },
+    { name: 'Dr. Rohan Mehta', id: 'rohan-mehta', title: 'Pet Wellness & Nutrition Specialist', image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80' },
+    { name: 'Dr. Sarah Kapoor', id: 'sarah-kapoor', title: 'Senior Veterinary Physician', image: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80' },
+    { name: 'Dr. David Chen', id: 'david-chen', title: 'Emergency & Critical Care Specialist', image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80' },
+    { name: 'Dr. Maya Patel', id: 'maya-patel', title: 'Veterinary Dermatology Specialist', image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80' },
+    { name: 'Dr. Priya Rao', id: 'priya-rao', title: 'Avian & Exotic Pet Specialist', image: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80' }
+  ];
+
+  for (const doc of docs) {
+    if (!isSlotBooked(doc.name, dateStr, timeSlot, excludeApptId)) {
+      return doc;
+    }
+  }
+  return docs[0];
+}
+
+export function getAvailableSlotsForDoctorAndDate(doctorNameOrId, dateStr, excludeApptId = null) {
+  const result = {
+    morning: [],
+    afternoon: [],
+    evening: [],
+    hasAvailableSlots: false
+  };
+
+  if (!dateStr) return result;
+
+  const isAnyDoctor = !doctorNameOrId || doctorNameOrId === 'any' || doctorNameOrId.toLowerCase().includes('any available');
+
+  ['morning', 'afternoon', 'evening'].forEach(period => {
+    result[period] = TIME_PERIODS[period].map(slot => {
+      let isBooked = false;
+      if (isAnyDoctor) {
+        isBooked = isAllDoctorsBookedAtSlot(dateStr, slot, excludeApptId);
+      } else {
+        isBooked = isSlotBooked(doctorNameOrId, dateStr, slot, excludeApptId);
+      }
+
+      if (!isBooked) {
+        result.hasAvailableSlots = true;
+      }
+
+      return {
+        time: slot,
+        isBooked
+      };
+    });
+  });
+
+  return result;
+}
+
+// ----------------------------------------------------
+// USER APPOINTMENTS CRUD OPERATIONS
 // ----------------------------------------------------
 
 export function getUserAppointments(userId) {
@@ -319,8 +477,10 @@ export function saveUserAppointment(userId, apptData) {
   const appts = getUserAppointments(userId);
   const newAppt = {
     ...apptData,
-    id: apptData.id || `appt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-    status: apptData.status || 'Upcoming'
+    id: apptData.id || generateAppointmentId(),
+    status: apptData.status || 'Upcoming',
+    createdAt: apptData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   const existingIdx = appts.findIndex(a => a.id === newAppt.id);
@@ -334,6 +494,22 @@ export function saveUserAppointment(userId, apptData) {
   return newAppt;
 }
 
+export function rescheduleUserAppointment(userId, apptId, { date, time, notes }) {
+  if (!userId || !apptId) return null;
+  const appts = getUserAppointments(userId);
+  const appt = appts.find(a => a.id === apptId);
+  if (!appt) return null;
+
+  appt.date = date || appt.date;
+  appt.time = time || appt.time;
+  if (notes !== undefined) appt.notes = notes;
+  appt.status = 'Rescheduled';
+  appt.updatedAt = new Date().toISOString();
+
+  localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  return appt;
+}
+
 export function cancelUserAppointment(userId, apptId) {
   if (!userId || !apptId) return false;
   const appts = getUserAppointments(userId);
@@ -341,6 +517,7 @@ export function cancelUserAppointment(userId, apptId) {
   if (!appt) return false;
 
   appt.status = 'Cancelled';
+  appt.updatedAt = new Date().toISOString();
   localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
   return true;
 }

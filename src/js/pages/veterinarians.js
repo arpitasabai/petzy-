@@ -70,7 +70,7 @@ export function renderVeterinarians() {
             </div>
             <h2>Schedule a Visit With Our Clinical Specialists</h2>
             <p>Select your preferred veterinarian when booking your consultation or routine health checkup.</p>
-            <a href="#/contact" class="btn btn-coral btn-lg">
+            <a href="#/book-appointment" class="btn btn-coral btn-lg">
               <i class="fa-solid fa-calendar-check"></i>
               <span>Book an Appointment</span>
             </a>

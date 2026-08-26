@@ -61,7 +61,9 @@ export function isAuthenticated() {
 }
 
 function dispatchAuthChange(user) {
-  window.dispatchEvent(new CustomEvent('petzy-auth-change', { detail: { user } }));
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('petzy-auth-change', { detail: { user } }));
+  }
 }
 
 // Customer Registration
