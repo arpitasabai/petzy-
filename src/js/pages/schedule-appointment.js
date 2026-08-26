@@ -138,6 +138,9 @@ export function renderScheduleAppointment() {
   `;
 }
 
+// Track processed hash to prevent query param re-reading on user selection changes
+let lastParsedHash = '';
+
 // ----------------------------------------------------
 // URL PARAMETERS & STATE SYNCHRONIZATION
 // ----------------------------------------------------
@@ -196,45 +199,51 @@ function syncStateFromUrl(user, pets) {
         bookingState.currentStep = 4; // Start at date/time for reschedule
       }
     }
+    lastParsedHash = hash;
     return;
   }
 
   // Case B: Fresh New Booking Flow
-  // If previously in confirmed state or reschedule mode, reset to clean state
-  if (bookingState.rescheduleId !== null || bookingState.confirmedAppt !== null) {
-    bookingState = getInitialBookingState();
-  }
-
-  // Check URL query parameters for fresh booking pre-selections
-  const srvParam = params.get('service') || params.get('serviceId');
-  if (srvParam) {
-    const foundSrv = getServiceById(srvParam);
-    if (foundSrv && bookingState.serviceId !== foundSrv.id) {
-      applyServiceToState(foundSrv);
+  // Only parse initial query params when hash changes externally
+  if (hash !== lastParsedHash) {
+    // If previously in confirmed state or reschedule mode, reset to clean state
+    if (bookingState.rescheduleId !== null || bookingState.confirmedAppt !== null) {
+      bookingState = getInitialBookingState();
     }
-  }
 
-  const docParam = params.get('doctor') || params.get('doctorId');
-  if (docParam) {
-    const foundDoc = getDoctorById(docParam);
-    if (foundDoc && bookingState.veterinarianId !== foundDoc.id) {
-      bookingState.veterinarianId = foundDoc.id;
-      bookingState.doctorName = foundDoc.name;
-      bookingState.doctorTitle = foundDoc.title;
-      bookingState.doctorImage = foundDoc.image;
+    // Check URL query parameters for fresh booking pre-selections
+    const srvParam = params.get('service') || params.get('serviceId');
+    if (srvParam) {
+      const foundSrv = getServiceById(srvParam);
+      if (foundSrv) {
+        applyServiceToState(foundSrv);
+      }
     }
-  }
 
-  const petParam = params.get('petId');
-  if (petParam && pets.length > 0) {
-    const foundPet = pets.find(p => p.id === petParam);
-    if (foundPet && bookingState.petId !== foundPet.id) {
-      bookingState.petId = foundPet.id;
-      bookingState.petName = foundPet.name;
-      bookingState.petSpecies = foundPet.species;
-      bookingState.petBreed = foundPet.breed;
-      bookingState.petPhoto = foundPet.photo;
+    const docParam = params.get('doctor') || params.get('doctorId');
+    if (docParam) {
+      const foundDoc = getDoctorById(docParam);
+      if (foundDoc) {
+        bookingState.veterinarianId = foundDoc.id;
+        bookingState.doctorName = foundDoc.name;
+        bookingState.doctorTitle = foundDoc.title;
+        bookingState.doctorImage = foundDoc.image;
+      }
     }
+
+    const petParam = params.get('petId');
+    if (petParam && pets.length > 0) {
+      const foundPet = pets.find(p => p.id === petParam);
+      if (foundPet) {
+        bookingState.petId = foundPet.id;
+        bookingState.petName = foundPet.name;
+        bookingState.petSpecies = foundPet.species;
+        bookingState.petBreed = foundPet.breed;
+        bookingState.petPhoto = foundPet.photo;
+      }
+    }
+
+    lastParsedHash = hash;
   }
 }
 
@@ -943,16 +952,21 @@ export function setupScheduleAppointmentEvents() {
       const found = getServiceById(srvId);
       if (found) {
         applyServiceToState(found);
-        // Show selection without auto-advancing to next page
+        if (typeof history !== 'undefined' && history.replaceState) {
+          history.replaceState(null, '', `#/book-appointment?service=${found.id}`);
+          lastParsedHash = window.location.hash || '';
+        }
+        // Re-render Step 1 showing active selection without advancing
         refreshWizard();
       }
     });
   });
 
-  document.getElementById('step1-next-btn')?.addEventListener('click', () => {
+  document.getElementById('step1-next-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     if (!bookingState.serviceId) {
-      const defaultSrv = siteData.services[0];
-      applyServiceToState(defaultSrv);
+      showToast('Please select a clinical or wellness service first.', 'coral', 'fa-solid fa-stethoscope');
+      return;
     }
     bookingState.currentStep = 2;
     refreshWizard();
@@ -973,23 +987,31 @@ export function setupScheduleAppointmentEvents() {
         bookingState.petBreed = found.breed;
         bookingState.petPhoto = found.photo;
 
+        if (typeof history !== 'undefined' && history.replaceState) {
+          history.replaceState(null, '', `#/book-appointment?service=${bookingState.serviceId}&petId=${found.id}`);
+          lastParsedHash = window.location.hash || '';
+        }
+
         // Show selection without auto-advancing to next page
         refreshWizard();
       }
     });
   });
 
-  document.getElementById('step2-change-service-btn')?.addEventListener('click', () => {
+  document.getElementById('step2-change-service-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     bookingState.currentStep = 1;
     refreshWizard();
   });
 
-  document.getElementById('step2-back-btn')?.addEventListener('click', () => {
+  document.getElementById('step2-back-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     bookingState.currentStep = 1;
     refreshWizard();
   });
 
-  document.getElementById('step2-next-btn')?.addEventListener('click', () => {
+  document.getElementById('step2-next-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     if (bookingState.petId) {
       bookingState.currentStep = 3;
       refreshWizard();
@@ -1042,12 +1064,14 @@ export function setupScheduleAppointmentEvents() {
     });
   });
 
-  document.getElementById('step3-back-btn')?.addEventListener('click', () => {
+  document.getElementById('step3-back-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     bookingState.currentStep = 2;
     refreshWizard();
   });
 
-  document.getElementById('step3-next-btn')?.addEventListener('click', () => {
+  document.getElementById('step3-next-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
     bookingState.currentStep = 4;
     refreshWizard();
   });
