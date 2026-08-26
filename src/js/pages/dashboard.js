@@ -621,7 +621,17 @@ function renderAppointmentsTab(appointments) {
                       <i class="fa-solid fa-calendar-xmark"></i>
                       <span>Cancel</span>
                     </button>
-                  ` : ''}
+                  ` : (a.status.toLowerCase() === 'completed' ? `
+                    <a href="#/book-appointment?followUpId=${a.id}" class="btn btn-teal" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                      <i class="fa-solid fa-calendar-plus"></i>
+                      <span>Book Follow-Up</span>
+                    </a>
+                  ` : (a.status.toLowerCase() === 'cancelled' ? `
+                    <a href="#/book-appointment?petId=${a.petId || ''}&service=${a.serviceId || ''}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                      <i class="fa-solid fa-calendar-plus"></i>
+                      <span>Re-book Visit</span>
+                    </a>
+                  ` : ''))}
                 </div>
               </div>
             `;

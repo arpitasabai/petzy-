@@ -143,10 +143,17 @@ export function openAppointmentModal(appointment, callback = null) {
 
           <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
             <button type="button" class="btn btn-outline" id="appt-close-btn" style="padding: 0.55rem 0.95rem; font-size: 0.85rem;">Close</button>
-            <a href="#/book-appointment?petId=${appointment.petId || ''}" class="btn btn-teal" style="padding: 0.55rem 1rem; font-size: 0.85rem;" onclick="document.getElementById('appt-close-x')?.click();">
-              <i class="fa-solid fa-calendar-plus"></i>
-              <span>${isCancelled ? 'Re-book Visit' : 'Book Follow-Up Visit'}</span>
-            </a>
+            ${isCompleted ? `
+              <a href="#/book-appointment?followUpId=${appointment.id}" class="btn btn-teal" style="padding: 0.55rem 1rem; font-size: 0.85rem;" onclick="document.getElementById('appt-close-x')?.click();">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <span>Book Follow-Up Visit</span>
+              </a>
+            ` : isCancelled ? `
+              <a href="#/book-appointment?petId=${appointment.petId || ''}&service=${appointment.serviceId || ''}" class="btn btn-teal" style="padding: 0.55rem 1rem; font-size: 0.85rem;" onclick="document.getElementById('appt-close-x')?.click();">
+                <i class="fa-solid fa-calendar-plus"></i>
+                <span>Re-book Visit</span>
+              </a>
+            ` : ''}
           </div>
         </div>
 

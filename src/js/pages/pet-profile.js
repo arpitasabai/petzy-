@@ -249,7 +249,7 @@ export function renderPetProfile(petId) {
                   </div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
                   <span class="appointment-status-badge ${a.status.toLowerCase()}">
                     <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i>
                     ${a.status}
@@ -258,6 +258,12 @@ export function renderPetProfile(petId) {
                     <i class="fa-solid fa-circle-info"></i>
                     <span>View Details</span>
                   </button>
+                  ${a.status.toLowerCase() === 'completed' ? `
+                    <a href="#/book-appointment?followUpId=${a.id}" class="btn btn-teal" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                      <i class="fa-solid fa-calendar-plus"></i>
+                      <span>Book Follow-Up</span>
+                    </a>
+                  ` : ''}
                 </div>
               </div>
             `).join('')}

@@ -272,4 +272,96 @@ const freshAfterResched = initializeBookingSession({});
 assert(freshAfterResched.rescheduleId === null, 'Re-entering #/book-appointment resets rescheduleId (TEST 10)');
 assert(freshAfterResched.currentStep === 1, 'Re-entering resets currentStep to 1');
 
+// ----------------------------------------------------
+// TEST 11: Book Follow-Up Visit Workflow
+// ----------------------------------------------------
+console.log('\n--- TEST 11: Book Follow-Up Visit Workflow ---');
+
+// Seed a completed appointment for Buddy
+const completedVisit = saveUserAppointment(samanthaId, {
+  id: 'PETZY-APT-1024',
+  petId: 'pet_buddy_01',
+  petName: 'Buddy',
+  species: 'Dog',
+  serviceId: 'consultation',
+  service: 'Veterinary Consultation',
+  duration: '30 Mins',
+  price: '$55',
+  veterinarianId: 'dr-sarah-kapoor',
+  veterinarian: 'Dr. Sarah Kapoor',
+  vetTitle: 'Senior Veterinary Physician',
+  date: '2026-08-20',
+  time: '09:30 AM',
+  status: 'Completed',
+  diagnosisSummary: 'Annual physical exam completed. Follow-up recommended in 2 weeks.'
+});
+
+assert(completedVisit.status === 'Completed', 'Previous appointment status is Completed');
+
+// Function simulating follow-up initialization
+function initializeFollowUpSession(followUpApptId) {
+  const prev = getUserAppointmentById(samanthaId, followUpApptId);
+  if (!prev) return null;
+
+  const matchedSrv = getServiceById(prev.serviceId) || siteData.services[0];
+  const matchedPet = getUserPetById(samanthaId, prev.petId);
+
+  return {
+    currentStep: 1, // Must start at Step 1, not auto-advance
+    appointmentType: 'Follow-Up',
+    previousAppointmentId: prev.id,
+    rescheduleId: null, // NOT a reschedule
+    serviceId: matchedSrv.id,
+    serviceName: matchedSrv.title,
+    serviceDuration: matchedSrv.duration,
+    servicePrice: matchedSrv.price,
+    serviceRoom: matchedSrv.room,
+    petId: matchedPet ? matchedPet.id : prev.petId,
+    petName: matchedPet ? matchedPet.name : prev.petName,
+    petSpecies: matchedPet ? matchedPet.species : prev.species,
+    veterinarianId: prev.veterinarianId,
+    doctorName: prev.veterinarian,
+    date: '2026-09-05', // NEW date!
+    time: '10:30 AM', // NEW time!
+    notes: `Follow-up visit for ${prev.service} (Ref #${prev.id}).`
+  };
+}
+
+const followUpSession = initializeFollowUpSession('PETZY-APT-1024');
+assert(followUpSession.currentStep === 1, 'Follow-up session starts at Step 1 (TEST 11.1)');
+assert(followUpSession.previousAppointmentId === 'PETZY-APT-1024', 'Follow-up references previous appointment ID (TEST 11.2)');
+assert(followUpSession.rescheduleId === null, 'Follow-up is NOT in reschedule mode (TEST 11.3)');
+assert(followUpSession.serviceId === 'consultation', 'Previous service (Consultation) is pre-selected');
+assert(followUpSession.petName === 'Buddy', 'Previous pet (Buddy) is pre-selected');
+assert(followUpSession.doctorName === 'Dr. Sarah Kapoor', 'Previous doctor (Dr. Sarah Kapoor) is pre-selected');
+assert(followUpSession.date !== completedVisit.date, 'Follow-up date is NEW, not previous date');
+
+// Customer confirms follow-up appointment
+const confirmedFollowUp = saveUserAppointment(samanthaId, {
+  petId: followUpSession.petId,
+  petName: followUpSession.petName,
+  species: followUpSession.petSpecies,
+  serviceId: followUpSession.serviceId,
+  service: followUpSession.serviceName,
+  duration: followUpSession.serviceDuration,
+  price: followUpSession.servicePrice,
+  veterinarianId: followUpSession.veterinarianId,
+  veterinarian: followUpSession.doctorName,
+  date: followUpSession.date,
+  time: followUpSession.time,
+  notes: followUpSession.notes,
+  status: 'Confirmed',
+  appointmentType: 'Follow-Up',
+  previousAppointmentId: followUpSession.previousAppointmentId
+});
+
+assert(confirmedFollowUp.id !== completedVisit.id, 'New unique appointment ID generated for follow-up (TEST 11.4)');
+assert(confirmedFollowUp.status === 'Confirmed', 'Follow-up appointment status is Confirmed (TEST 11.5)');
+assert(confirmedFollowUp.previousAppointmentId === 'PETZY-APT-1024', 'Follow-up stores link to previous appointment ID (TEST 11.6)');
+
+// Verify original appointment was NOT altered
+const originalAfterFollowUp = getUserAppointmentById(samanthaId, 'PETZY-APT-1024');
+assert(originalAfterFollowUp.status === 'Completed', 'Original appointment remains Completed and unchanged (TEST 11.7)');
+assert(originalAfterFollowUp.date === '2026-08-20', 'Original appointment date unchanged');
+
 console.log(`\n🎉 ALL FUNCTIONAL FIXES TESTS PASSED! (${passed}/${total} assertions)\n`);

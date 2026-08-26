@@ -26,6 +26,8 @@ function getInitialBookingState() {
     currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary
     appointmentId: null,
     rescheduleId: null,
+    previousAppointmentId: null,
+    appointmentType: 'Standard',
     serviceId: defaultSrv ? defaultSrv.id : 'consultation',
     serviceName: defaultSrv ? defaultSrv.title : 'Veterinary Consultation',
     serviceDuration: defaultSrv ? defaultSrv.duration : '30 Mins',
@@ -95,7 +97,7 @@ export function renderScheduleAppointment() {
 
   const pets = getUserPets(user.id);
 
-  // Sync state with URL parameters (detect fresh booking vs reschedule)
+  // Sync state with URL parameters (detect fresh booking, follow-up, or reschedule)
   syncStateFromUrl(user, pets);
 
   // Default date setup if empty
@@ -127,6 +129,11 @@ export function renderScheduleAppointment() {
             <i class="fa-solid fa-calendar-days"></i>
             <span>Rescheduling Appointment: <strong>#${bookingState.rescheduleId}</strong></span>
           </div>
+        ` : bookingState.previousAppointmentId ? `
+          <div class="section-badge" style="font-size: 0.82rem; background: var(--color-sage-green-soft); color: var(--color-forest-green);">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span>Follow-Up Visit for: <strong>#${bookingState.previousAppointmentId}</strong></span>
+          </div>
         ` : ''}
       </div>
 
@@ -134,13 +141,15 @@ export function renderScheduleAppointment() {
       <div class="auth-card-header" style="text-align: left; margin-bottom: 2rem;">
         <div class="section-badge coral" style="margin-bottom: 0.5rem;">
           <i class="fa-solid fa-calendar-plus"></i>
-          <span>Patient Appointment Booking</span>
+          <span>${bookingState.previousAppointmentId ? 'Follow-Up Visit Booking' : 'Patient Appointment Booking'}</span>
         </div>
         <h1 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">
-          ${bookingState.rescheduleId ? 'Reschedule Your Appointment' : 'Book a Veterinary Appointment'}
+          ${bookingState.rescheduleId ? 'Reschedule Your Appointment' : (bookingState.previousAppointmentId ? 'Book Follow-Up Visit' : 'Book a Veterinary Appointment')}
         </h1>
         <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin: 0;">
-          Select your medical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and confirm.
+          ${bookingState.previousAppointmentId 
+            ? `We've pre-selected <strong>${bookingState.petName || 'your pet'}</strong> and <strong>${bookingState.serviceName}</strong> from your previous visit. You can modify any choices or pick a new date & time.` 
+            : 'Select your medical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and confirm.'}
         </p>
       </div>
 
@@ -164,6 +173,7 @@ function syncStateFromUrl(user, pets) {
   const queryStr = hasParams ? hash.split('?')[1] || '' : '';
   const params = new URLSearchParams(queryStr);
   const reschedParam = params.get('rescheduleId');
+  const followUpParam = params.get('followUpId') || params.get('followUp');
 
   // Case A: User is rescheduling an existing appointment
   if (reschedParam) {
@@ -171,6 +181,8 @@ function syncStateFromUrl(user, pets) {
       const existing = getUserAppointmentById(user.id, reschedParam);
       if (existing) {
         bookingState.rescheduleId = reschedParam;
+        bookingState.previousAppointmentId = null;
+        bookingState.appointmentType = 'Reschedule';
         bookingState.serviceName = existing.service;
         
         const matchedSrv = siteData.services.find(s => 
@@ -179,13 +191,7 @@ function syncStateFromUrl(user, pets) {
         ) || siteData.services[0];
 
         if (matchedSrv) {
-          bookingState.serviceId = matchedSrv.id;
-          bookingState.serviceName = matchedSrv.title;
-          bookingState.serviceDuration = matchedSrv.duration;
-          bookingState.servicePrice = matchedSrv.price;
-          bookingState.serviceRoom = matchedSrv.room;
-          bookingState.serviceIcon = matchedSrv.icon;
-          bookingState.serviceImage = matchedSrv.image;
+          applyServiceToState(matchedSrv);
         }
 
         bookingState.petId = existing.petId;
@@ -200,11 +206,7 @@ function syncStateFromUrl(user, pets) {
           v.id === existing.veterinarianId || 
           v.name.toLowerCase() === (existing.veterinarian || '').toLowerCase()
         );
-        if (matchedDoc) {
-          bookingState.veterinarianId = matchedDoc.id;
-        } else {
-          bookingState.veterinarianId = 'any';
-        }
+        bookingState.veterinarianId = matchedDoc ? matchedDoc.id : 'any';
 
         bookingState.date = existing.date;
         bookingState.time = existing.time;
@@ -216,11 +218,73 @@ function syncStateFromUrl(user, pets) {
     return;
   }
 
-  // Case B: Fresh New Booking Flow
+  // Case B: User is booking a Follow-Up for a completed appointment
+  if (followUpParam) {
+    if (bookingState.previousAppointmentId !== followUpParam) {
+      const prev = getUserAppointmentById(user.id, followUpParam);
+      if (prev) {
+        bookingState = getInitialBookingState();
+        bookingState.previousAppointmentId = prev.id;
+        bookingState.appointmentType = 'Follow-Up';
+        bookingState.rescheduleId = null;
+
+        // Pre-select previous service
+        const matchedSrv = siteData.services.find(s => 
+          s.id === prev.serviceId || 
+          s.title.toLowerCase() === (prev.service || '').toLowerCase()
+        ) || siteData.services[0];
+        if (matchedSrv) {
+          applyServiceToState(matchedSrv);
+        }
+
+        // Pre-select previous pet
+        const matchedPet = pets.find(p => p.id === prev.petId);
+        if (matchedPet) {
+          bookingState.petId = matchedPet.id;
+          bookingState.petName = matchedPet.name;
+          bookingState.petSpecies = matchedPet.species;
+          bookingState.petBreed = matchedPet.breed;
+          bookingState.petPhoto = matchedPet.photo;
+        }
+
+        // Pre-select previous veterinarian
+        const matchedDoc = siteData.veterinarians.find(v => 
+          v.id === prev.veterinarianId || 
+          v.name.toLowerCase() === (prev.veterinarian || '').toLowerCase()
+        );
+        if (matchedDoc) {
+          bookingState.veterinarianId = matchedDoc.id;
+          bookingState.doctorName = matchedDoc.name;
+          bookingState.doctorTitle = matchedDoc.title;
+          bookingState.doctorImage = matchedDoc.image;
+        } else {
+          bookingState.veterinarianId = 'any';
+          bookingState.doctorName = 'Any Available Veterinarian';
+          bookingState.doctorTitle = 'Assigned based on schedule';
+          bookingState.doctorImage = '';
+        }
+
+        // Date and Time must be NEW! (Tomorrow default)
+        const tom = new Date(Date.now() + 86400000);
+        bookingState.date = tom.toISOString().split('T')[0];
+        bookingState.time = '10:30 AM';
+        bookingState.calendarMonth = tom.getMonth();
+        bookingState.calendarYear = tom.getFullYear();
+        bookingState.notes = `Follow-up visit for ${prev.service || 'clinical examination'} (Ref #${prev.id}).`;
+        
+        // Start at Step 1 and do NOT auto-advance
+        bookingState.currentStep = 1;
+      }
+    }
+    lastParsedHash = hash;
+    return;
+  }
+
+  // Case C: Fresh New Booking Flow
   // Only parse initial query params when hash changes externally
   if (hash !== lastParsedHash) {
-    // If previously in reschedule mode, reset to clean state
-    if (bookingState.rescheduleId !== null) {
+    // If previously in reschedule mode or follow-up mode, reset to clean state
+    if (bookingState.rescheduleId !== null || bookingState.previousAppointmentId !== null) {
       bookingState = getInitialBookingState();
     }
 
@@ -794,6 +858,12 @@ function renderStep5Summary() {
       <!-- Structured Summary Table -->
       <table class="booking-summary-table" aria-label="Appointment Confirmation Summary">
         <tbody>
+          ${bookingState.previousAppointmentId ? `
+            <tr class="booking-summary-row">
+              <td><i class="fa-solid fa-clipboard-check" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Appointment Type</td>
+              <td><span class="section-badge" style="background: var(--color-sage-green-soft); color: var(--color-forest-green); font-size: 0.8rem; margin: 0;">Follow-Up Visit (Ref #${bookingState.previousAppointmentId})</span></td>
+            </tr>
+          ` : ''}
           <tr class="booking-summary-row">
             <td><i class="fa-solid fa-stethoscope" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Clinical Service</td>
             <td><strong>${bookingState.serviceName}</strong></td>
@@ -841,7 +911,7 @@ function renderStep5Summary() {
         
         <button type="button" class="btn btn-coral btn-lg" id="step5-confirm-btn" style="min-width: 240px; justify-content: center;">
           <i class="fa-solid fa-calendar-check"></i>
-          <span>${bookingState.rescheduleId ? 'Confirm Reschedule' : 'Confirm Appointment'}</span>
+          <span>${bookingState.rescheduleId ? 'Confirm Reschedule' : (bookingState.previousAppointmentId ? 'Confirm Follow-Up Appointment' : 'Confirm Appointment')}</span>
         </button>
       </div>
     </div>
@@ -868,7 +938,9 @@ function renderStep6Confirmed() {
     time: '10:30 AM',
     room: 'Consultation Suite 2B',
     status: 'Confirmed',
-    isRescheduled: false
+    isRescheduled: false,
+    isFollowUp: false,
+    previousAppointmentId: null
   };
 
   return `
@@ -882,19 +954,22 @@ function renderStep6Confirmed() {
 
       <div class="section-badge" style="margin-bottom: 0.5rem; background: var(--color-sage-green-soft); color: var(--color-forest-green);">
         <i class="fa-solid fa-circle-check"></i>
-        <span>${appt.isRescheduled ? 'Appointment Rescheduled' : 'Appointment Confirmed ✓'}</span>
+        <span>${appt.isRescheduled ? 'Appointment Rescheduled' : (appt.isFollowUp ? 'Follow-Up Visit Confirmed ✓' : 'Appointment Confirmed ✓')}</span>
       </div>
 
       <h2 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.4rem;">
-        ${appt.isRescheduled ? 'Your Appointment Has Been Rescheduled!' : 'Appointment Confirmed ✓'}
+        ${appt.isRescheduled ? 'Your Appointment Has Been Rescheduled!' : (appt.isFollowUp ? 'Follow-Up Visit Successfully Confirmed!' : 'Appointment Confirmed ✓')}
       </h2>
       <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin-bottom: 1.5rem; max-width: 540px; margin-left: auto; margin-right: auto;">
-        Your veterinary visit for <strong>${appt.petName}</strong> has been successfully confirmed. We look forward to welcoming you at PETZY Central Hospital.
+        ${appt.isFollowUp 
+          ? `Your follow-up visit for <strong>${appt.petName}</strong> has been successfully booked with <strong>${appt.veterinarianName}</strong>.` 
+          : `Your veterinary visit for <strong>${appt.petName}</strong> has been successfully confirmed. We look forward to welcoming you at PETZY Central Hospital.`}
       </p>
 
       <div class="appointment-id-pill" style="margin-bottom: 1.75rem;">
         <span>Appointment ID:</span>
         <strong id="confirmed-appt-id">${appt.id}</strong>
+        ${appt.isFollowUp ? `<span style="font-size: 0.8rem; color: var(--color-forest-green); margin-left: 0.5rem;">(Follow-Up for #${appt.previousAppointmentId})</span>` : ''}
       </div>
 
       <!-- Visit Overview Box -->
@@ -1018,7 +1093,8 @@ export function setupScheduleAppointmentEvents() {
       if (found) {
         applyServiceToState(found);
         if (typeof history !== 'undefined' && history.replaceState) {
-          history.replaceState(null, '', `#/book-appointment?service=${found.id}`);
+          const followUpParam = bookingState.previousAppointmentId ? `&followUpId=${bookingState.previousAppointmentId}` : '';
+          history.replaceState(null, '', `#/book-appointment?service=${found.id}${followUpParam}`);
           lastParsedHash = window.location.hash || '';
         }
         // Re-render Step 1 showing active selection without advancing
@@ -1053,7 +1129,8 @@ export function setupScheduleAppointmentEvents() {
         bookingState.petPhoto = found.photo;
 
         if (typeof history !== 'undefined' && history.replaceState) {
-          history.replaceState(null, '', `#/book-appointment?service=${bookingState.serviceId}&petId=${found.id}`);
+          const followUpParam = bookingState.previousAppointmentId ? `&followUpId=${bookingState.previousAppointmentId}` : '';
+          history.replaceState(null, '', `#/book-appointment?service=${bookingState.serviceId}&petId=${found.id}${followUpParam}`);
           lastParsedHash = window.location.hash || '';
         }
 
@@ -1263,7 +1340,12 @@ export function setupScheduleAppointmentEvents() {
         time: bookingState.time,
         room: bookingState.serviceRoom || 'Consultation Suite 2B',
         notes: bookingState.notes || 'Routine examination and wellness consultation.',
-        diagnosisSummary: 'Scheduled visit. Awaiting clinical examination.'
+        status: 'Confirmed',
+        appointmentType: bookingState.previousAppointmentId ? 'Follow-Up' : 'Standard',
+        previousAppointmentId: bookingState.previousAppointmentId || null,
+        diagnosisSummary: bookingState.previousAppointmentId 
+          ? `Follow-up consultation for previous visit #${bookingState.previousAppointmentId}.` 
+          : 'Scheduled visit. Awaiting clinical examination.'
       };
 
       let saved;
@@ -1279,7 +1361,10 @@ export function setupScheduleAppointmentEvents() {
         showToast(`Appointment #${bookingState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
       } else {
         saved = saveUserAppointment(user.id, apptPayload);
-        showToast(`Appointment confirmed for ${bookingState.petName} on ${bookingState.date}!`, 'sage', 'fa-solid fa-calendar-check');
+        const toastMsg = bookingState.previousAppointmentId
+          ? `Follow-up visit confirmed for ${bookingState.petName} on ${bookingState.date}!`
+          : `Appointment confirmed for ${bookingState.petName} on ${bookingState.date}!`;
+        showToast(toastMsg, 'sage', 'fa-solid fa-calendar-check');
       }
 
       if (!saved) {
@@ -1308,7 +1393,9 @@ export function setupScheduleAppointmentEvents() {
         price: bookingState.servicePrice,
         room: bookingState.serviceRoom,
         status: saved.status || 'Confirmed',
-        isRescheduled: !!bookingState.rescheduleId
+        isRescheduled: !!bookingState.rescheduleId,
+        isFollowUp: !!bookingState.previousAppointmentId,
+        previousAppointmentId: bookingState.previousAppointmentId || null
       };
 
       // Reset temporary booking wizard state
