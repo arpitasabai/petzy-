@@ -1,13 +1,18 @@
-/* PETZY Appointment Details Modal Component (Milestone 3) */
+/* PETZY Appointment Details & Cancellation Modal Component (Milestone 3) */
 import { cancelUserAppointment } from '../services/storage.js';
 import { getCurrentUser } from '../services/auth.js';
 import { showToast } from './toast.js';
 
 let onUpdateCallback = null;
+let cameFromDetailsView = false;
 
 export function openAppointmentModal(appointment, callback = null, openCancelDialog = false) {
   if (!appointment) return;
   onUpdateCallback = callback;
+
+  if (!openCancelDialog) {
+    cameFromDetailsView = true;
+  }
 
   let modalEl = document.getElementById('petzy-appointment-modal-root');
   if (!modalEl) {
@@ -16,6 +21,67 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
     document.body.appendChild(modalEl);
   }
 
+  // ----------------------------------------------------
+  // 1. COMPACT CANCEL CONFIRMATION DIALOG (No Scrolling, Smaller Size)
+  // ----------------------------------------------------
+  if (openCancelDialog) {
+    modalEl.innerHTML = `
+      <div class="petzy-modal-backdrop" id="appt-modal-backdrop">
+        <div class="petzy-modal-container" style="position: relative; max-width: 460px; padding: 2rem 1.75rem; text-align: center; overflow: hidden; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); background: var(--color-white); border: 1px solid var(--color-border);">
+          <!-- Top Close Button -->
+          <button class="petzy-modal-close-btn" id="cancel-dialog-close-x" aria-label="Close dialog" style="position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; font-size: 0.9rem;">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+
+          <!-- Warning Alert Icon -->
+          <div style="width: 60px; height: 60px; border-radius: var(--radius-full); background: #FDEDEC; color: #E74C3C; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0.25rem auto 1rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+
+          <h3 style="font-size: 1.3rem; color: var(--color-forest-green); margin: 0 0 0.4rem; font-family: var(--font-heading);">
+            Cancel Appointment?
+          </h3>
+          
+          <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; line-height: 1.45; margin: 0 0 1.15rem;">
+            Are you sure you want to cancel the <strong>${appointment.service}</strong> visit for <strong>${appointment.petName}</strong> on <strong>${appointment.date} at ${appointment.time}</strong>?
+          </p>
+
+          <!-- Info Pill -->
+          <div style="background: var(--color-warm-cream); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.65rem 0.9rem; margin-bottom: 1.35rem; text-align: left; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem;">
+            <div>
+              <span style="color: var(--color-charcoal-light); font-weight: 700; text-transform: uppercase; font-size: 0.68rem; display: block;">Doctor</span>
+              <strong style="color: var(--color-forest-green);">${appointment.veterinarian}</strong>
+            </div>
+            <div style="text-align: right;">
+              <span style="color: var(--color-charcoal-light); font-weight: 700; text-transform: uppercase; font-size: 0.68rem; display: block;">Appointment Ref</span>
+              <strong style="color: var(--color-forest-green); font-size: 0.78rem;">#${appointment.id}</strong>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" id="keep-appointment-btn" style="flex: 1; min-width: 130px; padding: 0.6rem 0.9rem; font-size: 0.88rem; justify-content: center;">
+              <span>Keep Visit</span>
+            </button>
+            <button type="button" class="btn btn-coral" id="confirm-cancel-appointment-btn" style="flex: 1; min-width: 155px; padding: 0.6rem 0.9rem; font-size: 0.88rem; background: #C0392B; border-color: #C0392B; color: white; justify-content: center;">
+              <i class="fa-solid fa-calendar-xmark"></i>
+              <span>Cancel Appointment</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    setupCancelDialogEvents(modalEl, appointment);
+    setTimeout(() => {
+      modalEl.querySelector('.petzy-modal-backdrop')?.classList.add('open');
+    }, 10);
+    return;
+  }
+
+  // ----------------------------------------------------
+  // 2. FULL APPOINTMENT DETAILS MODAL VIEW
+  // ----------------------------------------------------
   const statusLower = (appointment.status || '').toLowerCase();
   const isUpcoming = ['upcoming', 'confirmed', 'rescheduled'].includes(statusLower);
   const isCancelled = statusLower === 'cancelled';
@@ -37,7 +103,7 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
 
   modalEl.innerHTML = `
     <div class="petzy-modal-backdrop" id="appt-modal-backdrop">
-      <div class="petzy-modal-container" style="position: relative;">
+      <div class="petzy-modal-container" style="position: relative; max-width: 620px;">
         <!-- Header -->
         <div class="petzy-modal-header">
           <div>
@@ -158,30 +224,11 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
             ` : ''}
           </div>
         </div>
-
-        <!-- Inline Cancel Confirmation Card -->
-        <div id="inline-cancel-confirm-box" style="display: ${openCancelDialog ? 'flex' : 'none'}; position: absolute; inset: 0; background: rgba(255,255,255,0.98); border-radius: var(--radius-2xl); z-index: 20; padding: 2.5rem 1.5rem; text-align: center; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
-          <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: #E74C3C; margin-bottom: 1rem;"></i>
-          <h3 style="font-size: 1.4rem; color: var(--color-forest-green); margin: 0 0 0.5rem;">Are you sure you want to cancel this appointment?</h3>
-          <p style="color: var(--color-charcoal-muted); max-width: 440px; margin: 0 0 1.75rem; font-size: 0.92rem;">
-            Cancelling will immediately release your time slot for <strong>${appointment.service}</strong> with <strong>${appointment.veterinarian}</strong> on <strong>${appointment.date} at ${appointment.time}</strong>.
-          </p>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-            <button type="button" class="btn btn-outline btn-lg" id="keep-appointment-btn">
-              <span>Keep Appointment</span>
-            </button>
-            <button type="button" class="btn btn-coral btn-lg" id="confirm-cancel-appointment-btn" style="background: #C0392B; border-color: #C0392B; color: white;">
-              <i class="fa-solid fa-calendar-xmark"></i>
-              <span>Cancel Appointment</span>
-            </button>
-          </div>
-        </div>
-
       </div>
     </div>
   `;
 
-  setupApptModalEvents(modalEl, appointment, openCancelDialog);
+  setupApptModalEvents(modalEl, appointment);
   setTimeout(() => {
     modalEl.querySelector('.petzy-modal-backdrop')?.classList.add('open');
   }, 10);
@@ -198,15 +245,51 @@ export function closeAppointmentModal() {
   }
 }
 
-function setupApptModalEvents(modalEl, appointment, openCancelDialog = false) {
+// Event bindings for compact Cancel Confirmation dialog
+function setupCancelDialogEvents(modalEl, appointment) {
+  const backdrop = modalEl.querySelector('#appt-modal-backdrop');
+  const closeX = modalEl.querySelector('#cancel-dialog-close-x');
+  const keepBtn = modalEl.querySelector('#keep-appointment-btn');
+  const confirmCancelBtn = modalEl.querySelector('#confirm-cancel-appointment-btn');
+
+  const handleDismiss = (e) => {
+    e?.preventDefault();
+    if (cameFromDetailsView) {
+      openAppointmentModal(appointment, onUpdateCallback, false);
+    } else {
+      closeAppointmentModal();
+    }
+  };
+
+  closeX?.addEventListener('click', handleDismiss);
+  keepBtn?.addEventListener('click', handleDismiss);
+  backdrop?.addEventListener('click', (e) => {
+    if (e.target === backdrop) handleDismiss(e);
+  });
+
+  // Confirm Cancellation
+  confirmCancelBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const user = getCurrentUser();
+    if (!user) return;
+
+    cancelUserAppointment(user.id, appointment.id);
+    showToast(`Appointment #${appointment.id} for ${appointment.petName} has been cancelled. Time slot released.`, 'coral', 'fa-solid fa-calendar-xmark');
+    closeAppointmentModal();
+
+    if (typeof onUpdateCallback === 'function') {
+      onUpdateCallback();
+    }
+  });
+}
+
+// Event bindings for full Appointment Details modal
+function setupApptModalEvents(modalEl, appointment) {
   const backdrop = modalEl.querySelector('#appt-modal-backdrop');
   const closeX = modalEl.querySelector('#appt-close-x');
   const closeBtn = modalEl.querySelector('#appt-close-btn');
   const cancelTriggerBtn = modalEl.querySelector('#appt-cancel-trigger-btn');
   const rescheduleBtn = modalEl.querySelector('#appt-reschedule-btn');
-  const cancelBox = modalEl.querySelector('#inline-cancel-confirm-box');
-  const keepBtn = modalEl.querySelector('#keep-appointment-btn');
-  const confirmCancelBtn = modalEl.querySelector('#confirm-cancel-appointment-btn');
 
   closeX?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -229,33 +312,9 @@ function setupApptModalEvents(modalEl, appointment, openCancelDialog = false) {
     window.location.hash = `#/book-appointment?rescheduleId=${appointment.id}`;
   });
 
-  // Cancel Confirmation Toggle
+  // Switch to compact Cancel Confirmation Dialog
   cancelTriggerBtn?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (cancelBox) cancelBox.style.display = 'flex';
-  });
-
-  keepBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (openCancelDialog) {
-      closeAppointmentModal();
-    } else if (cancelBox) {
-      cancelBox.style.display = 'none';
-    }
-  });
-
-  // Confirm Cancellation
-  confirmCancelBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const user = getCurrentUser();
-    if (!user) return;
-
-    cancelUserAppointment(user.id, appointment.id);
-    showToast(`Appointment #${appointment.id} for ${appointment.petName} has been cancelled. Time slot released.`, 'coral', 'fa-solid fa-calendar-xmark');
-    closeAppointmentModal();
-
-    if (typeof onUpdateCallback === 'function') {
-      onUpdateCallback();
-    }
+    openAppointmentModal(appointment, onUpdateCallback, true);
   });
 }
