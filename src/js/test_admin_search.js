@@ -81,19 +81,41 @@ console.log('\n--- 3. Veterinarians Search ---');
 const vets = getStoredVeterinarians();
 
 const searchVets = (query) => {
-  const q = query.toLowerCase().trim();
+  if (!query || !query.trim()) return vets;
+  const rawQ = query.toLowerCase().trim();
+  const cleanQ = rawQ.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const tokens = cleanQ.split(' ').filter(t => t.length > 0 && t !== 'dr' && t !== 'doctor');
+  if (tokens.length === 0) return vets;
+
   return vets.filter(v => {
-    const specs = Array.isArray(v.specialties) ? v.specialties.join(' ') : (v.specialties || '');
-    return !q ||
-      (v.name || '').toLowerCase().includes(q) ||
-      (v.title || '').toLowerCase().includes(q) ||
-      (v.degrees || '').toLowerCase().includes(q) ||
-      specs.toLowerCase().includes(q);
+    const name = (v.name || '').toLowerCase();
+    const cleanName = name.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ');
+    const id = (v.id || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+    const title = (v.title || '').toLowerCase();
+    const degrees = (v.degrees || '').toLowerCase();
+    const specs = (Array.isArray(v.specialties) ? v.specialties.join(' ') : (v.specialties || '')).toLowerCase();
+    const exp = (v.experience || '').toLowerCase();
+    const bio = (v.bio || '').toLowerCase();
+    const searchable = `${cleanName} ${name} ${id} ${title} ${degrees} ${specs} ${exp} ${bio}`;
+
+    return tokens.every(token => searchable.includes(token));
   });
 };
 
 const searchDoctor = searchVets('Ananya');
 assert(searchDoctor.length > 0 && searchDoctor[0].name.includes('Ananya'), 'Search by Doctor Name ("Ananya") finds Dr. Ananya Sharma');
+
+const searchDoctorWithTitle = searchVets('Dr. Ananya');
+assert(searchDoctorWithTitle.length > 0 && searchDoctorWithTitle[0].name.includes('Ananya'), 'Search by "Dr. Ananya" finds Dr. Ananya Sharma');
+
+const searchDoctorNoDot = searchVets('Dr Ananya');
+assert(searchDoctorNoDot.length > 0 && searchDoctorNoDot[0].name.includes('Ananya'), 'Search by "Dr Ananya" (without dot) finds Dr. Ananya Sharma');
+
+const searchDoctorFullWord = searchVets('doctor rohan');
+assert(searchDoctorFullWord.length > 0 && searchDoctorFullWord[0].name.includes('Rohan'), 'Search by "doctor rohan" finds Dr. Rohan Mehta');
+
+const searchDoctorLastName = searchVets('Kapoor');
+assert(searchDoctorLastName.length > 0 && searchDoctorLastName[0].name.includes('Sarah'), 'Search by Last Name ("Kapoor") finds Dr. Sarah Kapoor');
 
 const searchDegree = searchVets('BVSc');
 assert(searchDegree.length > 0, 'Search by Degree Credentials ("BVSc") returns qualified veterinarians');

@@ -17,15 +17,27 @@ export function renderAdminVeterinarians() {
   const vets = getStoredVeterinarians();
 
   const filtered = vets.filter(v => {
-    const q = vetSearchQuery.toLowerCase().trim();
-    const specs = Array.isArray(v.specialties) ? v.specialties.join(' ') : (v.specialties || '');
-    return !q ||
-      (v.name || '').toLowerCase().includes(q) ||
-      (v.title || '').toLowerCase().includes(q) ||
-      (v.degrees || '').toLowerCase().includes(q) ||
-      specs.toLowerCase().includes(q) ||
-      (v.experience || '').toLowerCase().includes(q) ||
-      (v.bio || '').toLowerCase().includes(q);
+    if (!vetSearchQuery || !vetSearchQuery.trim()) return true;
+
+    const rawQ = vetSearchQuery.toLowerCase().trim();
+    // Remove punctuation like dots, commas, dashes to support "Dr. Ananya", "Dr Ananya", "Ananya", etc.
+    const cleanQ = rawQ.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const tokens = cleanQ.split(' ').filter(t => t.length > 0 && t !== 'dr' && t !== 'doctor');
+    
+    // If the query was solely "dr" or "doctor", match all specialists
+    if (tokens.length === 0) return true;
+
+    const name = (v.name || '').toLowerCase();
+    const cleanName = name.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ');
+    const id = (v.id || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+    const title = (v.title || '').toLowerCase();
+    const degrees = (v.degrees || '').toLowerCase();
+    const specs = (Array.isArray(v.specialties) ? v.specialties.join(' ') : (v.specialties || '')).toLowerCase();
+    const exp = (v.experience || '').toLowerCase();
+    const bio = (v.bio || '').toLowerCase();
+    const searchable = `${cleanName} ${name} ${id} ${title} ${degrees} ${specs} ${exp} ${bio}`;
+
+    return tokens.every(token => searchable.includes(token));
   });
 
   return `
@@ -76,7 +88,23 @@ export function renderAdminVeterinarians() {
               </tr>
             </thead>
             <tbody>
-              ${filtered.map(v => {
+              ${filtered.length === 0 ? `
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 3rem 1.5rem;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+                      <i class="fa-solid fa-user-doctor" style="font-size: 1.5rem; color: var(--color-forest-green);"></i>
+                    </div>
+                    <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.35rem; font-size: 1.15rem;">No Veterinary Specialists Found</h4>
+                    <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0 0 1rem; max-width: 420px; display: inline-block;">No specialists match "<strong>${vetSearchQuery}</strong>". Try searching by first name, last name, specialty, or clinical title.</p>
+                    <div>
+                      <button type="button" class="btn btn-outline" id="admin-vet-empty-clear-btn" style="font-size: 0.82rem; padding: 0.4rem 1rem;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Search Filter</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ` : filtered.map(v => {
                 const avail = getDoctorAvailability(v.id);
                 const isInactive = v.status === 'Disabled' || v.status === 'Inactive';
                 const workingDaysShort = (avail.workingDays || []).map(d => d.substring(0, 3)).join(', ');
@@ -163,6 +191,11 @@ export function setupAdminVeterinariansEvents(refreshAdmin) {
   });
 
   document.getElementById('admin-vet-clear-btn')?.addEventListener('click', () => {
+    vetSearchQuery = '';
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-vet-empty-clear-btn')?.addEventListener('click', () => {
     vetSearchQuery = '';
     refreshAdmin();
   });
