@@ -169,10 +169,29 @@ export function setupAdminEvents() {
   if (!user || !isAdmin()) return;
 
   const refreshAdmin = () => {
+    // Preserve focused search input and cursor selection before DOM re-render
+    const activeEl = document.activeElement;
+    const focusedId = activeEl ? activeEl.id : null;
+    const selStart = activeEl && typeof activeEl.selectionStart === 'number' ? activeEl.selectionStart : null;
+    const selEnd = activeEl && typeof activeEl.selectionEnd === 'number' ? activeEl.selectionEnd : null;
+
     const root = document.getElementById('app-root');
     if (root) {
       root.innerHTML = renderAdmin();
       setupAdminEvents();
+
+      // Restore active focus and cursor position smoothly
+      if (focusedId) {
+        const reInput = document.getElementById(focusedId);
+        if (reInput && (reInput.tagName === 'INPUT' || reInput.tagName === 'TEXTAREA')) {
+          reInput.focus();
+          if (selStart !== null && selEnd !== null) {
+            try {
+              reInput.setSelectionRange(selStart, selEnd);
+            } catch (err) {}
+          }
+        }
+      }
     }
   };
 

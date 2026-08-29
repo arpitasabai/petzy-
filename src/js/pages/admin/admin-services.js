@@ -13,12 +13,16 @@ export function renderAdminServices() {
   const services = getStoredServices();
 
   const filtered = services.filter(s => {
-    const q = serviceSearchQuery.toLowerCase();
+    const q = serviceSearchQuery.toLowerCase().trim();
     return !q ||
       (s.title || '').toLowerCase().includes(q) ||
       (s.badge || '').toLowerCase().includes(q) ||
       (s.category || '').toLowerCase().includes(q) ||
-      (s.room || '').toLowerCase().includes(q);
+      (s.room || '').toLowerCase().includes(q) ||
+      (s.price || '').toLowerCase().includes(q) ||
+      (s.duration || '').toLowerCase().includes(q) ||
+      (s.petTypeLabel || '').toLowerCase().includes(q) ||
+      (s.shortDesc || '').toLowerCase().includes(q);
   });
 
   return `
@@ -44,7 +48,12 @@ export function renderAdminServices() {
       <div style="background: var(--color-white); padding: 1.15rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); margin-bottom: 1.5rem;">
         <div style="position: relative; max-width: 400px;">
           <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;"></i>
-          <input type="text" id="admin-srv-search-input" class="form-input" placeholder="Search services by title, category, or suite..." value="${serviceSearchQuery}" style="padding-left: 2.25rem; font-size: 0.85rem;">
+          <input type="text" id="admin-srv-search-input" class="form-input" placeholder="Search services by title, category, or suite..." value="${serviceSearchQuery}" autocomplete="off" style="padding-left: 2.25rem; padding-right: ${serviceSearchQuery ? '2.25rem' : '0.85rem'}; font-size: 0.85rem;">
+          ${serviceSearchQuery ? `
+            <button type="button" id="admin-srv-clear-btn" title="Clear Search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-charcoal-muted); cursor: pointer; padding: 4px;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          ` : ''}
         </div>
       </div>
 
@@ -138,6 +147,11 @@ export function setupAdminServicesEvents(refreshAdmin) {
   const searchInput = document.getElementById('admin-srv-search-input');
   searchInput?.addEventListener('input', (e) => {
     serviceSearchQuery = e.target.value;
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-srv-clear-btn')?.addEventListener('click', () => {
+    serviceSearchQuery = '';
     refreshAdmin();
   });
 

@@ -27,13 +27,17 @@ export function renderAdminPayments() {
   });
 
   const filtered = allPayments.filter(p => {
-    const q = paymentSearchQuery.toLowerCase();
+    const q = paymentSearchQuery.toLowerCase().trim();
+    const cleanQ = q.replace(/^#/, '');
     const matchesSearch = !q ||
-      (p.id || '').toLowerCase().includes(q) ||
-      (p.transactionId || '').toLowerCase().includes(q) ||
+      (p.id || '').toLowerCase().includes(cleanQ) ||
+      (p.transactionId || '').toLowerCase().includes(cleanQ) ||
+      (p.appointmentId || '').toLowerCase().includes(cleanQ) ||
       (p.customerName || '').toLowerCase().includes(q) ||
       (p.petName || '').toLowerCase().includes(q) ||
-      (p.serviceName || '').toLowerCase().includes(q);
+      (p.serviceName || '').toLowerCase().includes(q) ||
+      (p.paymentMethod || '').toLowerCase().includes(q) ||
+      (p.amount || '').toLowerCase().includes(q);
 
     const matchesStatus = paymentStatusFilter === 'all' || (p.status || '').toLowerCase() === paymentStatusFilter.toLowerCase();
 
@@ -95,7 +99,12 @@ export function renderAdminPayments() {
       <div style="background: var(--color-white); padding: 1.15rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
         <div style="position: relative; flex: 1; min-width: 260px;">
           <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;"></i>
-          <input type="text" id="admin-pay-search-input" class="form-input" placeholder="Search by payment ID, transaction ID, client, pet, service..." value="${paymentSearchQuery}" style="padding-left: 2.25rem; font-size: 0.85rem;">
+          <input type="text" id="admin-pay-search-input" class="form-input" placeholder="Search by payment ID, transaction ID, client, pet, service..." value="${paymentSearchQuery}" autocomplete="off" style="padding-left: 2.25rem; padding-right: ${paymentSearchQuery ? '2.25rem' : '0.85rem'}; font-size: 0.85rem;">
+          ${paymentSearchQuery ? `
+            <button type="button" id="admin-pay-clear-btn" title="Clear Search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-charcoal-muted); cursor: pointer; padding: 4px;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          ` : ''}
         </div>
 
         <div style="display: flex; gap: 0.5rem;">
@@ -214,6 +223,11 @@ export function renderAdminPayments() {
 export function setupAdminPaymentsEvents(refreshAdmin) {
   document.getElementById('admin-pay-search-input')?.addEventListener('input', (e) => {
     paymentSearchQuery = e.target.value;
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-pay-clear-btn')?.addEventListener('click', () => {
+    paymentSearchQuery = '';
     refreshAdmin();
   });
 

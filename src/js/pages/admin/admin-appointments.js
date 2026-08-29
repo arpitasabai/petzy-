@@ -19,12 +19,17 @@ export function renderAdminAppointments() {
   const vets = getStoredVeterinarians();
 
   const filtered = allAppointments.filter(a => {
-    const q = apptSearchQuery.toLowerCase();
+    const q = apptSearchQuery.toLowerCase().trim();
+    const cleanQ = q.replace(/^#/, '');
     const matchesSearch = !q ||
-      (a.id || '').toLowerCase().includes(q) ||
+      (a.id || '').toLowerCase().includes(cleanQ) ||
       (a.petName || '').toLowerCase().includes(q) ||
-      (a.service || '').toLowerCase().includes(q) ||
-      (a.veterinarian || '').toLowerCase().includes(q);
+      (a.service || a.serviceName || '').toLowerCase().includes(q) ||
+      (a.veterinarian || a.veterinarianName || '').toLowerCase().includes(q) ||
+      (a.customerName || '').toLowerCase().includes(q) ||
+      (a.date || '').toLowerCase().includes(q) ||
+      (a.time || '').toLowerCase().includes(q) ||
+      (a.room || '').toLowerCase().includes(q);
 
     const sLower = (a.status || '').toLowerCase();
     const matchesStatus = apptStatusFilter === 'all' ||
@@ -33,7 +38,7 @@ export function renderAdminAppointments() {
       (apptStatusFilter === 'cancelled' && sLower === 'cancelled') ||
       (apptStatusFilter === 'rescheduled' && sLower === 'rescheduled');
 
-    const matchesDoc = apptDoctorFilter === 'all' || (a.veterinarianId === apptDoctorFilter || a.veterinarian.includes(apptDoctorFilter));
+    const matchesDoc = apptDoctorFilter === 'all' || (a.veterinarianId === apptDoctorFilter || (a.veterinarian || '').includes(apptDoctorFilter));
 
     const pLower = (a.paymentStatus || 'paid').toLowerCase();
     const matchesPayment = apptPaymentFilter === 'all' || pLower === apptPaymentFilter.toLowerCase();
@@ -66,7 +71,12 @@ export function renderAdminAppointments() {
         <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
           <div style="position: relative; flex: 1; min-width: 260px;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;"></i>
-            <input type="text" id="admin-appt-search-input" class="form-input" placeholder="Search by booking ID, pet name, doctor, service..." value="${apptSearchQuery}" style="padding-left: 2.25rem; font-size: 0.85rem;">
+            <input type="text" id="admin-appt-search-input" class="form-input" placeholder="Search by booking ID, pet name, doctor, service..." value="${apptSearchQuery}" autocomplete="off" style="padding-left: 2.25rem; padding-right: ${apptSearchQuery ? '2.25rem' : '0.85rem'}; font-size: 0.85rem;">
+            ${apptSearchQuery ? `
+              <button type="button" id="admin-appt-clear-btn" title="Clear Search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-charcoal-muted); cursor: pointer; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            ` : ''}
           </div>
 
           <!-- Doctor Filter Dropdown -->
@@ -221,6 +231,11 @@ export function renderAdminAppointments() {
 export function setupAdminAppointmentsEvents(refreshAdmin) {
   document.getElementById('admin-appt-search-input')?.addEventListener('input', (e) => {
     apptSearchQuery = e.target.value;
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-appt-clear-btn')?.addEventListener('click', () => {
+    apptSearchQuery = '';
     refreshAdmin();
   });
 

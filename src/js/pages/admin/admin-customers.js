@@ -18,15 +18,17 @@ export function renderAdminCustomers() {
 
   // Filter customers based on search and status
   const filtered = allCustomers.filter(c => {
-    const q = customerSearchQuery.toLowerCase();
+    const q = customerSearchQuery.toLowerCase().trim();
+    const cleanQ = q.replace(/^#/, '');
     const pets = getUserPets(c.id);
-    const petNames = pets.map(p => (p.name || '').toLowerCase()).join(' ');
+    const petInfo = pets.map(p => `${p.name || ''} ${p.species || ''} ${p.breed || ''}`).join(' ').toLowerCase();
 
     const matchesSearch = !q || 
       (c.name || '').toLowerCase().includes(q) ||
       (c.email || '').toLowerCase().includes(q) ||
       (c.phone || '').toLowerCase().includes(q) ||
-      petNames.includes(q);
+      (c.id || '').toLowerCase().includes(cleanQ) ||
+      petInfo.includes(q);
 
     const matchesStatus = customerStatusFilter === 'all' ||
       (customerStatusFilter === 'active' && c.status !== 'Disabled') ||
@@ -43,9 +45,9 @@ export function renderAdminCustomers() {
         <div>
           <h2 style="font-size: 1.5rem; color: var(--color-forest-green); margin: 0 0 0.25rem; font-family: var(--font-heading);">
             <i class="fa-solid fa-users" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i>
-            Customer & Patient Profiles
+            Registered Customers & Pet Profiles
           </h2>
-          <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Inspect registered pet parents, monitor companion pet health files, and manage account statuses.</span>
+          <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">Inspect pet parent accounts, verify companion animal records, and manage clinic patient access.</span>
         </div>
 
         <div class="section-badge" style="background: var(--color-sage-green-soft); color: var(--color-forest-green); margin: 0;">
@@ -59,7 +61,12 @@ export function renderAdminCustomers() {
         <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 260px;">
           <div style="position: relative; width: 100%;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;"></i>
-            <input type="text" id="admin-cust-search-input" class="form-input" placeholder="Search by parent name, email, phone, or pet name..." value="${customerSearchQuery}" style="padding-left: 2.25rem; font-size: 0.85rem;">
+            <input type="text" id="admin-cust-search-input" class="form-input" placeholder="Search by parent name, email, phone, or pet name..." value="${customerSearchQuery}" autocomplete="off" style="padding-left: 2.25rem; padding-right: ${customerSearchQuery ? '2.25rem' : '0.85rem'}; font-size: 0.85rem;">
+            ${customerSearchQuery ? `
+              <button type="button" id="admin-cust-clear-btn" title="Clear Search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-charcoal-muted); cursor: pointer; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -177,10 +184,15 @@ export function renderAdminCustomers() {
 }
 
 export function setupAdminCustomersEvents(refreshAdmin) {
-  // Search input handler with debounce
+  // Search input handler
   const searchInput = document.getElementById('admin-cust-search-input');
   searchInput?.addEventListener('input', (e) => {
     customerSearchQuery = e.target.value;
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-cust-clear-btn')?.addEventListener('click', () => {
+    customerSearchQuery = '';
     refreshAdmin();
   });
 

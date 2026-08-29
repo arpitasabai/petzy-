@@ -17,11 +17,15 @@ export function renderAdminVeterinarians() {
   const vets = getStoredVeterinarians();
 
   const filtered = vets.filter(v => {
-    const q = vetSearchQuery.toLowerCase();
+    const q = vetSearchQuery.toLowerCase().trim();
+    const specs = Array.isArray(v.specialties) ? v.specialties.join(' ') : (v.specialties || '');
     return !q ||
       (v.name || '').toLowerCase().includes(q) ||
       (v.title || '').toLowerCase().includes(q) ||
-      (v.degrees || '').toLowerCase().includes(q);
+      (v.degrees || '').toLowerCase().includes(q) ||
+      specs.toLowerCase().includes(q) ||
+      (v.experience || '').toLowerCase().includes(q) ||
+      (v.bio || '').toLowerCase().includes(q);
   });
 
   return `
@@ -47,7 +51,12 @@ export function renderAdminVeterinarians() {
       <div style="background: var(--color-white); padding: 1.15rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); margin-bottom: 1.5rem;">
         <div style="position: relative; max-width: 400px;">
           <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;"></i>
-          <input type="text" id="admin-vet-search-input" class="form-input" placeholder="Search specialists by name, role, or credentials..." value="${vetSearchQuery}" style="padding-left: 2.25rem; font-size: 0.85rem;">
+          <input type="text" id="admin-vet-search-input" class="form-input" placeholder="Search specialists by name, role, or credentials..." value="${vetSearchQuery}" autocomplete="off" style="padding-left: 2.25rem; padding-right: ${vetSearchQuery ? '2.25rem' : '0.85rem'}; font-size: 0.85rem;">
+          ${vetSearchQuery ? `
+            <button type="button" id="admin-vet-clear-btn" title="Clear Search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-charcoal-muted); cursor: pointer; padding: 4px;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          ` : ''}
         </div>
       </div>
 
@@ -150,6 +159,11 @@ export function setupAdminVeterinariansEvents(refreshAdmin) {
   const searchInput = document.getElementById('admin-vet-search-input');
   searchInput?.addEventListener('input', (e) => {
     vetSearchQuery = e.target.value;
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-vet-clear-btn')?.addEventListener('click', () => {
+    vetSearchQuery = '';
     refreshAdmin();
   });
 
