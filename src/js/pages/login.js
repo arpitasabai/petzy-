@@ -1,5 +1,5 @@
-/* PETZY Login View (Veterinary Platform) */
-import { loginUser, loginAsDemoUser, getCurrentUser, getRememberedEmail } from '../services/auth.js';
+/* PETZY Login View (Veterinary Platform - Customer & Admin) */
+import { loginUser, loginAsDemoUser, loginAsAdmin, getCurrentUser, isAdmin, getRememberedEmail } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
 
@@ -7,9 +7,9 @@ export function renderLogin() {
   const currentUser = getCurrentUser();
   if (currentUser) {
     setTimeout(() => {
-      window.location.hash = '#/dashboard';
+      window.location.hash = isAdmin() ? '#/admin' : '#/dashboard';
     }, 10);
-    return `<div class="auth-page-wrapper"><p>Redirecting to dashboard...</p></div>`;
+    return `<div class="auth-page-wrapper"><p>Redirecting to portal...</p></div>`;
   }
 
   const rememberedEmail = getRememberedEmail();
@@ -23,10 +23,10 @@ export function renderLogin() {
         <div class="auth-card-header">
           <div class="section-badge" style="margin-bottom: 0.5rem;">
             <i class="fa-solid fa-lock"></i>
-            <span>Pet Parent Portal</span>
+            <span>PETZY Portal Sign In</span>
           </div>
           <h2 style="font-size: 1.95rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">Sign In to PETZY</h2>
-          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Access your pet's vaccination records, appointment history, and doctor care plans.</p>
+          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Access your pet care records or manage hospital administration.</p>
         </div>
 
         <!-- Google OAuth Mock Button -->
@@ -46,7 +46,7 @@ export function renderLogin() {
         <form id="petzy-login-form">
           <div class="form-group">
             <label class="form-label" for="login-email">Email Address *</label>
-            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com" required value="${rememberedEmail}">
+            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com or admin@petzy.com" required value="${rememberedEmail}">
           </div>
 
           <div class="form-group">
@@ -75,11 +75,17 @@ export function renderLogin() {
 
         <!-- 1-Click Demo Account Quick Access -->
         <div class="quick-demo-login-box">
-          <p><i class="fa-solid fa-key" style="margin-right: 0.35rem; color: var(--color-forest-green);"></i> Evaluation Mode: Instant 1-Click Demo Login</p>
-          <button type="button" class="demo-login-btn" id="quick-demo-btn">
-            <i class="fa-solid fa-paw"></i>
-            <span>Sign In as Samantha (Demo Parent)</span>
-          </button>
+          <p><i class="fa-solid fa-key" style="margin-right: 0.35rem; color: var(--color-forest-green);"></i> Evaluation Mode: Instant 1-Click Login</p>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button type="button" class="demo-login-btn" id="quick-demo-btn">
+              <i class="fa-solid fa-paw"></i>
+              <span>Sign In as Samantha (Demo Pet Parent)</span>
+            </button>
+            <button type="button" class="demo-login-btn" id="quick-admin-btn" style="background: var(--color-forest-green); color: var(--color-warm-cream); border-color: var(--color-forest-green);">
+              <i class="fa-solid fa-shield-halved" style="color: var(--color-soft-coral);"></i>
+              <span>Sign In as Administrator (Dr. Marcus Vance)</span>
+            </button>
+          </div>
         </div>
 
         <div style="text-align: center; margin-top: 1.75rem; font-size: 0.92rem; color: var(--color-charcoal-muted);">
@@ -97,6 +103,7 @@ export function setupLoginEvents() {
   const emailInput = document.getElementById('login-email');
   const rememberCheckbox = document.getElementById('login-remember-me');
   const quickDemoBtn = document.getElementById('quick-demo-btn');
+  const quickAdminBtn = document.getElementById('quick-admin-btn');
   const googleBtn = document.getElementById('google-auth-btn');
   const forgotBtn = document.getElementById('forgot-password-link');
 
@@ -125,21 +132,31 @@ export function setupLoginEvents() {
 
     try {
       const user = loginUser(email, password, rememberMe);
-      showToast(`Welcome back, ${user.name}! Signed in to your patient portal.`, 'sage', 'fa-solid fa-circle-check');
+      const isAdm = user.role === 'admin' || user.email.toLowerCase() === 'admin@petzy.com';
+      showToast(`Welcome back, ${user.name}! Signed in successfully.`, 'sage', isAdm ? 'fa-solid fa-shield-halved' : 'fa-solid fa-circle-check');
       setTimeout(() => {
-        window.location.hash = getRedirectTarget();
+        window.location.hash = getRedirectTarget(isAdm);
       }, 400);
     } catch (err) {
       showToast(err.message || 'Login failed', 'coral', 'fa-solid fa-triangle-exclamation');
     }
   });
 
-  // Quick 1-Click Demo Login
+  // Quick 1-Click Demo Parent Login
   quickDemoBtn?.addEventListener('click', () => {
     const user = loginAsDemoUser();
     showToast(`Welcome back, ${user.name}! Signed in as Demo Pet Parent.`, 'sage', 'fa-solid fa-paw');
     setTimeout(() => {
-      window.location.hash = getRedirectTarget();
+      window.location.hash = getRedirectTarget(false);
+    }, 400);
+  });
+
+  // Quick 1-Click Demo Admin Login
+  quickAdminBtn?.addEventListener('click', () => {
+    const user = loginAsAdmin();
+    showToast(`Welcome, ${user.name}! Administrator access granted.`, 'sage', 'fa-solid fa-shield-halved');
+    setTimeout(() => {
+      window.location.hash = getRedirectTarget(true);
     }, 400);
   });
 
@@ -148,7 +165,7 @@ export function setupLoginEvents() {
     const user = loginAsDemoUser();
     showToast('Signed in via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = getRedirectTarget();
+      window.location.hash = getRedirectTarget(false);
     }, 400);
   });
 
@@ -159,12 +176,13 @@ export function setupLoginEvents() {
   });
 }
 
-function getRedirectTarget() {
+function getRedirectTarget(isAdm = false) {
   const hash = window.location.hash || '';
   if (hash.includes('?redirect=')) {
     const r = hash.split('?redirect=')[1]?.split('&')[0];
     if (r) return `#/${r}`;
   }
-  return '#/dashboard';
+  return isAdm ? '#/admin' : '#/dashboard';
 }
+
 

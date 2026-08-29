@@ -1,8 +1,10 @@
-/* PETZY Veterinarians Directory View (Milestone 1) */
+/* PETZY Veterinarians Directory View (Milestone 1 & Milestone 4) */
 import { siteData } from '../data.js';
+import { getActiveVeterinarians } from '../services/storage.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderVeterinarians() {
+  const veterinarians = getActiveVeterinarians();
   return `
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
@@ -30,7 +32,7 @@ export function renderVeterinarians() {
         </div>
 
         <div class="vets-grid">
-          ${siteData.veterinarians.map(vet => `
+          ${veterinarians.map(vet => `
             <div class="vet-card">
               <div class="vet-image-box">
                 <img src="${vet.image}" alt="${vet.name}" loading="lazy">

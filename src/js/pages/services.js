@@ -1,8 +1,10 @@
-/* PETZY Services Overview View (Veterinary Platform - Diverse Pet Imagery) */
+/* PETZY Services Overview View (Veterinary Platform - Dynamic Services) */
 import { siteData } from '../data.js';
+import { getActiveServices } from '../services/storage.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderServices() {
+  const services = getActiveServices();
   return `
     <!-- Inner Page Hero -->
     <section class="inner-page-hero animate-fade-up">
@@ -30,7 +32,7 @@ export function renderServices() {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 3.5rem;">
-          ${siteData.services.map((srv, idx) => `
+          ${services.map((srv, idx) => `
             <div class="about-petzy-layout ${idx % 2 !== 0 ? 'reverse' : ''}" style="${idx % 2 !== 0 ? 'direction: rtl;' : ''}">
               
               <!-- Visual Container with Rounded 20-24px corners & subtle hover zoom -->

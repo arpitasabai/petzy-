@@ -3,6 +3,7 @@ import { getCurrentUser, logoutUser, updateUserProfile, changeUserPassword } fro
 import { getUserPets, getUserAppointments, deleteUserPet } from '../services/storage.js';
 import { openPetModal } from '../components/pet-modal.js';
 import { openAppointmentModal } from '../components/appointment-modal.js';
+import { openPaymentReceiptModal } from '../components/payment-receipt-modal.js';
 import { showToast } from '../components/toast.js';
 
 let activeTab = 'overview';
@@ -607,9 +608,18 @@ function renderAppointmentsTab(appointments) {
                     ${a.status}
                   </span>
 
+                  <span class="section-badge" style="background: var(--color-sage-green-soft); color: var(--color-forest-green); font-size: 0.72rem; padding: 0.2rem 0.55rem; margin: 0;">
+                    <i class="fa-solid fa-check" style="color: #27AE60;"></i> ${a.paymentStatus || 'Paid'} (${a.price || '$55'})
+                  </span>
+
                   <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${a.id}')">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>View Details</span>
+                    <span>Details</span>
+                  </button>
+
+                  <button class="btn btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="window.petzyOpenReceipt('${a.paymentId || a.id}')" title="View Official Digital Receipt">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Receipt</span>
                   </button>
 
                   ${isActionable ? `
@@ -821,6 +831,10 @@ export function setupDashboardEvents() {
     if (appt) {
       openAppointmentModal(appt, () => refreshDashboard(), false);
     }
+  };
+
+  window.petzyOpenReceipt = (paymentOrApptId) => {
+    openPaymentReceiptModal(paymentOrApptId);
   };
 
   window.petzyRescheduleAppt = (apptId) => {

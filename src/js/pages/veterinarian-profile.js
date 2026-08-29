@@ -1,5 +1,6 @@
-/* PETZY Dynamic Veterinarian Profile View (Milestone 1) */
-import { siteData, getDoctorById } from '../data.js';
+/* PETZY Dynamic Veterinarian Profile View (Milestone 1 & Milestone 4) */
+import { siteData } from '../data.js';
+import { getDoctorById } from '../services/storage.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderVeterinarianProfile(doctorId) {

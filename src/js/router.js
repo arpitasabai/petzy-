@@ -14,8 +14,9 @@ import { renderTermsConditions, setupTermsConditionsEvents } from './pages/terms
 import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
 import { renderPetProfile, setupPetProfileEvents } from './pages/pet-profile.js';
 import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pages/schedule-appointment.js';
+import { renderAdmin, setupAdminEvents } from './pages/admin.js';
 import { updateActiveNav } from './components/header.js';
-import { getDoctorById, getServiceById } from './data.js';
+import { getDoctorById, getServiceById } from './services/storage.js';
 
 const routes = {
   '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Because Every Paw Deserves the Best Care' },
@@ -31,6 +32,13 @@ const routes = {
   '/dashboard': { render: renderDashboard, setup: setupDashboardEvents, title: 'Customer Dashboard — PETZY Veterinary Care' },
   '/schedule-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
   '/book-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
+  '/admin': { render: renderAdmin, setup: setupAdminEvents, title: 'Hospital Administration — PETZY' },
+  '/admin/customers': { render: renderAdmin, setup: setupAdminEvents, title: 'Customer Management — PETZY Admin' },
+  '/admin/services': { render: renderAdmin, setup: setupAdminEvents, title: 'Services Catalog — PETZY Admin' },
+  '/admin/veterinarians': { render: renderAdmin, setup: setupAdminEvents, title: 'Veterinarians Management — PETZY Admin' },
+  '/admin/availability': { render: renderAdmin, setup: setupAdminEvents, title: 'Doctor Schedules & Availability — PETZY Admin' },
+  '/admin/appointments': { render: renderAdmin, setup: setupAdminEvents, title: 'Global Appointments — PETZY Admin' },
+  '/admin/payments': { render: renderAdmin, setup: setupAdminEvents, title: 'Payments & Revenue Ledger — PETZY Admin' },
   '/privacy-policy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
   '/privacy': { render: renderPrivacyPolicy, setup: setupPrivacyPolicyEvents, title: 'Privacy Policy — PETZY Veterinary Care' },
   '/terms-conditions': { render: renderTermsConditions, setup: setupTermsConditionsEvents, title: 'Terms & Conditions — PETZY Veterinary Care' },

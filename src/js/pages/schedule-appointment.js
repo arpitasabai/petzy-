@@ -1,4 +1,4 @@
-/* PETZY Multi-Step Appointment Booking System (Milestone 3) */
+/* PETZY Multi-Step Appointment Booking & Payment System (Milestone 4) */
 import { getCurrentUser } from '../services/auth.js';
 import {
   getUserPets,
@@ -8,22 +8,34 @@ import {
   getUserAppointmentById,
   getAvailableSlotsForDoctorAndDate,
   findAvailableDoctorForSlot,
-  generateAppointmentId
+  generateAppointmentId,
+  generatePaymentId,
+  generateTransactionId,
+  createPaymentRecord,
+  getStoredServices,
+  getServiceById,
+  getActiveServices,
+  getStoredVeterinarians,
+  getDoctorById,
+  getActiveVeterinarians,
+  getDoctorAvailability
 } from '../services/storage.js';
-import { siteData, getDoctorById, getServiceById } from '../data.js';
+import { siteData } from '../data.js';
 import { renderBackButton } from '../components/back-button.js';
 import { openPetModal } from '../components/pet-modal.js';
 import { openAppointmentModal } from '../components/appointment-modal.js';
+import { openPaymentReceiptModal } from '../components/payment-receipt-modal.js';
 import { showToast } from '../components/toast.js';
 
 // Helper for initial default state
 function getInitialBookingState() {
   const tomorrow = new Date(Date.now() + 86400000);
   const tomorrowStr = tomorrow.toISOString().split('T')[0];
-  const defaultSrv = siteData.services[0]; // Veterinary Consultation
+  const allServices = getActiveServices();
+  const defaultSrv = allServices[0] || siteData.services[0];
 
   return {
-    currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary
+    currentStep: 1, // 1: Service, 2: Pet, 3: Doctor, 4: Date & Time, 5: Summary, 6: Payment Checkout
     appointmentId: null,
     rescheduleId: null,
     previousAppointmentId: null,
@@ -33,7 +45,7 @@ function getInitialBookingState() {
     serviceDuration: defaultSrv ? defaultSrv.duration : '30 Mins',
     servicePrice: defaultSrv ? defaultSrv.price : '$55',
     serviceRoom: defaultSrv ? defaultSrv.room : 'Consultation Suite 2B',
-    serviceIcon: defaultSrv ? defaultSrv.icon : 'fa-stethoscope',
+    serviceIcon: defaultSrv ? defaultSrv.icon : 'fa-solid fa-stethoscope',
     serviceImage: defaultSrv ? defaultSrv.image : '',
     petId: null,
     petName: '',
@@ -48,7 +60,13 @@ function getInitialBookingState() {
     time: '10:30 AM',
     notes: '',
     calendarMonth: tomorrow.getMonth(),
-    calendarYear: tomorrow.getFullYear()
+    calendarYear: tomorrow.getFullYear(),
+    // Payment info
+    paymentMethod: 'card',
+    cardNumber: '4242 •••• •••• 4242',
+    cardExpiry: '12/28',
+    cardCvv: '883',
+    cardholderName: ''
   };
 }
 
@@ -90,7 +108,7 @@ export function renderScheduleAppointment() {
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
           ${renderBackButton('#/dashboard')}
         </div>
-        ${renderStep6Confirmed()}
+        ${renderStep7Confirmed()}
       </div>
     `;
   }
@@ -106,6 +124,11 @@ export function renderScheduleAppointment() {
     bookingState.date = tom.toISOString().split('T')[0];
     bookingState.calendarMonth = tom.getMonth();
     bookingState.calendarYear = tom.getFullYear();
+  }
+
+  // Default cardholder name
+  if (!bookingState.cardholderName && user) {
+    bookingState.cardholderName = user.name || 'Samantha Hayes';
   }
 
   // Ensure selected pet is valid
@@ -141,7 +164,7 @@ export function renderScheduleAppointment() {
       <div class="auth-card-header" style="text-align: left; margin-bottom: 2rem;">
         <div class="section-badge coral" style="margin-bottom: 0.5rem;">
           <i class="fa-solid fa-calendar-plus"></i>
-          <span>${bookingState.previousAppointmentId ? 'Follow-Up Visit Booking' : 'Patient Appointment Booking'}</span>
+          <span>${bookingState.previousAppointmentId ? 'Follow-Up Visit Booking' : 'Patient Appointment & Checkout'}</span>
         </div>
         <h1 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">
           ${bookingState.rescheduleId ? 'Reschedule Your Appointment' : (bookingState.previousAppointmentId ? 'Book Follow-Up Visit' : 'Book a Veterinary Appointment')}
@@ -149,11 +172,11 @@ export function renderScheduleAppointment() {
         <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin: 0;">
           ${bookingState.previousAppointmentId 
             ? `We've pre-selected <strong>${bookingState.petName || 'your pet'}</strong> and <strong>${bookingState.serviceName}</strong> from your previous visit. You can modify any choices or pick a new date & time.` 
-            : 'Select your medical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and confirm.'}
+            : 'Select your clinical service, choose your registered pet and preferred veterinarian, pick an open date & time slot, and securely confirm with online checkout.'}
         </p>
       </div>
 
-      <!-- 5-Step Progress Bar -->
+      <!-- 6-Step Progress Bar -->
       ${renderProgressBar(bookingState.currentStep)}
 
       <!-- Step Content Box -->
@@ -185,11 +208,7 @@ function syncStateFromUrl(user, pets) {
         bookingState.appointmentType = 'Reschedule';
         bookingState.serviceName = existing.service;
         
-        const matchedSrv = siteData.services.find(s => 
-          s.id === existing.serviceId || 
-          s.title.toLowerCase() === (existing.service || '').toLowerCase()
-        ) || siteData.services[0];
-
+        const matchedSrv = getServiceById(existing.serviceId || existing.service);
         if (matchedSrv) {
           applyServiceToState(matchedSrv);
         }
@@ -202,10 +221,7 @@ function syncStateFromUrl(user, pets) {
         bookingState.doctorTitle = existing.vetTitle;
         bookingState.doctorImage = existing.vetImage;
         
-        const matchedDoc = siteData.veterinarians.find(v => 
-          v.id === existing.veterinarianId || 
-          v.name.toLowerCase() === (existing.veterinarian || '').toLowerCase()
-        );
+        const matchedDoc = getDoctorById(existing.veterinarianId || existing.veterinarian);
         bookingState.veterinarianId = matchedDoc ? matchedDoc.id : 'any';
 
         bookingState.date = existing.date;
@@ -229,10 +245,7 @@ function syncStateFromUrl(user, pets) {
         bookingState.rescheduleId = null;
 
         // Pre-select previous service
-        const matchedSrv = siteData.services.find(s => 
-          s.id === prev.serviceId || 
-          s.title.toLowerCase() === (prev.service || '').toLowerCase()
-        ) || siteData.services[0];
+        const matchedSrv = getServiceById(prev.serviceId || prev.service);
         if (matchedSrv) {
           applyServiceToState(matchedSrv);
         }
@@ -248,10 +261,7 @@ function syncStateFromUrl(user, pets) {
         }
 
         // Pre-select previous veterinarian
-        const matchedDoc = siteData.veterinarians.find(v => 
-          v.id === prev.veterinarianId || 
-          v.name.toLowerCase() === (prev.veterinarian || '').toLowerCase()
-        );
+        const matchedDoc = getDoctorById(prev.veterinarianId || prev.veterinarian);
         if (matchedDoc) {
           bookingState.veterinarianId = matchedDoc.id;
           bookingState.doctorName = matchedDoc.name;
@@ -281,14 +291,11 @@ function syncStateFromUrl(user, pets) {
   }
 
   // Case C: Fresh New Booking Flow
-  // Only parse initial query params when hash changes externally
   if (hash !== lastParsedHash) {
-    // If previously in reschedule mode or follow-up mode, reset to clean state
     if (bookingState.rescheduleId !== null || bookingState.previousAppointmentId !== null) {
       bookingState = getInitialBookingState();
     }
 
-    // Check URL query parameters for fresh booking pre-selections
     const srvParam = params.get('service') || params.get('serviceId');
     if (srvParam) {
       const foundSrv = getServiceById(srvParam);
@@ -329,13 +336,13 @@ function applyServiceToState(srv) {
   bookingState.serviceName = srv.title;
   bookingState.serviceDuration = srv.duration;
   bookingState.servicePrice = srv.price;
-  bookingState.serviceRoom = srv.room;
-  bookingState.serviceIcon = srv.icon;
-  bookingState.serviceImage = srv.image;
+  bookingState.serviceRoom = srv.room || 'Consultation Suite 2B';
+  bookingState.serviceIcon = srv.icon || 'fa-solid fa-stethoscope';
+  bookingState.serviceImage = srv.image || '';
 }
 
 // ----------------------------------------------------
-// PROGRESS BAR COMPONENT
+// PROGRESS BAR COMPONENT (6 Steps)
 // ----------------------------------------------------
 function renderProgressBar(currentStep) {
   const steps = [
@@ -343,7 +350,8 @@ function renderProgressBar(currentStep) {
     { num: 2, label: 'Pet', icon: 'fa-paw' },
     { num: 3, label: 'Veterinarian', icon: 'fa-user-doctor' },
     { num: 4, label: 'Date & Time', icon: 'fa-calendar-days' },
-    { num: 5, label: 'Confirmation', icon: 'fa-clipboard-check' }
+    { num: 5, label: 'Summary', icon: 'fa-clipboard-check' },
+    { num: 6, label: 'Payment', icon: 'fa-credit-card' }
   ];
 
   const fillPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -351,7 +359,7 @@ function renderProgressBar(currentStep) {
   return `
     <div class="booking-progress-bar" aria-label="Appointment Booking Progress">
       <div class="booking-progress-track"></div>
-      <div class="booking-progress-fill" style="width: calc(${fillPercent}% * 0.9);"></div>
+      <div class="booking-progress-fill" style="width: calc(${fillPercent}% * 0.92);"></div>
 
       ${steps.map(s => {
         let statusClass = '';
@@ -386,15 +394,19 @@ function renderCurrentStep(user, pets) {
       return renderStep4DateTime();
     case 5:
       return renderStep5Summary();
+    case 6:
+      return renderStep6Payment(user);
     default:
       return renderStep1Service();
   }
 }
 
 // ----------------------------------------------------
-// STEP 1: SELECT SERVICE
+// STEP 1: SELECT SERVICE (Dynamic from Storage)
 // ----------------------------------------------------
 function renderStep1Service() {
+  const services = getActiveServices();
+
   return `
     <div class="profile-card-box animate-fade-up">
       <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
@@ -406,7 +418,7 @@ function renderStep1Service() {
       </div>
 
       <div class="booking-services-grid">
-        ${siteData.services.map(srv => {
+        ${services.map(srv => {
           const isSelected = srv.id === bookingState.serviceId;
 
           return `
@@ -417,8 +429,8 @@ function renderStep1Service() {
                 <div>
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
                     <span class="section-badge" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; margin: 0;">
-                      <i class="${srv.icon}"></i>
-                      <span>${srv.badge}</span>
+                      <i class="${srv.icon || 'fa-solid fa-stethoscope'}"></i>
+                      <span>${srv.badge || srv.category || 'Clinical Care'}</span>
                     </span>
                     <span class="booking-service-duration">
                       <i class="fa-solid fa-clock"></i> ${srv.duration || '30 Mins'}
@@ -427,7 +439,7 @@ function renderStep1Service() {
 
                   <h3 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0.4rem 0 0.35rem;">${srv.title}</h3>
                   <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); line-height: 1.45; margin: 0 0 0.75rem;">
-                    ${srv.shortDesc}
+                    ${srv.shortDesc || srv.description}
                   </p>
                 </div>
 
@@ -458,77 +470,82 @@ function renderStep1Service() {
 // STEP 2: SELECT PET
 // ----------------------------------------------------
 function renderStep2Pet(pets) {
+  const hasPets = pets && pets.length > 0;
+
   return `
     <div class="profile-card-box animate-fade-up">
       <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
         <div class="section-subhead-title">
           <i class="fa-solid fa-paw" style="color: var(--color-forest-green); font-size: 1.25rem;"></i>
-          <h2 style="font-size: 1.35rem; margin: 0;">2. Select Patient (Your Pet)</h2>
+          <h2 style="font-size: 1.35rem; margin: 0;">2. Select Companion Pet</h2>
         </div>
         
-        <button type="button" class="btn btn-outline" id="booking-add-pet-btn" style="padding: 0.4rem 0.9rem; font-size: 0.82rem;">
+        <button type="button" class="btn btn-outline" id="booking-add-pet-btn" style="padding: 0.4rem 0.95rem; font-size: 0.85rem;">
           <i class="fa-solid fa-plus"></i>
-          <span>Add a Pet</span>
+          <span>Add New Pet</span>
         </button>
       </div>
 
-      <!-- Service Highlight Banner -->
-      <div style="background: var(--color-warm-cream); padding: 0.75rem 1.25rem; border-radius: var(--radius-md); border-left: 4px solid var(--color-forest-green); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-        <div style="font-size: 0.92rem; color: var(--color-forest-green);">
-          <span>Selected Service: <strong>${bookingState.serviceName}</strong> (${bookingState.serviceDuration} • ${bookingState.servicePrice})</span>
+      <!-- Selected Service Summary Pill -->
+      <div class="booking-selected-service-banner">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="${bookingState.serviceImage || 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80'}" alt="${bookingState.serviceName}" class="banner-service-thumb">
+          <div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Selected Service</span>
+            <h4 style="font-size: 1.05rem; color: var(--color-forest-green); margin: 0;">${bookingState.serviceName}</h4>
+            <span style="font-size: 0.8rem; color: var(--color-charcoal-muted);">${bookingState.serviceDuration} • <strong style="color: var(--color-forest-green);">${bookingState.servicePrice}</strong></span>
+          </div>
         </div>
-        <button type="button" class="btn btn-outline" id="step2-change-service-btn" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;">
-          <span>Change</span>
+        <button type="button" class="btn btn-outline" id="step2-change-service-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          <span>Change Service</span>
         </button>
       </div>
 
-      ${pets.length === 0 ? `
-        <div style="background: var(--color-warm-cream); padding: 3rem 2rem; border-radius: var(--radius-xl); border: 2px dashed var(--color-sage-green); text-align: center;">
-          <i class="fa-solid fa-paw" style="font-size: 3rem; color: var(--color-sage-green); margin-bottom: 1rem;"></i>
-          <h3 style="color: var(--color-forest-green); margin-bottom: 0.4rem;">No pets added yet.</h3>
-          <p style="color: var(--color-charcoal-muted); max-width: 420px; margin: 0 auto 1.5rem;">
-            Please register your pet to link their medical charts, vaccine schedules, and appointments.
-          </p>
-          <button type="button" class="btn btn-teal btn-lg" id="empty-state-add-pet-btn">
-            <i class="fa-solid fa-plus"></i>
-            <span>Add a Pet</span>
-          </button>
-        </div>
-      ` : `
+      ${hasPets ? `
         <div class="booking-pets-grid">
-          ${pets.map(p => {
-            const isSelected = p.id === bookingState.petId;
-
+          ${pets.map(pet => {
+            const isSelected = pet.id === bookingState.petId;
             return `
-              <div class="booking-pet-card ${isSelected ? 'selected' : ''}" data-pet-id="${p.id}" style="cursor: pointer;">
-                <img src="${p.photo}" alt="${p.name}" class="booking-pet-avatar">
+              <div class="booking-pet-card ${isSelected ? 'selected' : ''}" data-pet-id="${pet.id}" style="cursor: pointer;">
+                <img src="${pet.photo || 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80'}" alt="${pet.name}" class="booking-pet-avatar">
                 
-                <div style="flex-grow: 1; overflow: hidden;">
-                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
-                    <h3 style="font-size: 1.1rem; color: var(--color-forest-green); margin: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${p.name}</h3>
-                    ${isSelected ? '<i class="fa-solid fa-circle-check" style="color: var(--color-forest-green); font-size: 1.1rem;"></i>' : ''}
+                <div style="flex-grow: 1;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <h3 style="font-size: 1.15rem; color: var(--color-forest-green); margin: 0;">${pet.name}</h3>
+                    ${isSelected ? '<span class="pet-selected-check"><i class="fa-solid fa-check"></i></span>' : ''}
                   </div>
                   
-                  <span style="font-size: 0.85rem; color: var(--color-charcoal-muted); display: block; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                    ${p.species} • ${p.breed}
-                  </span>
-                  <span style="font-size: 0.78rem; font-weight: 700; color: var(--color-soft-coral-hover); display: block; margin-top: 0.25rem;">
-                    <i class="fa-solid fa-cake-candles"></i> ${p.age}
-                  </span>
+                  <div style="font-size: 0.85rem; color: var(--color-charcoal-muted); margin-bottom: 0.35rem;">
+                    <strong>${pet.species}</strong> • ${pet.breed}
+                  </div>
+                  
+                  <div style="font-size: 0.8rem; color: var(--color-charcoal-light);">
+                    ${pet.age || 'Adult'} • ${pet.gender || 'Companion'}
+                  </div>
                 </div>
               </div>
             `;
           }).join('')}
+        </div>
+      ` : `
+        <div class="booking-empty-pets-box" style="text-align: center; padding: 3rem 1.5rem; background: var(--color-warm-cream); border-radius: var(--radius-xl); border: 2px dashed var(--color-border);">
+          <i class="fa-solid fa-paw" style="font-size: 2.5rem; color: var(--color-forest-green); margin-bottom: 1rem;"></i>
+          <h3 style="color: var(--color-forest-green); margin-bottom: 0.5rem;">No Pets Registered Yet</h3>
+          <p style="color: var(--color-charcoal-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">Please register your companion pet to proceed with scheduling.</p>
+          <button type="button" class="btn btn-teal" id="empty-state-add-pet-btn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Your First Pet</span>
+          </button>
         </div>
       `}
 
       <div class="wizard-footer-nav">
         <button type="button" class="btn btn-outline" id="step2-back-btn">
           <i class="fa-solid fa-arrow-left"></i>
-          <span>Back to Service</span>
+          <span>Back to Services</span>
         </button>
         
-        <button type="button" class="btn btn-teal btn-lg" id="step2-next-btn" ${pets.length === 0 ? 'disabled' : ''}>
+        <button type="button" class="btn btn-teal btn-lg" id="step2-next-btn" ${!bookingState.petId ? 'disabled' : ''}>
           <span>Continue to Veterinarian</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
@@ -538,9 +555,10 @@ function renderStep2Pet(pets) {
 }
 
 // ----------------------------------------------------
-// STEP 3: SELECT VETERINARIAN
+// STEP 3: SELECT VETERINARIAN (Dynamic from Storage)
 // ----------------------------------------------------
 function renderStep3Doctor() {
+  const veterinarians = getActiveVeterinarians();
   const isAnySelected = bookingState.veterinarianId === 'any' || bookingState.doctorName.toLowerCase().includes('any available');
 
   return `
@@ -574,7 +592,7 @@ function renderStep3Doctor() {
 
       <!-- Specific Veterinarians Grid -->
       <div class="booking-doctors-grid">
-        ${siteData.veterinarians.map(v => {
+        ${veterinarians.map(v => {
           const isSelected = v.id === bookingState.veterinarianId || v.name === bookingState.doctorName;
 
           return `
@@ -593,7 +611,7 @@ function renderStep3Doctor() {
 
                 <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem;">
                   <span style="background: var(--color-warm-cream); color: var(--color-forest-green); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-weight: 600;">
-                    <i class="fa-solid fa-award" style="color: #DEB853;"></i> ${v.experience}
+                    <i class="fa-solid fa-award" style="color: #DEB853;"></i> ${v.experience || '5+ Years'}
                   </span>
                   <span style="color: var(--color-sage-green-dark); font-weight: 600;">
                     <i class="fa-solid fa-circle" style="font-size: 0.5rem; color: #27AE60;"></i> Available
@@ -621,7 +639,7 @@ function renderStep3Doctor() {
 }
 
 // ----------------------------------------------------
-// STEP 4: SELECT DATE & TIME SLOTS
+// STEP 4: SELECT DATE & TIME SLOTS (Availability Aware)
 // ----------------------------------------------------
 function renderStep4DateTime() {
   const slotAvailability = getAvailableSlotsForDoctorAndDate(
@@ -655,7 +673,7 @@ function renderStep4DateTime() {
             </button>
           </div>
 
-          <div class="calendar-weekdays">
+          <div class="calendar-weekdays-row">
             <span>Su</span>
             <span>Mo</span>
             <span>Tu</span>
@@ -666,84 +684,107 @@ function renderStep4DateTime() {
           </div>
 
           <div class="calendar-days-grid" id="calendar-days-container">
-            ${renderCalendarDays(bookingState.calendarYear, bookingState.calendarMonth, bookingState.date)}
+            ${renderCalendarDaysGrid(bookingState.calendarYear, bookingState.calendarMonth, bookingState.date)}
           </div>
 
-          <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--color-charcoal-muted);">
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span style="width: 12px; height: 12px; border-radius: 3px; background: var(--color-soft-coral); display: inline-block;"></span>
-              <span>Selected Date</span>
+          <div class="calendar-legend-row" style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; font-size: 0.78rem; color: var(--color-charcoal-muted);">
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--color-forest-green);"></span>
+              <span>Selected</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span style="width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--color-forest-green); display: inline-block;"></span>
-              <span>Today</span>
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #27AE60;"></span>
+              <span>Available</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <span style="width: 12px; height: 12px; border-radius: 3px; background: #e0e0e0; display: inline-block;"></span>
-              <span>Unavailable</span>
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></span>
+              <span>Past / Blocked</span>
             </div>
           </div>
         </div>
 
         <!-- Right: Time Slots & Notes -->
-        <div class="time-slots-box">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.65rem; border-bottom: 1px solid var(--color-border-subtle);">
-            <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-forest-green);">
-              <i class="fa-solid fa-clock" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
-              Available Slots for ${formatDateHuman(bookingState.date)}
-            </span>
+        <div class="petzy-slots-box">
+          <div style="margin-bottom: 1.25rem;">
+            <span style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--color-charcoal-light);">Selected Date</span>
+            <h4 style="font-size: 1.2rem; color: var(--color-forest-green); margin: 0.2rem 0 0;">
+              <i class="fa-solid fa-calendar-check" style="color: var(--color-soft-coral); margin-right: 0.4rem;"></i>
+              ${formatDateHuman(bookingState.date)}
+            </h4>
           </div>
 
-          ${!slotAvailability.hasAvailableSlots ? `
-            <div style="background: #FDEDEC; border: 1px solid #F5B7B1; color: #C0392B; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; margin-bottom: 1.25rem;">
-              <i class="fa-solid fa-calendar-xmark" style="font-size: 1.75rem; margin-bottom: 0.5rem;"></i>
-              <p style="font-weight: 700; margin: 0 0 0.25rem;">No appointments are available for this date.</p>
-              <p style="font-size: 0.85rem; margin: 0;">Please choose another date on the calendar.</p>
+          ${!slotAvailability.isDoctorWorkingDay ? `
+            <div style="background: var(--color-soft-coral-soft); border-left: 4px solid var(--color-soft-coral); padding: 0.85rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--color-charcoal); margin-bottom: 1.25rem;">
+              <i class="fa-solid fa-circle-exclamation" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
+              <strong>Doctor Off Duty:</strong> ${bookingState.doctorName} does not have scheduled clinical hours on this day. Please select another day or choose "Any Available Veterinarian".
             </div>
-          ` : `
-            <!-- Morning Slots -->
-            <div class="time-slots-group">
-              <div class="time-group-title">
-                <i class="fa-solid fa-sun" style="color: #F39C12;"></i>
-                <span>Morning</span>
-              </div>
-              <div class="time-slots-grid">
-                ${slotAvailability.morning.map(s => renderTimeSlotButton(s)).join('')}
-              </div>
+          ` : slotAvailability.isDateBlocked ? `
+            <div style="background: var(--color-soft-coral-soft); border-left: 4px solid var(--color-soft-coral); padding: 0.85rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--color-charcoal); margin-bottom: 1.25rem;">
+              <i class="fa-solid fa-calendar-xmark" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
+              <strong>Doctor Unavailable:</strong> ${bookingState.doctorName} is on leave on this date (${slotAvailability.blockedReason}).
             </div>
+          ` : ''}
 
-            <!-- Afternoon Slots -->
-            <div class="time-slots-group">
-              <div class="time-group-title">
-                <i class="fa-solid fa-cloud-sun" style="color: var(--color-forest-green);"></i>
-                <span>Afternoon</span>
-              </div>
-              <div class="time-slots-grid">
-                ${slotAvailability.afternoon.map(s => renderTimeSlotButton(s)).join('')}
-              </div>
+          <!-- Morning Slots -->
+          <div class="time-period-section">
+            <h4 class="time-period-title">
+              <i class="fa-solid fa-sun" style="color: #F5A623;"></i>
+              <span>Morning (09:00 AM – 11:30 AM)</span>
+            </h4>
+            <div class="time-slots-grid">
+              ${slotAvailability.morning.map(slot => `
+                <button type="button" class="time-slot-pill ${slot.isBooked ? 'booked' : ''} ${bookingState.time === slot.time ? 'selected' : ''}" data-time="${slot.time}" ${slot.isBooked ? 'disabled title="Slot already reserved"' : ''}>
+                  <i class="${slot.isBooked ? 'fa-solid fa-lock' : 'fa-regular fa-clock'}"></i>
+                  <span>${slot.time}</span>
+                  ${slot.isBooked ? '<span class="booked-tag">Booked</span>' : ''}
+                </button>
+              `).join('')}
             </div>
+          </div>
 
-            <!-- Evening Slots -->
-            <div class="time-slots-group">
-              <div class="time-group-title">
-                <i class="fa-solid fa-moon" style="color: var(--color-soft-coral);"></i>
-                <span>Evening</span>
-              </div>
-              <div class="time-slots-grid">
-                ${slotAvailability.evening.map(s => renderTimeSlotButton(s)).join('')}
-              </div>
+          <!-- Afternoon Slots -->
+          <div class="time-period-section">
+            <h4 class="time-period-title">
+              <i class="fa-solid fa-cloud-sun" style="color: var(--color-soft-coral);"></i>
+              <span>Afternoon (01:00 PM – 03:30 PM)</span>
+            </h4>
+            <div class="time-slots-grid">
+              ${slotAvailability.afternoon.map(slot => `
+                <button type="button" class="time-slot-pill ${slot.isBooked ? 'booked' : ''} ${bookingState.time === slot.time ? 'selected' : ''}" data-time="${slot.time}" ${slot.isBooked ? 'disabled title="Slot already reserved"' : ''}>
+                  <i class="${slot.isBooked ? 'fa-solid fa-lock' : 'fa-regular fa-clock'}"></i>
+                  <span>${slot.time}</span>
+                  ${slot.isBooked ? '<span class="booked-tag">Booked</span>' : ''}
+                </button>
+              `).join('')}
             </div>
-          `}
+          </div>
 
-          <!-- Clinical Notes / Reason for Visit -->
-          <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
-            <label class="form-label" for="booking-notes-input" style="font-size: 0.85rem;">
-              Reason for Visit & Symptoms (Optional)
+          <!-- Evening Slots -->
+          <div class="time-period-section">
+            <h4 class="time-period-title">
+              <i class="fa-solid fa-moon" style="color: #6C5CE7;"></i>
+              <span>Evening (05:00 PM – 06:30 PM)</span>
+            </h4>
+            <div class="time-slots-grid">
+              ${slotAvailability.evening.map(slot => `
+                <button type="button" class="time-slot-pill ${slot.isBooked ? 'booked' : ''} ${bookingState.time === slot.time ? 'selected' : ''}" data-time="${slot.time}" ${slot.isBooked ? 'disabled title="Slot already reserved"' : ''}>
+                  <i class="${slot.isBooked ? 'fa-solid fa-lock' : 'fa-regular fa-clock'}"></i>
+                  <span>${slot.time}</span>
+                  ${slot.isBooked ? '<span class="booked-tag">Booked</span>' : ''}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Clinical Notes Input -->
+          <div style="margin-top: 1.5rem;">
+            <label class="form-label" for="booking-notes-input" style="font-size: 0.88rem; font-weight: 700; color: var(--color-forest-green);">
+              <i class="fa-solid fa-clipboard" style="margin-right: 0.35rem;"></i>
+              Reason for Visit / Special Clinical Notes (Optional)
             </label>
-            <textarea id="booking-notes-input" class="form-textarea" rows="2" placeholder="e.g. Annual health checkup, vaccine boosters, routine physical, or check mild ear scratching...">${bookingState.notes}</textarea>
+            <textarea id="booking-notes-input" class="form-input" rows="2" placeholder="Describe symptoms, vaccination needs, dietary questions..." style="resize: vertical; font-size: 0.88rem;">${bookingState.notes}</textarea>
           </div>
         </div>
-
       </div>
 
       <div class="wizard-footer-nav">
@@ -752,8 +793,8 @@ function renderStep4DateTime() {
           <span>Back to Veterinarian</span>
         </button>
         
-        <button type="button" class="btn btn-teal btn-lg" id="step4-next-btn" ${!slotAvailability.hasAvailableSlots ? 'disabled' : ''}>
-          <span>Review Booking Summary</span>
+        <button type="button" class="btn btn-teal btn-lg" id="step4-next-btn" ${(!bookingState.time || !slotAvailability.hasAvailableSlots) ? 'disabled' : ''}>
+          <span>Review Summary & Breakdown</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
@@ -761,42 +802,24 @@ function renderStep4DateTime() {
   `;
 }
 
-function renderTimeSlotButton(slot) {
-  const isSelected = slot.time === bookingState.time;
-
-  if (slot.isBooked) {
-    return `
-      <button type="button" class="time-slot-pill booked" disabled title="Slot already booked by another patient">
-        <span>${slot.time}</span>
-      </button>
-    `;
-  }
-
-  return `
-    <button type="button" class="time-slot-pill ${isSelected ? 'selected' : ''}" data-time="${slot.time}">
-      <span>${slot.time}</span>
-    </button>
-  `;
-}
-
-function renderCalendarDays(year, month, selectedDateStr) {
-  const firstDayIndex = new Date(year, month, 1).getDay();
+function renderCalendarDaysGrid(year, month, selectedDateStr) {
+  const firstDay = new Date(year, month, 1).getDay(); // 0 = Sun
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   let html = '';
 
-  // Empty leading days
-  for (let i = 0; i < firstDayIndex; i++) {
-    html += `<div class="calendar-day-cell empty"></div>`;
+  for (let i = 0; i < firstDay; i++) {
+    html += '<div class="calendar-day-cell empty"></div>';
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
     const currentDayDate = new Date(year, month, day);
-    currentDayDate.setHours(0, 0, 0, 0);
+    const mStr = String(month + 1).padStart(2, '0');
+    const dStr = String(day).padStart(2, '0');
+    const dateStr = `${year}-${mStr}-${dStr}`;
 
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const isPast = currentDayDate < today;
     const isToday = currentDayDate.getTime() === today.getTime();
     const isSelected = dateStr === selectedDateStr;
@@ -825,13 +848,13 @@ function renderStep5Summary() {
     : { name: bookingState.doctorName, title: bookingState.doctorTitle, image: bookingState.doctorImage };
 
   return `
-    <div class="profile-card-box animate-fade-up" style="max-width: 820px; margin: 0 auto;">
+    <div class="profile-card-box animate-fade-up" style="max-width: 860px; margin: 0 auto;">
       <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
         <div class="section-subhead-title">
           <i class="fa-solid fa-clipboard-check" style="color: var(--color-forest-green); font-size: 1.35rem;"></i>
           <h2 style="font-size: 1.45rem; margin: 0;">5. Review Appointment Summary</h2>
         </div>
-        <span class="section-badge coral" style="margin: 0;">Ready to Confirm</span>
+        <span class="section-badge coral" style="margin: 0;">Step 5 of 6</span>
       </div>
 
       <!-- Spotlight Header with Pet & Doctor -->
@@ -885,8 +908,8 @@ function renderStep5Summary() {
             <td>PETZY Clinic (${bookingState.serviceRoom || 'Suite 2B'})</td>
           </tr>
           <tr class="booking-summary-row">
-            <td><i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Consultation Fee</td>
-            <td><strong style="color: var(--color-forest-green); font-size: 1.15rem;">${bookingState.servicePrice || '$55'}</strong></td>
+            <td><i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.4rem;"></i> Total Consultation Fee</td>
+            <td><strong style="color: var(--color-forest-green); font-size: 1.25rem;">${bookingState.servicePrice || '$55'}</strong></td>
           </tr>
           ${bookingState.notes ? `
             <tr class="booking-summary-row">
@@ -906,12 +929,12 @@ function renderStep5Summary() {
       <div class="wizard-footer-nav">
         <button type="button" class="btn btn-outline btn-lg" id="step5-back-btn">
           <i class="fa-solid fa-arrow-left"></i>
-          <span>Back & Edit</span>
+          <span>Back & Edit Details</span>
         </button>
         
-        <button type="button" class="btn btn-coral btn-lg" id="step5-confirm-btn" style="min-width: 240px; justify-content: center;">
-          <i class="fa-solid fa-calendar-check"></i>
-          <span>${bookingState.rescheduleId ? 'Confirm Reschedule' : (bookingState.previousAppointmentId ? 'Confirm Follow-Up Appointment' : 'Confirm Appointment')}</span>
+        <button type="button" class="btn btn-coral btn-lg" id="step5-to-payment-btn" style="min-width: 240px; justify-content: center;">
+          <span>${bookingState.rescheduleId ? 'Confirm Reschedule' : 'Proceed to Payment Checkout'}</span>
+          <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </div>
@@ -919,17 +942,178 @@ function renderStep5Summary() {
 }
 
 // ----------------------------------------------------
-// STEP 6: CONFIRMATION SUCCESS SCREEN / DETAILS PAGE
+// STEP 6: ONLINE PAYMENT CHECKOUT (Milestone 4 Integration)
 // ----------------------------------------------------
-function renderStep6Confirmed() {
+function renderStep6Payment(user) {
+  const price = bookingState.servicePrice || '$55';
+
+  return `
+    <div class="profile-card-box animate-fade-up" style="max-width: 860px; margin: 0 auto;">
+      <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
+        <div class="section-subhead-title">
+          <i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); font-size: 1.35rem;"></i>
+          <h2 style="font-size: 1.45rem; margin: 0;">6. Secure Online Payment Checkout</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 700; color: #27AE60;">
+          <i class="fa-solid fa-lock"></i>
+          <span>256-Bit SSL Encrypted</span>
+        </div>
+      </div>
+
+      <!-- Payment Checkout Grid -->
+      <div class="payment-checkout-layout" style="display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 1.75rem; margin-bottom: 1.5rem;">
+        
+        <!-- Left: Payment Form -->
+        <div>
+          <!-- Payment Method Selector -->
+          <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <button type="button" class="payment-method-tab ${bookingState.paymentMethod === 'card' ? 'active' : ''}" data-method="card" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-md); border: 2px solid ${bookingState.paymentMethod === 'card' ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${bookingState.paymentMethod === 'card' ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; text-align: center; font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;">
+              <i class="fa-solid fa-credit-card" style="display: block; font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--color-forest-green);"></i>
+              <span>Credit / Debit Card</span>
+            </button>
+            <button type="button" class="payment-method-tab ${bookingState.paymentMethod === 'digital' ? 'active' : ''}" data-method="digital" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-md); border: 2px solid ${bookingState.paymentMethod === 'digital' ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${bookingState.paymentMethod === 'digital' ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; text-align: center; font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;">
+              <i class="fa-brands fa-apple" style="display: block; font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--color-charcoal);"></i>
+              <span>Apple / Google Pay</span>
+            </button>
+          </div>
+
+          <!-- Card Payment Details Box -->
+          <div id="card-fields-box" style="${bookingState.paymentMethod === 'card' ? 'display: block;' : 'display: none;'}">
+            <div class="form-group">
+              <label class="form-label" for="checkout-cardholder">Cardholder Name *</label>
+              <input type="text" id="checkout-cardholder" class="form-input" placeholder="e.g. Samantha Hayes" value="${bookingState.cardholderName || user.name || ''}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="checkout-cardnumber">Card Number *</label>
+              <div class="password-input-wrap">
+                <input type="text" id="checkout-cardnumber" class="form-input" placeholder="4242 •••• •••• 4242" value="${bookingState.cardNumber}" required maxlength="19">
+                <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.25rem; color: var(--color-forest-green);">
+                  <i class="fa-brands fa-cc-visa"></i>
+                </span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="checkout-expiry">Expiration (MM/YY) *</label>
+                <input type="text" id="checkout-expiry" class="form-input" placeholder="MM/YY" value="${bookingState.cardExpiry}" required maxlength="5">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="checkout-cvv">CVV / CVC *</label>
+                <div class="password-input-wrap">
+                  <input type="password" id="checkout-cvv" class="form-input" placeholder="•••" value="${bookingState.cardCvv}" required maxlength="4">
+                  <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--color-charcoal-muted); font-size: 0.85rem;" title="3-digit security code on the back">
+                    <i class="fa-solid fa-circle-question"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Digital Wallet Option -->
+          <div id="digital-wallet-box" style="${bookingState.paymentMethod === 'digital' ? 'display: block;' : 'display: none;'} background: var(--color-warm-cream); padding: 1.5rem; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--color-border); margin-bottom: 1rem;">
+            <i class="fa-brands fa-apple" style="font-size: 2.2rem; color: var(--color-charcoal); margin-bottom: 0.5rem;"></i>
+            <h4 style="color: var(--color-forest-green); margin-bottom: 0.35rem;">Instant 1-Touch Checkout</h4>
+            <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); margin: 0 0 1rem;">Click below to authorize immediate payment with Apple Pay / Google Pay.</p>
+            <button type="button" class="btn btn-teal" id="instant-wallet-pay-btn" style="width: 100%; justify-content: center; background: #000; color: #fff;">
+              <i class="fa-brands fa-apple"></i>
+              <span>Pay ${price} with Apple Pay</span>
+            </button>
+          </div>
+
+          <!-- Promo Code Bar -->
+          <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <input type="text" id="checkout-promo-input" class="form-input" placeholder="Promo code (e.g. PAWCARE10)" style="font-size: 0.85rem;">
+            <button type="button" class="btn btn-outline" id="apply-promo-btn" style="font-size: 0.85rem; white-space: nowrap;">
+              <span>Apply</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Order Summary Card -->
+        <div style="background: var(--color-warm-cream); padding: 1.5rem; border-radius: var(--radius-xl); border: 1px solid var(--color-border); height: fit-content;">
+          <h4 style="font-size: 1.15rem; color: var(--color-forest-green); margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.65rem;">
+            <i class="fa-solid fa-receipt" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i>
+            Order Summary
+          </h4>
+
+          <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.88rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Service:</span>
+              <strong style="color: var(--color-forest-green);">${bookingState.serviceName}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Patient:</span>
+              <strong>${bookingState.petName} (${bookingState.petSpecies})</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Veterinarian:</span>
+              <strong>${bookingState.doctorName}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Date & Time:</span>
+              <strong>${bookingState.date} • ${bookingState.time}</strong>
+            </div>
+          </div>
+
+          <div style="border-top: 1.5px dashed var(--color-border); padding-top: 0.85rem; margin-bottom: 1.25rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.45rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Clinical Fee:</span>
+              <span style="font-weight: 600;">${price}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Hospital Facility Surcharge:</span>
+              <span style="color: #27AE60; font-weight: 600;">$0.00 (Waived)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--color-charcoal-muted);">Taxes:</span>
+              <span style="color: #27AE60; font-weight: 600;">$0.00 (Included)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; color: var(--color-forest-green); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--color-border);">
+              <span>Total Due:</span>
+              <span id="checkout-total-price">${price}</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--color-charcoal-muted); line-height: 1.35;">
+            <i class="fa-solid fa-shield-halved" style="color: #27AE60; font-size: 1rem; flex-shrink: 0;"></i>
+            <span>Your payment is processed securely. 100% money-back guarantee if cancelled 2+ hours prior.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="wizard-footer-nav">
+        <button type="button" class="btn btn-outline btn-lg" id="step6-back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Summary</span>
+        </button>
+        
+        <button type="button" class="btn btn-coral btn-lg" id="step6-pay-submit-btn" style="min-width: 260px; justify-content: center;">
+          <i class="fa-solid fa-lock"></i>
+          <span>Pay ${price} & Confirm Booking</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------
+// STEP 7: CONFIRMATION SUCCESS SCREEN (Booking & Payment Confirmed)
+// ----------------------------------------------------
+function renderStep7Confirmed() {
   const appt = confirmedAppointment || {
     id: generateAppointmentId(),
+    paymentId: generatePaymentId(),
+    transactionId: generateTransactionId(),
     serviceName: 'Veterinary Consultation',
-    serviceIcon: 'fa-stethoscope',
+    serviceIcon: 'fa-solid fa-stethoscope',
     duration: '30 Mins',
     price: '$55',
-    petName: 'My Pet',
-    petSpecies: 'Pet',
+    petName: 'Buddy',
+    petSpecies: 'Dog',
     petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
     veterinarianName: 'Dr. Sarah Kapoor',
     veterinarianTitle: 'Chief Veterinary Officer',
@@ -938,13 +1122,14 @@ function renderStep6Confirmed() {
     time: '10:30 AM',
     room: 'Consultation Suite 2B',
     status: 'Confirmed',
+    paymentStatus: 'Paid',
     isRescheduled: false,
     isFollowUp: false,
     previousAppointmentId: null
   };
 
   return `
-    <div class="booking-confirmed-card animate-fade-up" style="max-width: 780px; margin: 0 auto; background: var(--color-warm-white); border-radius: var(--radius-2xl); padding: 2.5rem 2rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-md); text-align: center;">
+    <div class="booking-confirmed-card animate-fade-up" style="max-width: 820px; margin: 0 auto; background: var(--color-warm-white); border-radius: var(--radius-2xl); padding: 2.5rem 2rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-md); text-align: center;">
       <!-- Animated Checkmark Icon -->
       <div class="checkmark-circle-wrap" style="margin-bottom: 1.25rem;">
         <svg class="checkmark-svg" viewBox="0 0 52 52">
@@ -952,24 +1137,31 @@ function renderStep6Confirmed() {
         </svg>
       </div>
 
-      <div class="section-badge" style="margin-bottom: 0.5rem; background: var(--color-sage-green-soft); color: var(--color-forest-green);">
+      <div class="section-badge" style="margin-bottom: 0.5rem; background: var(--color-sage-green-soft); color: var(--color-forest-green); font-size: 0.85rem;">
         <i class="fa-solid fa-circle-check"></i>
-        <span>${appt.isRescheduled ? 'Appointment Rescheduled' : (appt.isFollowUp ? 'Follow-Up Visit Confirmed ✓' : 'Appointment Confirmed ✓')}</span>
+        <span>BOOKING CONFIRMED & PAYMENT SUCCESSFUL</span>
       </div>
 
       <h2 style="font-size: 2.2rem; color: var(--color-forest-green); margin-bottom: 0.4rem;">
-        ${appt.isRescheduled ? 'Your Appointment Has Been Rescheduled!' : (appt.isFollowUp ? 'Follow-Up Visit Successfully Confirmed!' : 'Appointment Confirmed ✓')}
+        ${appt.isRescheduled ? 'Your Appointment Has Been Rescheduled!' : (appt.isFollowUp ? 'Follow-Up Visit Confirmed!' : 'Appointment Confirmed & Paid ✓')}
       </h2>
-      <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin-bottom: 1.5rem; max-width: 540px; margin-left: auto; margin-right: auto;">
+      <p style="font-size: 1rem; color: var(--color-charcoal-muted); margin-bottom: 1.5rem; max-width: 580px; margin-left: auto; margin-right: auto;">
         ${appt.isFollowUp 
           ? `Your follow-up visit for <strong>${appt.petName}</strong> has been successfully booked with <strong>${appt.veterinarianName}</strong>.` 
-          : `Your veterinary visit for <strong>${appt.petName}</strong> has been successfully confirmed. We look forward to welcoming you at PETZY Central Hospital.`}
+          : `Your veterinary visit for <strong>${appt.petName}</strong> has been successfully confirmed. Payment receipt and appointment details are stored in your portal.`}
       </p>
 
-      <div class="appointment-id-pill" style="margin-bottom: 1.75rem;">
-        <span>Appointment ID:</span>
-        <strong id="confirmed-appt-id">${appt.id}</strong>
-        ${appt.isFollowUp ? `<span style="font-size: 0.8rem; color: var(--color-forest-green); margin-left: 0.5rem;">(Follow-Up for #${appt.previousAppointmentId})</span>` : ''}
+      <!-- Key IDs Pill Row -->
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.75rem;">
+        <div class="appointment-id-pill" style="margin: 0;">
+          <span>Booking ID:</span>
+          <strong id="confirmed-appt-id">${appt.id}</strong>
+        </div>
+        <div class="appointment-id-pill" style="margin: 0; background: var(--color-sage-green-soft);">
+          <i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>
+          <span>Payment Ref:</span>
+          <strong style="color: var(--color-forest-green);">${appt.paymentId || 'PAY-PETZY-VERIFIED'}</strong>
+        </div>
       </div>
 
       <!-- Visit Overview Box -->
@@ -1023,26 +1215,33 @@ function renderStep6Confirmed() {
         </div>
 
         <!-- Status & Location Row -->
-        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap: 0.75rem; font-size: 0.85rem;">
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border-subtle); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; font-size: 0.85rem;">
           <div>
             <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.35rem;"></i> Location:</span>
             <strong style="color: var(--color-forest-green);">PETZY Clinic (${appt.room || 'Suite 2B'})</strong>
           </div>
-          <div>
-            <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-circle-check" style="color: #27AE60; margin-right: 0.35rem;"></i> Status:</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="section-badge" style="background: #27AE60; color: #fff; margin: 0; font-size: 0.75rem;">
+              <i class="fa-solid fa-check"></i> Paid ${appt.price || '$55'}
+            </span>
             <span class="status-pill status-upcoming" style="padding: 0.2rem 0.65rem; font-size: 0.78rem;">${appt.status || 'Confirmed'}</span>
           </div>
         </div>
       </div>
 
+      <!-- Action Buttons -->
       <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <a href="#/dashboard?tab=appointments" class="btn btn-teal btn-lg" id="confirmed-view-appointments-btn">
+        <button type="button" class="btn btn-teal btn-lg" id="confirmed-view-receipt-btn">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>View Digital Receipt</span>
+        </button>
+        <a href="#/dashboard?tab=appointments" class="btn btn-outline btn-lg" id="confirmed-view-appointments-btn">
           <i class="fa-solid fa-calendar-days"></i>
-          <span>View My Appointments</span>
+          <span>View Appointment</span>
         </a>
         <a href="#/dashboard" class="btn btn-outline btn-lg" id="confirmed-back-dashboard-btn">
           <i class="fa-solid fa-table-columns"></i>
-          <span>Back to Dashboard</span>
+          <span>Go to Dashboard</span>
         </a>
         <button type="button" class="btn btn-coral btn-lg" id="confirmed-book-another-btn">
           <i class="fa-solid fa-calendar-plus"></i>
@@ -1097,7 +1296,6 @@ export function setupScheduleAppointmentEvents() {
           history.replaceState(null, '', `#/book-appointment?service=${found.id}${followUpParam}`);
           lastParsedHash = window.location.hash || '';
         }
-        // Re-render Step 1 showing active selection without advancing
         refreshWizard();
       }
     });
@@ -1134,7 +1332,6 @@ export function setupScheduleAppointmentEvents() {
           lastParsedHash = window.location.hash || '';
         }
 
-        // Show selection without auto-advancing to next page
         refreshWizard();
       }
     });
@@ -1201,7 +1398,6 @@ export function setupScheduleAppointmentEvents() {
         }
       }
 
-      // Show selection without auto-advancing to next page
       refreshWizard();
     });
   });
@@ -1261,7 +1457,6 @@ export function setupScheduleAppointmentEvents() {
         document.querySelectorAll('.time-slot-pill').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         
-        // Enable next button if disabled
         const nextBtn = document.getElementById('step4-next-btn');
         if (nextBtn) nextBtn.removeAttribute('disabled');
       }
@@ -1292,138 +1487,225 @@ export function setupScheduleAppointmentEvents() {
   });
 
   // ----------------------------------------------------
-  // STEP 5 EVENTS (Summary Confirmation)
+  // STEP 5 EVENTS (Summary -> Proceed to Payment)
   // ----------------------------------------------------
   document.getElementById('step5-back-btn')?.addEventListener('click', () => {
     bookingState.currentStep = 4;
     refreshWizard();
   });
 
-  document.getElementById('step5-confirm-btn')?.addEventListener('click', (e) => {
+  document.getElementById('step5-to-payment-btn')?.addEventListener('click', (e) => {
     e.preventDefault();
-    const confirmBtn = document.getElementById('step5-confirm-btn');
-    if (confirmBtn) {
-      if (confirmBtn.disabled) return;
-      confirmBtn.disabled = true;
-      confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Confirming Appointment...</span>';
-    }
-
-    try {
-      // Resolve doctor if "Any"
-      let finalDocName = bookingState.doctorName;
-      let finalDocTitle = bookingState.doctorTitle;
-      let finalDocImage = bookingState.doctorImage;
-      let finalDocId = bookingState.veterinarianId;
-
-      if (bookingState.veterinarianId === 'any' || finalDocName.toLowerCase().includes('any available')) {
-        const autoAssigned = findAvailableDoctorForSlot(bookingState.date, bookingState.time, bookingState.rescheduleId);
-        finalDocName = autoAssigned.name;
-        finalDocTitle = autoAssigned.title;
-        finalDocImage = autoAssigned.image;
-        finalDocId = autoAssigned.id;
-      }
-
-      const apptPayload = {
-        petId: bookingState.petId,
-        petName: bookingState.petName,
-        petPhoto: bookingState.petPhoto,
-        species: bookingState.petSpecies,
-        serviceId: bookingState.serviceId,
-        service: bookingState.serviceName,
-        duration: bookingState.serviceDuration,
-        price: bookingState.servicePrice,
-        veterinarianId: finalDocId,
-        veterinarian: finalDocName,
-        vetTitle: finalDocTitle,
-        vetImage: finalDocImage,
-        date: bookingState.date,
-        time: bookingState.time,
-        room: bookingState.serviceRoom || 'Consultation Suite 2B',
-        notes: bookingState.notes || 'Routine examination and wellness consultation.',
-        status: 'Confirmed',
-        appointmentType: bookingState.previousAppointmentId ? 'Follow-Up' : 'Standard',
-        previousAppointmentId: bookingState.previousAppointmentId || null,
-        diagnosisSummary: bookingState.previousAppointmentId 
-          ? `Follow-up consultation for previous visit #${bookingState.previousAppointmentId}.` 
-          : 'Scheduled visit. Awaiting clinical examination.'
-      };
-
-      let saved;
-      if (bookingState.rescheduleId) {
-        saved = rescheduleUserAppointment(user.id, bookingState.rescheduleId, {
-          date: bookingState.date,
-          time: bookingState.time,
-          notes: bookingState.notes
-        });
-        if (!saved) {
-          saved = saveUserAppointment(user.id, { ...apptPayload, id: bookingState.rescheduleId, status: 'Rescheduled' });
-        }
-        showToast(`Appointment #${bookingState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
-      } else {
-        saved = saveUserAppointment(user.id, apptPayload);
-        const toastMsg = bookingState.previousAppointmentId
-          ? `Follow-up visit confirmed for ${bookingState.petName} on ${bookingState.date}!`
-          : `Appointment confirmed for ${bookingState.petName} on ${bookingState.date}!`;
-        showToast(toastMsg, 'sage', 'fa-solid fa-calendar-check');
-      }
-
-      if (!saved) {
-        throw new Error('Could not save appointment in storage.');
-      }
-
-      // Store confirmed appointment details for Confirmation View
-      confirmedAppointment = {
-        id: saved.id || generateAppointmentId(),
-        serviceId: bookingState.serviceId,
-        serviceName: bookingState.serviceName,
-        serviceIcon: bookingState.serviceIcon,
-        serviceImage: bookingState.serviceImage,
-        petId: bookingState.petId,
-        petName: bookingState.petName,
-        petSpecies: bookingState.petSpecies,
-        petBreed: bookingState.petBreed,
-        petPhoto: bookingState.petPhoto,
-        veterinarianId: finalDocId,
-        veterinarianName: finalDocName,
-        veterinarianTitle: finalDocTitle,
-        veterinarianImage: finalDocImage,
-        date: bookingState.date,
-        time: bookingState.time,
-        duration: bookingState.serviceDuration,
-        price: bookingState.servicePrice,
-        room: bookingState.serviceRoom,
-        status: saved.status || 'Confirmed',
-        isRescheduled: !!bookingState.rescheduleId,
-        isFollowUp: !!bookingState.previousAppointmentId,
-        previousAppointmentId: bookingState.previousAppointmentId || null
-      };
-
-      // Reset temporary booking wizard state
-      bookingState = getInitialBookingState();
-
-      // Clean URL query hash so refresh won't conflict
-      if (typeof history !== 'undefined' && history.replaceState) {
-        history.replaceState(null, '', '#/book-appointment');
-        lastParsedHash = window.location.hash || '';
-      }
-
-      // Render Confirmation Page
+    if (bookingState.rescheduleId) {
+      // Reschedule does not require new payment
+      executeRescheduleAppointment(user);
+    } else {
+      bookingState.currentStep = 6;
       refreshWizard();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    } catch (err) {
-      console.error('Booking confirmation error:', err);
-      showToast('Unable to confirm your appointment. Please try again.', 'coral', 'fa-solid fa-circle-exclamation');
-      if (confirmBtn) {
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="fa-solid fa-calendar-check"></i> <span>Confirm Appointment</span>';
-      }
     }
   });
 
   // ----------------------------------------------------
-  // STEP 6 EVENTS (Confirmation Screen Actions)
+  // STEP 6 EVENTS (Online Payment Checkout & Confirmation)
   // ----------------------------------------------------
+  document.querySelectorAll('.payment-method-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const m = tab.getAttribute('data-method');
+      bookingState.paymentMethod = m;
+      refreshWizard();
+    });
+  });
+
+  document.getElementById('checkout-cardholder')?.addEventListener('input', (e) => {
+    bookingState.cardholderName = e.target.value;
+  });
+
+  document.getElementById('checkout-cardnumber')?.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/\D/g, '').substring(0, 16);
+    let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+    e.target.value = formatted;
+    bookingState.cardNumber = formatted;
+  });
+
+  document.getElementById('checkout-expiry')?.addEventListener('input', (e) => {
+    let val = e.target.value.replace(/\D/g, '').substring(0, 4);
+    if (val.length >= 2) {
+      val = val.substring(0, 2) + '/' + val.substring(2);
+    }
+    e.target.value = val;
+    bookingState.cardExpiry = val;
+  });
+
+  document.getElementById('checkout-cvv')?.addEventListener('input', (e) => {
+    bookingState.cardCvv = e.target.value.replace(/\D/g, '').substring(0, 4);
+  });
+
+  document.getElementById('apply-promo-btn')?.addEventListener('click', () => {
+    const promo = document.getElementById('checkout-promo-input')?.value.trim().toUpperCase();
+    if (promo === 'PAWCARE10' || promo === 'PETZY10') {
+      showToast('Promo code applied! 10% Clinical Courtesy Discount.', 'sage', 'fa-solid fa-tag');
+    } else {
+      showToast('Invalid or expired promo code.', 'coral', 'fa-solid fa-triangle-exclamation');
+    }
+  });
+
+  document.getElementById('step6-back-btn')?.addEventListener('click', () => {
+    bookingState.currentStep = 5;
+    refreshWizard();
+  });
+
+  // Submit Payment Handler
+  const executePaymentAndBooking = () => {
+    const submitBtn = document.getElementById('step6-pay-submit-btn');
+    if (submitBtn) {
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Authorizing Payment with Bank...</span>';
+    }
+
+    setTimeout(() => {
+      try {
+        // Resolve doctor if "Any"
+        let finalDocName = bookingState.doctorName;
+        let finalDocTitle = bookingState.doctorTitle;
+        let finalDocImage = bookingState.doctorImage;
+        let finalDocId = bookingState.veterinarianId;
+
+        if (bookingState.veterinarianId === 'any' || finalDocName.toLowerCase().includes('any available')) {
+          const autoAssigned = findAvailableDoctorForSlot(bookingState.date, bookingState.time, bookingState.rescheduleId);
+          finalDocName = autoAssigned.name;
+          finalDocTitle = autoAssigned.title;
+          finalDocImage = autoAssigned.image;
+          finalDocId = autoAssigned.id;
+        }
+
+        const newApptId = generateAppointmentId();
+        const newPaymentId = generatePaymentId();
+        const newTxnId = generateTransactionId();
+
+        // 1. Create and persist Payment Record
+        const paymentRecord = createPaymentRecord({
+          id: newPaymentId,
+          transactionId: newTxnId,
+          appointmentId: newApptId,
+          userId: user.id,
+          customerName: user.name || bookingState.cardholderName || 'Valued Pet Parent',
+          customerEmail: user.email || '',
+          petId: bookingState.petId,
+          petName: bookingState.petName,
+          serviceId: bookingState.serviceId,
+          serviceName: bookingState.serviceName,
+          amount: bookingState.servicePrice || '$55.00',
+          paymentMethod: bookingState.paymentMethod === 'digital' ? 'Apple Pay (Verified)' : `Credit Card (•••• ${bookingState.cardNumber.slice(-4) || '4242'})`,
+          paymentDate: new Date().toISOString(),
+          status: 'Paid'
+        });
+
+        // 2. Create and persist Appointment Record (strictly marked as Paid upon verification)
+        const apptPayload = {
+          id: newApptId,
+          paymentId: newPaymentId,
+          transactionId: newTxnId,
+          paymentStatus: 'Paid',
+          paymentMethod: paymentRecord.paymentMethod,
+          petId: bookingState.petId,
+          petName: bookingState.petName,
+          petPhoto: bookingState.petPhoto,
+          species: bookingState.petSpecies,
+          serviceId: bookingState.serviceId,
+          service: bookingState.serviceName,
+          duration: bookingState.serviceDuration,
+          price: bookingState.servicePrice,
+          veterinarianId: finalDocId,
+          veterinarian: finalDocName,
+          vetTitle: finalDocTitle,
+          vetImage: finalDocImage,
+          date: bookingState.date,
+          time: bookingState.time,
+          room: bookingState.serviceRoom || 'Consultation Suite 2B',
+          notes: bookingState.notes || 'Routine examination and wellness consultation.',
+          status: 'Confirmed',
+          appointmentType: bookingState.previousAppointmentId ? 'Follow-Up' : 'Standard',
+          previousAppointmentId: bookingState.previousAppointmentId || null,
+          diagnosisSummary: bookingState.previousAppointmentId 
+            ? `Follow-up consultation for previous visit #${bookingState.previousAppointmentId}.` 
+            : 'Scheduled visit. Awaiting clinical examination.'
+        };
+
+        const saved = saveUserAppointment(user.id, apptPayload);
+        if (!saved) {
+          throw new Error('Could not save appointment in storage.');
+        }
+
+        // 3. Set Confirmed Appointment display state
+        confirmedAppointment = {
+          id: saved.id,
+          paymentId: newPaymentId,
+          transactionId: newTxnId,
+          serviceId: bookingState.serviceId,
+          serviceName: bookingState.serviceName,
+          serviceIcon: bookingState.serviceIcon,
+          serviceImage: bookingState.serviceImage,
+          petId: bookingState.petId,
+          petName: bookingState.petName,
+          petSpecies: bookingState.petSpecies,
+          petBreed: bookingState.petBreed,
+          petPhoto: bookingState.petPhoto,
+          veterinarianId: finalDocId,
+          veterinarianName: finalDocName,
+          veterinarianTitle: finalDocTitle,
+          veterinarianImage: finalDocImage,
+          date: bookingState.date,
+          time: bookingState.time,
+          duration: bookingState.serviceDuration,
+          price: bookingState.servicePrice,
+          room: bookingState.serviceRoom,
+          status: saved.status || 'Confirmed',
+          paymentStatus: 'Paid',
+          isRescheduled: false,
+          isFollowUp: !!bookingState.previousAppointmentId,
+          previousAppointmentId: bookingState.previousAppointmentId || null
+        };
+
+        showToast(`Payment successful! Appointment #${saved.id} confirmed for ${bookingState.petName}.`, 'sage', 'fa-solid fa-circle-check');
+
+        // Reset wizard state
+        bookingState = getInitialBookingState();
+
+        // Clean URL query hash so refresh won't conflict
+        if (typeof history !== 'undefined' && history.replaceState) {
+          history.replaceState(null, '', '#/book-appointment');
+          lastParsedHash = window.location.hash || '';
+        }
+
+        // Render Confirmation Page
+        refreshWizard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      } catch (err) {
+        console.error('Payment checkout error:', err);
+        showToast('Payment processing error. Please check card details.', 'coral', 'fa-solid fa-circle-exclamation');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>Pay & Confirm Booking</span>';
+        }
+      }
+    }, 1200);
+  };
+
+  document.getElementById('step6-pay-submit-btn')?.addEventListener('click', executePaymentAndBooking);
+  document.getElementById('instant-wallet-pay-btn')?.addEventListener('click', executePaymentAndBooking);
+
+  // ----------------------------------------------------
+  // STEP 7 EVENTS (Confirmation Screen Actions)
+  // ----------------------------------------------------
+  document.getElementById('confirmed-view-receipt-btn')?.addEventListener('click', () => {
+    if (confirmedAppointment) {
+      openPaymentReceiptModal(confirmedAppointment.paymentId || confirmedAppointment.id);
+    }
+  });
+
   document.getElementById('confirmed-view-appointments-btn')?.addEventListener('click', () => {
     confirmedAppointment = null;
     bookingState = getInitialBookingState();
@@ -1446,6 +1728,55 @@ export function setupScheduleAppointmentEvents() {
     refreshWizard();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+}
+
+function executeRescheduleAppointment(user) {
+  try {
+    const saved = rescheduleUserAppointment(user.id, bookingState.rescheduleId, {
+      date: bookingState.date,
+      time: bookingState.time,
+      notes: bookingState.notes
+    });
+
+    showToast(`Appointment #${bookingState.rescheduleId} rescheduled successfully!`, 'sage', 'fa-solid fa-calendar-check');
+
+    confirmedAppointment = {
+      id: bookingState.rescheduleId,
+      serviceName: bookingState.serviceName,
+      serviceIcon: bookingState.serviceIcon,
+      petName: bookingState.petName,
+      petSpecies: bookingState.petSpecies,
+      petPhoto: bookingState.petPhoto,
+      veterinarianName: bookingState.doctorName,
+      veterinarianTitle: bookingState.doctorTitle,
+      veterinarianImage: bookingState.doctorImage,
+      date: bookingState.date,
+      time: bookingState.time,
+      duration: bookingState.serviceDuration,
+      price: bookingState.servicePrice,
+      room: bookingState.serviceRoom,
+      status: 'Rescheduled',
+      paymentStatus: 'Paid',
+      isRescheduled: true,
+      isFollowUp: false,
+      previousAppointmentId: null
+    };
+
+    bookingState = getInitialBookingState();
+    if (typeof history !== 'undefined' && history.replaceState) {
+      history.replaceState(null, '', '#/book-appointment');
+      lastParsedHash = window.location.hash || '';
+    }
+
+    const root = document.getElementById('app-root');
+    if (root) {
+      root.innerHTML = renderScheduleAppointment();
+      setupScheduleAppointmentEvents();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    showToast('Failed to reschedule appointment.', 'coral', 'fa-solid fa-triangle-exclamation');
+  }
 }
 
 function formatDateHuman(dateStr) {

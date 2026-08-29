@@ -1,5 +1,6 @@
 /* PETZY Dynamic Service Detail View (Veterinary Platform) */
-import { siteData, getServiceById } from '../data.js';
+import { siteData } from '../data.js';
+import { getServiceById } from '../services/storage.js';
 import { renderBackButton } from '../components/back-button.js';
 
 export function renderServiceDetail(serviceId) {

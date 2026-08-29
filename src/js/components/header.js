@@ -1,7 +1,7 @@
-/* PETZY Header Component (Veterinary Platform) */
+/* PETZY Header Component (Veterinary Platform - Customer & Admin) */
 import { siteData } from '../data.js';
 import { showToast } from './toast.js';
-import { getCurrentUser } from '../services/auth.js';
+import { getCurrentUser, isAdmin } from '../services/auth.js';
 
 let authListenerInitialized = false;
 
@@ -10,6 +10,7 @@ export function renderHeader() {
   if (!headerEl) return;
 
   const currentUser = getCurrentUser();
+  const isUserAdmin = isAdmin();
 
   headerEl.innerHTML = `
     <div class="container header-container">
@@ -25,6 +26,12 @@ export function renderHeader() {
         <a href="#/services" class="nav-link" data-route="/services">Services</a>
         <a href="#/veterinarians" class="nav-link" data-route="/veterinarians">Veterinarians</a>
         <a href="#/contact" class="nav-link" data-route="/contact">Contact</a>
+        ${isUserAdmin ? `
+          <a href="#/admin" class="nav-link admin-nav-tag" data-route="/admin" style="color: var(--color-forest-green); font-weight: 800; display: inline-flex; align-items: center; gap: 0.35rem; background: var(--color-sage-green-soft); padding: 0.3rem 0.75rem; border-radius: var(--radius-full); border: 1px solid var(--color-border);">
+            <i class="fa-solid fa-shield-halved" style="color: var(--color-soft-coral);"></i>
+            <span>Admin</span>
+          </a>
+        ` : ''}
       </nav>
 
       <!-- Right Header Actions -->
@@ -34,13 +41,18 @@ export function renderHeader() {
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
 
-        <!-- Customer Login / Dashboard Link -->
-        ${currentUser ? `
+        <!-- Customer Login / Dashboard / Admin Link -->
+        ${currentUser ? (isUserAdmin ? `
+          <a href="#/admin" class="header-login-link" data-route="/admin" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-forest-green); color: var(--color-warm-cream);">
+            <img src="${currentUser.avatar || 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80'}" alt="${currentUser.name}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--color-soft-coral);">
+            <span style="font-weight: 700;">Admin Panel</span>
+          </a>
+        ` : `
           <a href="#/dashboard" class="header-login-link" data-route="/dashboard" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-sage-green-soft);">
             <img src="${currentUser.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'}" alt="${currentUser.name}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--color-forest-green);">
             <span style="font-weight: 700;">Dashboard</span>
           </a>
-        ` : `
+        `) : `
           <a href="#/login" class="header-login-link" data-route="/login">Login</a>
         `}
 
@@ -60,11 +72,15 @@ export function renderHeader() {
       <a href="#/service-detail" class="nav-link mobile-link" data-route="/service-detail">Service Detail</a>
       <a href="#/faq" class="nav-link mobile-link" data-route="/faq">FAQ</a>
       <a href="#/contact" class="nav-link mobile-link" data-route="/contact">Contact</a>
-      ${currentUser ? `
+      ${currentUser ? (isUserAdmin ? `
+        <a href="#/admin" class="nav-link mobile-link" data-route="/admin" style="color: var(--color-forest-green); font-weight: 800; background: var(--color-warm-cream); padding: 0.75rem; border-radius: var(--radius-md);">
+          <i class="fa-solid fa-shield-halved" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i> Admin Panel (${currentUser.name.split(' ')[0]})
+        </a>
+      ` : `
         <a href="#/dashboard" class="nav-link mobile-link" data-route="/dashboard" style="color: var(--color-forest-green); font-weight: 800;">
           <i class="fa-solid fa-chart-pie" style="color: var(--color-soft-coral); margin-right: 0.35rem;"></i> My Dashboard (${currentUser.name.split(' ')[0]})
         </a>
-      ` : `
+      `) : `
         <a href="#/login" class="nav-link mobile-link" data-route="/login">Login</a>
       `}
     </div>

@@ -1,8 +1,13 @@
-/* PETZY Account-Isolated Local Storage Service */
+/* PETZY Account-Isolated Local Storage & Dynamic Entity Management Service (Milestone 4) */
+import { siteData } from '../data.js';
 
 const PETS_KEY_PREFIX = 'petzy_user_pets_';
 const APPOINTMENTS_KEY_PREFIX = 'petzy_user_appts_';
 const USERS_KEY = 'petzy_registered_users';
+const SERVICES_KEY = 'petzy_services';
+const VETS_KEY = 'petzy_veterinarians';
+const VET_AVAILABILITY_KEY = 'petzy_vet_availability';
+const PAYMENTS_KEY = 'petzy_payments';
 
 // High-quality curated pet images for presets and demo pets
 export const PET_IMAGE_PRESETS = {
@@ -48,6 +53,7 @@ export const ALL_TIME_SLOTS = [
   ...TIME_PERIODS.evening
 ];
 
+// Helper to generate IDs
 export function generateAppointmentId() {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
@@ -57,18 +63,472 @@ export function generateAppointmentId() {
   return `PETZY-${result}`;
 }
 
+export function generatePaymentId() {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `PAY-PETZY-${result}`;
+}
+
+export function generateTransactionId() {
+  const num = Math.floor(100000000 + Math.random() * 900000000);
+  return `TXN_${num}`;
+}
+
+// ----------------------------------------------------
+// DYNAMIC SERVICES CRUD (ADMIN & PUBLIC SYNCHRONIZATION)
+// ----------------------------------------------------
+
+export function getStoredServices() {
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(SERVICES_KEY) : null;
+  if (!raw) {
+    const initial = JSON.parse(JSON.stringify(siteData.services)).map(s => ({
+      ...s,
+      status: s.status || 'active',
+      category: s.category || s.badge || 'Clinical Care'
+    }));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(SERVICES_KEY, JSON.stringify(initial));
+    }
+    return initial;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return siteData.services;
+  }
+}
+
+export function getActiveServices() {
+  return getStoredServices().filter(s => s.status !== 'disabled' && s.status !== 'inactive');
+}
+
+export function getServiceById(slugOrId) {
+  const allServices = getStoredServices();
+  if (!slugOrId) {
+    return allServices[0] || siteData.services[0];
+  }
+  const clean = String(slugOrId).toLowerCase().trim().replace(/\/$/, '');
+  const found = allServices.find(s => s.id.toLowerCase() === clean || s.title.toLowerCase() === clean);
+  return found || null;
+}
+
+export function saveService(serviceData) {
+  const services = getStoredServices();
+  const id = serviceData.id || `srv_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const cleanPrice = String(serviceData.price || '$55').startsWith('$') ? String(serviceData.price) : `$${serviceData.price}`;
+
+  const newService = {
+    ...serviceData,
+    id,
+    price: cleanPrice,
+    status: serviceData.status || 'active',
+    inclusions: Array.isArray(serviceData.inclusions) ? serviceData.inclusions : (serviceData.inclusions ? String(serviceData.inclusions).split('\n').filter(Boolean) : [
+      "Comprehensive Physical Health Check",
+      "Vital Signs & Heart Auscultation",
+      "Diagnostic Assessment & Plan",
+      "Post-Visit Home Care Guidelines"
+    ]),
+    features: Array.isArray(serviceData.features) ? serviceData.features : (serviceData.features ? String(serviceData.features).split('\n').filter(Boolean) : [
+      "Performed by board-certified veterinarians",
+      "Stress-free Fear-Free certified clinical protocol",
+      "Digital care records synchronized to pet portal"
+    ]),
+    faqs: Array.isArray(serviceData.faqs) ? serviceData.faqs : [],
+    benefits: Array.isArray(serviceData.benefits) ? serviceData.benefits : []
+  };
+
+  const idx = services.findIndex(s => s.id === id);
+  if (idx >= 0) {
+    services[idx] = newService;
+  } else {
+    services.push(newService);
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(SERVICES_KEY, JSON.stringify(services));
+  }
+  return newService;
+}
+
+export function deleteService(serviceId) {
+  const services = getStoredServices();
+  const filtered = services.filter(s => s.id !== serviceId);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(SERVICES_KEY, JSON.stringify(filtered));
+  }
+  return true;
+}
+
+export function toggleServiceStatus(serviceId) {
+  const services = getStoredServices();
+  const srv = services.find(s => s.id === serviceId);
+  if (!srv) return null;
+  srv.status = srv.status === 'disabled' ? 'active' : 'disabled';
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(SERVICES_KEY, JSON.stringify(services));
+  }
+  return srv;
+}
+
+// ----------------------------------------------------
+// DYNAMIC VETERINARIANS CRUD (ADMIN & PUBLIC SYNCHRONIZATION)
+// ----------------------------------------------------
+
+export function getStoredVeterinarians() {
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(VETS_KEY) : null;
+  if (!raw) {
+    const initial = JSON.parse(JSON.stringify(siteData.veterinarians)).map(v => ({
+      ...v,
+      status: v.status || 'active'
+    }));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(VETS_KEY, JSON.stringify(initial));
+    }
+    return initial;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return siteData.veterinarians;
+  }
+}
+
+export function getActiveVeterinarians() {
+  return getStoredVeterinarians().filter(v => v.status !== 'disabled' && v.status !== 'inactive');
+}
+
+export function getDoctorById(slugOrId) {
+  const allVets = getStoredVeterinarians();
+  if (!slugOrId) return allVets[0] || siteData.veterinarians[0];
+  const clean = String(slugOrId).toLowerCase().trim().replace(/^dr-/, '').replace(/\/$/, '');
+  const found = allVets.find(v => {
+    const vClean = v.id.toLowerCase().replace(/^dr-/, '');
+    const vSlug = v.slug ? v.slug.toLowerCase().replace(/^dr-/, '') : '';
+    return vClean === clean || v.id.toLowerCase() === slugOrId.toLowerCase() || vSlug === clean || v.name.toLowerCase().includes(clean);
+  });
+  return found || null;
+}
+
+export function saveVeterinarian(vetData) {
+  const vets = getStoredVeterinarians();
+  const id = vetData.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+
+  const newVet = {
+    ...vetData,
+    id,
+    slug: vetData.slug || id,
+    status: vetData.status || 'active',
+    specialties: Array.isArray(vetData.specialties) ? vetData.specialties : (vetData.specialties ? String(vetData.specialties).split(',').map(s => s.trim()).filter(Boolean) : ['Veterinary Medicine', 'Companion Care']),
+    education: Array.isArray(vetData.education) ? vetData.education : (vetData.education ? String(vetData.education).split('\n').map(s => s.trim()).filter(Boolean) : ['Doctor of Veterinary Medicine (DVM)']),
+    quickFacts: vetData.quickFacts || {
+      experience: vetData.experience || '5+ Years',
+      cases: '1,500+ Patients',
+      languages: 'English',
+      certification: vetData.degrees || 'DVM Board Certified'
+    }
+  };
+
+  const idx = vets.findIndex(v => v.id === id);
+  if (idx >= 0) {
+    vets[idx] = newVet;
+  } else {
+    vets.push(newVet);
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(VETS_KEY, JSON.stringify(vets));
+  }
+  return newVet;
+}
+
+export function deleteVeterinarian(vetId) {
+  const vets = getStoredVeterinarians();
+  const filtered = vets.filter(v => v.id !== vetId);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(VETS_KEY, JSON.stringify(filtered));
+  }
+  return true;
+}
+
+export function toggleDoctorStatus(vetId) {
+  const vets = getStoredVeterinarians();
+  const vet = vets.find(v => v.id === vetId);
+  if (!vet) return null;
+  vet.status = vet.status === 'disabled' ? 'active' : 'disabled';
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(VETS_KEY, JSON.stringify(vets));
+  }
+  return vet;
+}
+
+// ----------------------------------------------------
+// VETERINARIAN AVAILABILITY & BLOCKED DATES MANAGEMENT
+// ----------------------------------------------------
+
+const DEFAULT_AVAILABILITY = {
+  workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+  shifts: {
+    morning: true,
+    afternoon: true,
+    evening: true
+  },
+  blockedDates: [] // Array of { date: 'YYYY-MM-DD', reason: 'Conference' }
+};
+
+export function getAllDoctorAvailability() {
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(VET_AVAILABILITY_KEY) : null;
+  if (!raw) {
+    const initial = {};
+    const vets = getStoredVeterinarians();
+    vets.forEach(v => {
+      initial[v.id] = JSON.parse(JSON.stringify(DEFAULT_AVAILABILITY));
+    });
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(VET_AVAILABILITY_KEY, JSON.stringify(initial));
+    }
+    return initial;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return {};
+  }
+}
+
+export function getDoctorAvailability(doctorId) {
+  const all = getAllDoctorAvailability();
+  if (!doctorId) return DEFAULT_AVAILABILITY;
+  const cleanId = String(doctorId).toLowerCase();
+  
+  // Find matching doctor key
+  const matchKey = Object.keys(all).find(k => k.toLowerCase() === cleanId || k.replace(/^dr-/, '') === cleanId.replace(/^dr-/, ''));
+  if (matchKey && all[matchKey]) {
+    return all[matchKey];
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_AVAILABILITY));
+}
+
+export function saveDoctorAvailability(doctorId, config) {
+  const all = getAllDoctorAvailability();
+  all[doctorId] = {
+    ...DEFAULT_AVAILABILITY,
+    ...config
+  };
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(VET_AVAILABILITY_KEY, JSON.stringify(all));
+  }
+  return all[doctorId];
+}
+
+export function blockDoctorDate(doctorId, dateStr, reason = 'Leave / Clinic Duty') {
+  const all = getAllDoctorAvailability();
+  if (!all[doctorId]) {
+    all[doctorId] = JSON.parse(JSON.stringify(DEFAULT_AVAILABILITY));
+  }
+  if (!all[doctorId].blockedDates) {
+    all[doctorId].blockedDates = [];
+  }
+  if (!all[doctorId].blockedDates.some(b => b.date === dateStr)) {
+    all[doctorId].blockedDates.push({ date: dateStr, reason });
+  }
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(VET_AVAILABILITY_KEY, JSON.stringify(all));
+  }
+  return all[doctorId];
+}
+
+export function unblockDoctorDate(doctorId, dateStr) {
+  const all = getAllDoctorAvailability();
+  if (all[doctorId] && all[doctorId].blockedDates) {
+    all[doctorId].blockedDates = all[doctorId].blockedDates.filter(b => b.date !== dateStr);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(VET_AVAILABILITY_KEY, JSON.stringify(all));
+    }
+  }
+  return all[doctorId] || null;
+}
+
+// ----------------------------------------------------
+// PAYMENT RECORDS & REVENUE MANAGEMENT (MILSTONE 4)
+// ----------------------------------------------------
+
+export function getPaymentRecords() {
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(PAYMENTS_KEY) : null;
+  if (!raw) {
+    // Seed initial demo payments
+    const initialPayments = [
+      {
+        id: 'PAY-PETZY-948201',
+        transactionId: 'TXN_884920194',
+        appointmentId: 'PETZY-948201',
+        userId: 'usr_samantha_hayes_01',
+        customerName: 'Samantha Hayes',
+        customerEmail: 'samantha@petzy.com',
+        petId: 'pet_buddy_01',
+        petName: 'Buddy',
+        serviceId: 'consultation',
+        serviceName: 'Veterinary Consultation',
+        amount: '$55.00',
+        amountValue: 55,
+        paymentMethod: 'Visa •••• 4242',
+        paymentDate: '2026-08-20T10:05:00.000Z',
+        status: 'Paid'
+      },
+      {
+        id: 'PAY-PETZY-832104',
+        transactionId: 'TXN_773910283',
+        appointmentId: 'PETZY-832104',
+        userId: 'usr_samantha_hayes_01',
+        customerName: 'Samantha Hayes',
+        customerEmail: 'samantha@petzy.com',
+        petId: 'pet_buddy_01',
+        petName: 'Buddy',
+        serviceId: 'vaccination',
+        serviceName: 'Vaccination & Immunity',
+        amount: '$45.00',
+        amountValue: 45,
+        paymentMethod: 'Mastercard •••• 5555',
+        paymentDate: '2025-08-10T14:10:00.000Z',
+        status: 'Paid'
+      },
+      {
+        id: 'PAY-PETZY-719302',
+        transactionId: 'TXN_662809172',
+        appointmentId: 'PETZY-719302',
+        userId: 'usr_samantha_hayes_01',
+        customerName: 'Samantha Hayes',
+        customerEmail: 'samantha@petzy.com',
+        petId: 'pet_mimi_02',
+        petName: 'Mimi',
+        serviceId: 'dental-care',
+        serviceName: 'Dental Care & Hygiene',
+        amount: '$85.00',
+        amountValue: 85,
+        paymentMethod: 'Apple Pay (Visa •••• 1928)',
+        paymentDate: '2025-10-12T11:05:00.000Z',
+        status: 'Paid'
+      },
+      {
+        id: 'PAY-PETZY-605821',
+        transactionId: 'TXN_551798061',
+        appointmentId: 'PETZY-605821',
+        userId: 'usr_samantha_hayes_01',
+        customerName: 'Samantha Hayes',
+        customerEmail: 'samantha@petzy.com',
+        petId: 'pet_mimi_02',
+        petName: 'Mimi',
+        serviceId: 'vaccination',
+        serviceName: 'Vaccination & Immunity',
+        amount: '$45.00',
+        amountValue: 45,
+        paymentMethod: 'Visa •••• 4242',
+        paymentDate: '2025-06-15T15:05:00.000Z',
+        status: 'Paid'
+      }
+    ];
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(initialPayments));
+    }
+    return initialPayments;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
+  }
+}
+
+export function getPaymentById(paymentId) {
+  const records = getPaymentRecords();
+  return records.find(p => p.id === paymentId || p.transactionId === paymentId) || null;
+}
+
+export function getPaymentsByUserId(userId) {
+  const records = getPaymentRecords();
+  return records.filter(p => p.userId === userId);
+}
+
+export function getPaymentByAppointmentId(apptId) {
+  const records = getPaymentRecords();
+  return records.find(p => p.appointmentId === apptId) || null;
+}
+
+export function createPaymentRecord(paymentData) {
+  const records = getPaymentRecords();
+  const amountStr = String(paymentData.amount || '$55').startsWith('$') ? String(paymentData.amount) : `$${paymentData.amount}`;
+  const amountVal = parseFloat(amountStr.replace(/[^0-9.]/g, '')) || 55;
+
+  const newPayment = {
+    id: paymentData.id || generatePaymentId(),
+    transactionId: paymentData.transactionId || generateTransactionId(),
+    appointmentId: paymentData.appointmentId,
+    userId: paymentData.userId,
+    customerName: paymentData.customerName || 'Valued Pet Parent',
+    customerEmail: paymentData.customerEmail || '',
+    petId: paymentData.petId || '',
+    petName: paymentData.petName || 'Pet',
+    serviceId: paymentData.serviceId || '',
+    serviceName: paymentData.serviceName || 'Veterinary Care',
+    amount: amountStr,
+    amountValue: amountVal,
+    paymentMethod: paymentData.paymentMethod || 'Credit Card •••• 4242',
+    paymentDate: paymentData.paymentDate || new Date().toISOString(),
+    status: paymentData.status || 'Paid'
+  };
+
+  records.unshift(newPayment);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(records));
+  }
+  return newPayment;
+}
+
+export function refundPaymentRecord(paymentId, reason = 'Customer request / Cancellation') {
+  const records = getPaymentRecords();
+  const payment = records.find(p => p.id === paymentId || p.transactionId === paymentId);
+  if (!payment) return null;
+
+  payment.status = 'Refunded';
+  payment.refundedAt = new Date().toISOString();
+  payment.refundReason = reason;
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(records));
+  }
+
+  // Also update corresponding appointment status if found
+  if (payment.appointmentId && payment.userId) {
+    const appts = getUserAppointments(payment.userId);
+    const appt = appts.find(a => a.id === payment.appointmentId);
+    if (appt) {
+      appt.paymentStatus = 'Refunded';
+      saveUserAppointment(payment.userId, appt);
+    }
+  }
+
+  return payment;
+}
+
 // ----------------------------------------------------
 // SEED INITIAL DEMO DATA
 // ----------------------------------------------------
 
-// Seed initial data for demo customer (Samantha Hayes)
 export function seedDemoData(userId) {
   if (!userId) return;
 
   const petsKey = PETS_KEY_PREFIX + userId;
   const apptsKey = APPOINTMENTS_KEY_PREFIX + userId;
 
-  if (!localStorage.getItem(petsKey)) {
+  // Initialize Services, Veterinarians, Availability, and Payments
+  getStoredServices();
+  getStoredVeterinarians();
+  getAllDoctorAvailability();
+  getPaymentRecords();
+
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem(petsKey)) {
     const demoPets = [
       {
         id: 'pet_buddy_01',
@@ -170,10 +630,14 @@ export function seedDemoData(userId) {
     localStorage.setItem(petsKey, JSON.stringify(demoPets));
   }
 
-  if (!localStorage.getItem(apptsKey)) {
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem(apptsKey)) {
     const demoAppointments = [
       {
         id: 'PETZY-948201',
+        paymentId: 'PAY-PETZY-948201',
+        transactionId: 'TXN_884920194',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Visa •••• 4242',
         petId: 'pet_buddy_01',
         petName: 'Buddy',
         petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
@@ -182,6 +646,7 @@ export function seedDemoData(userId) {
         service: 'Veterinary Consultation',
         duration: '30 Mins',
         price: '$55',
+        veterinarianId: 'ananya-sharma',
         veterinarian: 'Dr. Ananya Sharma',
         vetTitle: 'Chief Veterinary Surgeon',
         vetImage: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80',
@@ -195,6 +660,10 @@ export function seedDemoData(userId) {
       },
       {
         id: 'PETZY-832104',
+        paymentId: 'PAY-PETZY-832104',
+        transactionId: 'TXN_773910283',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Mastercard •••• 5555',
         petId: 'pet_buddy_01',
         petName: 'Buddy',
         petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
@@ -203,6 +672,7 @@ export function seedDemoData(userId) {
         service: 'Vaccination & Immunity',
         duration: '30 Mins',
         price: '$45',
+        veterinarianId: 'rohan-mehta',
         veterinarian: 'Dr. Rohan Mehta',
         vetTitle: 'Pet Wellness & Nutrition Specialist',
         vetImage: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80',
@@ -216,6 +686,10 @@ export function seedDemoData(userId) {
       },
       {
         id: 'PETZY-719302',
+        paymentId: 'PAY-PETZY-719302',
+        transactionId: 'TXN_662809172',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Apple Pay (Visa •••• 1928)',
         petId: 'pet_mimi_02',
         petName: 'Mimi',
         petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
@@ -224,6 +698,7 @@ export function seedDemoData(userId) {
         service: 'Dental Care & Hygiene',
         duration: '45 Mins',
         price: '$85',
+        veterinarianId: 'sarah-kapoor',
         veterinarian: 'Dr. Sarah Kapoor',
         vetTitle: 'Senior Veterinary Physician',
         vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
@@ -237,6 +712,10 @@ export function seedDemoData(userId) {
       },
       {
         id: 'PETZY-605821',
+        paymentId: 'PAY-PETZY-605821',
+        transactionId: 'TXN_551798061',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Visa •••• 4242',
         petId: 'pet_mimi_02',
         petName: 'Mimi',
         petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
@@ -245,6 +724,7 @@ export function seedDemoData(userId) {
         service: 'Vaccination & Immunity',
         duration: '30 Mins',
         price: '$45',
+        veterinarianId: 'sarah-kapoor',
         veterinarian: 'Dr. Sarah Kapoor',
         vetTitle: 'Senior Veterinary Physician',
         vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
@@ -268,7 +748,7 @@ export function seedDemoData(userId) {
 export function getUserPets(userId) {
   if (!userId) return [];
   const key = PETS_KEY_PREFIX + userId;
-  const raw = localStorage.getItem(key);
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
   if (!raw) return [];
   try {
     return JSON.parse(raw);
@@ -298,7 +778,9 @@ export function saveUserPet(userId, petData) {
     pets.push(newPet);
   }
 
-  localStorage.setItem(PETS_KEY_PREFIX + userId, JSON.stringify(pets));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(PETS_KEY_PREFIX + userId, JSON.stringify(pets));
+  }
   return newPet;
 }
 
@@ -306,7 +788,9 @@ export function deleteUserPet(userId, petId) {
   if (!userId) return false;
   const pets = getUserPets(userId);
   const filtered = pets.filter(p => p.id !== petId);
-  localStorage.setItem(PETS_KEY_PREFIX + userId, JSON.stringify(filtered));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(PETS_KEY_PREFIX + userId, JSON.stringify(filtered));
+  }
   return true;
 }
 
@@ -334,7 +818,7 @@ export function addVaccinationRecord(userId, petId, record) {
 }
 
 // ----------------------------------------------------
-// CROSS-ACCOUNT DOUBLE-BOOKING PREVENTION & APPOINTMENT QUERIES
+// CROSS-ACCOUNT DOUBLE-BOOKING & AVAILABILITY ENFORCEMENT
 // ----------------------------------------------------
 
 export function getAllGlobalAppointments() {
@@ -344,11 +828,17 @@ export function getAllGlobalAppointments() {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith(APPOINTMENTS_KEY_PREFIX)) {
+          const userId = key.replace(APPOINTMENTS_KEY_PREFIX, '');
           const raw = localStorage.getItem(key);
           if (raw) {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-              allAppts.push(...parsed);
+              parsed.forEach(a => {
+                allAppts.push({
+                  ...a,
+                  userId: a.userId || userId
+                });
+              });
             }
           }
         }
@@ -382,33 +872,51 @@ export function isSlotBooked(doctorNameOrId, dateStr, timeSlot, excludeApptId = 
 }
 
 export function isAllDoctorsBookedAtSlot(dateStr, timeSlot, excludeApptId = null) {
-  const docs = [
-    'Dr. Ananya Sharma',
-    'Dr. Rohan Mehta',
-    'Dr. Sarah Kapoor',
-    'Dr. David Chen',
-    'Dr. Maya Patel',
-    'Dr. Priya Rao'
-  ];
-  return docs.every(doc => isSlotBooked(doc, dateStr, timeSlot, excludeApptId));
+  const docs = getActiveVeterinarians();
+  return docs.every(doc => isSlotBooked(doc.name, dateStr, timeSlot, excludeApptId));
 }
 
 export function findAvailableDoctorForSlot(dateStr, timeSlot, excludeApptId = null) {
-  const docs = [
-    { name: 'Dr. Ananya Sharma', id: 'ananya-sharma', title: 'Chief Veterinary Surgeon', image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80' },
-    { name: 'Dr. Rohan Mehta', id: 'rohan-mehta', title: 'Pet Wellness & Nutrition Specialist', image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80' },
-    { name: 'Dr. Sarah Kapoor', id: 'sarah-kapoor', title: 'Senior Veterinary Physician', image: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80' },
-    { name: 'Dr. David Chen', id: 'david-chen', title: 'Emergency & Critical Care Specialist', image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80' },
-    { name: 'Dr. Maya Patel', id: 'maya-patel', title: 'Veterinary Dermatology Specialist', image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=600&q=80' },
-    { name: 'Dr. Priya Rao', id: 'priya-rao', title: 'Avian & Exotic Pet Specialist', image: 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?auto=format&fit=crop&w=600&q=80' }
-  ];
+  const docs = getActiveVeterinarians();
 
   for (const doc of docs) {
+    const avail = getDoctorAvailability(doc.id);
+
+    // Check if doctor works on this day
+    if (avail.workingDays && !isDoctorWorkingOnDay(avail.workingDays, dateStr)) {
+      continue;
+    }
+
+    // Check if date is blocked for this doctor
+    if (avail.blockedDates && avail.blockedDates.some(b => b.date === dateStr)) {
+      continue;
+    }
+
+    // Check if slot is booked
     if (!isSlotBooked(doc.name, dateStr, timeSlot, excludeApptId)) {
       return doc;
     }
   }
-  return docs[0];
+  return docs[0] || siteData.veterinarians[0];
+}
+
+function isDoctorWorkingOnDay(workingDaysList, dateStr) {
+  if (!Array.isArray(workingDaysList) || workingDaysList.length === 0) return true;
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const daysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const curShort = daysShort[dt.getDay()];
+    const curFull = daysFull[dt.getDay()];
+    return workingDaysList.some(day => 
+      day.toLowerCase() === curShort.toLowerCase() || 
+      day.toLowerCase() === curFull.toLowerCase() ||
+      day.toLowerCase().startsWith(curShort.toLowerCase())
+    );
+  } catch (e) {
+    return true;
+  }
 }
 
 export function getAvailableSlotsForDoctorAndDate(doctorNameOrId, dateStr, excludeApptId = null) {
@@ -416,20 +924,46 @@ export function getAvailableSlotsForDoctorAndDate(doctorNameOrId, dateStr, exclu
     morning: [],
     afternoon: [],
     evening: [],
-    hasAvailableSlots: false
+    hasAvailableSlots: false,
+    isDoctorWorkingDay: true,
+    isDateBlocked: false,
+    blockedReason: ''
   };
 
   if (!dateStr) return result;
 
-  const isAnyDoctor = !doctorNameOrId || doctorNameOrId === 'any' || doctorNameOrId.toLowerCase().includes('any available');
+  const isAnyDoctor = !doctorNameOrId || doctorNameOrId === 'any' || String(doctorNameOrId).toLowerCase().includes('any available');
+  
+  let targetDoc = null;
+  if (!isAnyDoctor) {
+    targetDoc = getDoctorById(doctorNameOrId);
+  }
+
+  // Doctor availability & leave checks
+  if (targetDoc) {
+    const avail = getDoctorAvailability(targetDoc.id);
+
+    if (avail.workingDays && !isDoctorWorkingOnDay(avail.workingDays, dateStr)) {
+      result.isDoctorWorkingDay = false;
+    }
+
+    if (avail.blockedDates && avail.blockedDates.some(b => b.date === dateStr)) {
+      result.isDateBlocked = true;
+      const blk = avail.blockedDates.find(b => b.date === dateStr);
+      result.blockedReason = blk ? blk.reason : 'Doctor is unavailable';
+    }
+  }
 
   ['morning', 'afternoon', 'evening'].forEach(period => {
     result[period] = TIME_PERIODS[period].map(slot => {
       let isBooked = false;
-      if (isAnyDoctor) {
+
+      if (!result.isDoctorWorkingDay || result.isDateBlocked) {
+        isBooked = true; // All slots disabled if doctor isn't working or on leave
+      } else if (isAnyDoctor) {
         isBooked = isAllDoctorsBookedAtSlot(dateStr, slot, excludeApptId);
       } else {
-        isBooked = isSlotBooked(doctorNameOrId, dateStr, slot, excludeApptId);
+        isBooked = isSlotBooked(targetDoc ? targetDoc.name : doctorNameOrId, dateStr, slot, excludeApptId);
       }
 
       if (!isBooked) {
@@ -453,7 +987,7 @@ export function getAvailableSlotsForDoctorAndDate(doctorNameOrId, dateStr, exclu
 export function getUserAppointments(userId) {
   if (!userId) return [];
   const key = APPOINTMENTS_KEY_PREFIX + userId;
-  const raw = localStorage.getItem(key);
+  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
   if (!raw) return [];
   try {
     return JSON.parse(raw);
@@ -477,8 +1011,10 @@ export function saveUserAppointment(userId, apptData) {
   const appts = getUserAppointments(userId);
   const newAppt = {
     ...apptData,
+    userId,
     id: apptData.id || generateAppointmentId(),
     status: apptData.status || 'Upcoming',
+    paymentStatus: apptData.paymentStatus || 'Paid',
     createdAt: apptData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -490,7 +1026,9 @@ export function saveUserAppointment(userId, apptData) {
     appts.unshift(newAppt);
   }
 
-  localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  }
   return newAppt;
 }
 
@@ -506,7 +1044,9 @@ export function rescheduleUserAppointment(userId, apptId, { date, time, notes })
   appt.status = 'Rescheduled';
   appt.updatedAt = new Date().toISOString();
 
-  localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  }
   return appt;
 }
 
@@ -518,8 +1058,51 @@ export function cancelUserAppointment(userId, apptId) {
 
   appt.status = 'Cancelled';
   appt.updatedAt = new Date().toISOString();
-  localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(APPOINTMENTS_KEY_PREFIX + userId, JSON.stringify(appts));
+  }
   return true;
 }
+
+// ----------------------------------------------------
+// ADMIN GLOBAL APPOINTMENT MANAGEMENT
+// ----------------------------------------------------
+
+export function updateAppointmentStatusByAdmin(apptId, newStatus, optionsOrDiagnosis = null, notes = null) {
+  let updatedAppt = null;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(APPOINTMENTS_KEY_PREFIX)) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const appts = JSON.parse(raw);
+            const target = appts.find(a => a.id === apptId);
+            if (target) {
+              target.status = newStatus;
+              if (typeof optionsOrDiagnosis === 'object' && optionsOrDiagnosis !== null) {
+                if (optionsOrDiagnosis.diagnosisSummary !== undefined) target.diagnosisSummary = optionsOrDiagnosis.diagnosisSummary;
+                if (optionsOrDiagnosis.paymentStatus !== undefined) target.paymentStatus = optionsOrDiagnosis.paymentStatus;
+                if (optionsOrDiagnosis.notes !== undefined) target.notes = optionsOrDiagnosis.notes;
+              } else {
+                if (optionsOrDiagnosis !== null) target.diagnosisSummary = optionsOrDiagnosis;
+                if (notes !== null) target.notes = notes;
+              }
+              target.updatedAt = new Date().toISOString();
+              localStorage.setItem(key, JSON.stringify(appts));
+              updatedAppt = target;
+              break;
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error updating appointment status by admin:', e);
+  }
+  return updatedAppt;
+}
+
 
 

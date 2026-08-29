@@ -1,7 +1,8 @@
-/* PETZY Appointment Details & Cancellation Modal Component (Milestone 3) */
+/* PETZY Appointment Details & Cancellation Modal Component (Milestone 3 & 4) */
 import { cancelUserAppointment } from '../services/storage.js';
 import { getCurrentUser } from '../services/auth.js';
 import { showToast } from './toast.js';
+import { openPaymentReceiptModal } from './payment-receipt-modal.js';
 
 let onUpdateCallback = null;
 let cameFromDetailsView = false;
@@ -149,7 +150,7 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
           </div>
 
           <!-- Appointment Meta Row -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.65rem; margin-bottom: 1.25rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.65rem; margin-bottom: 1.25rem;">
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
               <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Date</span>
               <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;"><i class="fa-solid fa-calendar" style="color: var(--color-soft-coral); margin-right: 0.3rem;"></i>${appointment.date}</span>
@@ -159,8 +160,8 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
               <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;"><i class="fa-solid fa-clock" style="color: var(--color-forest-green-light); margin-right: 0.3rem;"></i>${appointment.time}</span>
             </div>
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
-              <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Duration</span>
-              <span style="font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;"><i class="fa-solid fa-hourglass-half" style="color: var(--color-sage-green); margin-right: 0.3rem;"></i>${appointment.duration || '30 Mins'}</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Payment</span>
+              <span style="font-weight: 700; color: #27AE60; font-size: 0.88rem;"><i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i>${appointment.paymentStatus || 'Paid'} (${appointment.price || '$55'})</span>
             </div>
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
               <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Location</span>
@@ -186,10 +187,12 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
             </div>
           ` : ''}
 
-          <!-- Location Information Footer -->
+          <!-- Location & Payment Receipt Info Footer -->
           <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.65rem; border-top: 1px solid var(--color-border-subtle); font-size: 0.78rem; color: var(--color-charcoal-muted); flex-wrap: wrap; gap: 0.4rem;">
-            <span><i class="fa-solid fa-location-dot"></i> PETZY Clinic, SF Suite 400</span>
-            <span><i class="fa-solid fa-phone"></i> +1 (800) 555-PETZY</span>
+            <span><i class="fa-solid fa-location-dot"></i> PETZY Central Clinic (Suite 400)</span>
+            <button type="button" class="btn btn-outline" id="appt-modal-receipt-btn" style="padding: 0.25rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-full);">
+              <i class="fa-solid fa-file-invoice"></i> View Payment Receipt
+            </button>
           </div>
         </div>
 
@@ -310,6 +313,13 @@ function setupApptModalEvents(modalEl, appointment) {
     e.preventDefault();
     closeAppointmentModal();
     window.location.hash = `#/book-appointment?rescheduleId=${appointment.id}`;
+  });
+
+  // Receipt button handler
+  const receiptBtn = modalEl.querySelector('#appt-modal-receipt-btn');
+  receiptBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openPaymentReceiptModal(appointment.paymentId || appointment.id);
   });
 
   // Switch to compact Cancel Confirmation Dialog
