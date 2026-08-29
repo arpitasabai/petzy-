@@ -59,9 +59,7 @@ export function handleRoute() {
   
   if (typeof window !== 'undefined') {
     window.petzyHandleRoute = handleRoute;
-    if (typeof window.petzyRecordRoute === 'function' && !window.petzyIsGoingBack) {
-      window.petzyRecordRoute(fullRawHash);
-    }
+    window.petzyNavCount = (window.petzyNavCount || 0) + 1;
   }
 
   if (currentActiveRoute && currentActiveRoute !== fullHash) {

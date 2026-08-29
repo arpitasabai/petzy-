@@ -1,6 +1,6 @@
-/* PETZY Reusable Back Button & Intelligent Navigation Component */
+/* PETZY Reusable Back Button & Navigation Component */
 
-// Smart semantic parent resolver for when no previous page exists in session
+// Smart semantic parent resolver for direct URL entries / refreshes with no prior history
 export function getSmartParentRoute(rawHash) {
   const hash = (rawHash || (typeof window !== 'undefined' ? window.location.hash : '') || '#/').replace(/^#/, '');
   const cleanPath = hash.split('?')[0].split('#')[0] || '/';
@@ -45,59 +45,28 @@ export function getSmartParentRoute(rawHash) {
   return '#/';
 }
 
-// Global router navigation stack
+// Global browser navigation handler
 if (typeof window !== 'undefined') {
-  if (!window.petzyNavigationStack) {
-    window.petzyNavigationStack = [];
-  }
-
-  window.petzyRecordRoute = function(fullHash) {
-    if (!fullHash) return;
-    const normalized = fullHash.startsWith('#') ? fullHash : '#' + fullHash;
-    const stack = window.petzyNavigationStack;
-    
-    // Don't push duplicate if the current top of stack is the same route
-    if (stack.length === 0 || stack[stack.length - 1] !== normalized) {
-      if (stack.length > 50) stack.shift();
-      stack.push(normalized);
-    }
-  };
-
   window.petzyGoBack = function(fallbackUrl = null) {
     const currentHash = window.location.hash || '#/';
-    const stack = window.petzyNavigationStack;
     
-    // Remove current page from top of stack if present
-    while (stack.length > 0 && stack[stack.length - 1] === currentHash) {
-      stack.pop();
-    }
-    
-    let previousTarget = null;
-    if (stack.length > 0) {
-      previousTarget = stack.pop();
-    }
+    // Check if the user has navigated within this browser session
+    const hasHistoryInSession = (window.petzyNavCount && window.petzyNavCount > 1) || (window.history && window.history.length > 2);
 
-    // If no valid previous target or same as current, compute smart semantic fallback
-    if (!previousTarget || previousTarget === currentHash) {
-      previousTarget = fallbackUrl || getSmartParentRoute(currentHash);
+    if (hasHistoryInSession) {
+      // Use standard browser history back
+      window.history.back();
+    } else {
+      // If direct entry or refreshed page, use smart parent fallback
+      const target = fallbackUrl || getSmartParentRoute(currentHash);
+      const normalizedTarget = target.startsWith('#') ? target : '#' + target;
+      
+      if (window.location.hash !== normalizedTarget) {
+        window.location.hash = normalizedTarget;
+      } else if (typeof window.petzyHandleRoute === 'function') {
+        window.petzyHandleRoute();
+      }
     }
-
-    if (!previousTarget.startsWith('#')) {
-      previousTarget = '#' + previousTarget;
-    }
-
-    // Set navigation flag so handleRoute knows we are going back
-    window.petzyIsGoingBack = true;
-
-    if (window.location.hash !== previousTarget) {
-      window.location.hash = previousTarget;
-    } else if (typeof window.petzyHandleRoute === 'function') {
-      window.petzyHandleRoute();
-    }
-
-    setTimeout(() => {
-      window.petzyIsGoingBack = false;
-    }, 80);
   };
 }
 
