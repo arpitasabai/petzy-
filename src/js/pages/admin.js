@@ -1,6 +1,7 @@
 /* PETZY Master Admin Portal Controller (Milestone 4) */
 import { getCurrentUser, isAdmin, logoutUser } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
+import { renderBackButton } from '../components/back-button.js';
 import { renderAdminOverview, setupAdminOverviewEvents } from './admin/admin-overview.js';
 import { renderAdminCustomers, setupAdminCustomersEvents } from './admin/admin-customers.js';
 import { renderAdminServices, setupAdminServicesEvents } from './admin/admin-services.js';
@@ -108,7 +109,9 @@ export function renderAdmin() {
         
         <!-- Topbar -->
         <header class="admin-topbar">
-          <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem;">
+            ${renderBackButton('#/dashboard', 'margin-bottom: 0;')}
+            
             <button type="button" class="mobile-menu-toggle" id="admin-mobile-toggle" aria-label="Toggle Admin Menu">
               <i class="fa-solid fa-bars"></i>
             </button>

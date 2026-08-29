@@ -4,6 +4,7 @@ import { getUserPets, getUserAppointments, deleteUserPet } from '../services/sto
 import { openPetModal } from '../components/pet-modal.js';
 import { openAppointmentModal } from '../components/appointment-modal.js';
 import { openPaymentReceiptModal } from '../components/payment-receipt-modal.js';
+import { renderBackButton } from '../components/back-button.js';
 import { showToast } from '../components/toast.js';
 
 let activeTab = 'overview';
@@ -138,7 +139,8 @@ export function renderDashboard() {
       <main class="dashboard-main" id="dashboard-main-content">
         <!-- Topbar -->
         <div class="dashboard-topbar">
-          <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.85rem;">
+            ${renderBackButton('#/', 'margin-bottom: 0;')}
             <button class="dashboard-mobile-toggle-btn" id="dashboard-mobile-toggle-btn" aria-label="Toggle Dashboard Menu">
               <i class="fa-solid fa-bars"></i>
             </button>

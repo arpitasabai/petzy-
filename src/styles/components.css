@@ -1385,6 +1385,30 @@
   color: var(--color-soft-coral);
 }
 
+/* Dashboard & Admin Topbar back button integration */
+.admin-topbar .petzy-back-btn-container,
+.dashboard-topbar .petzy-back-btn-container {
+  margin-bottom: 0;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.admin-topbar .petzy-back-btn,
+.dashboard-topbar .petzy-back-btn {
+  padding: 0.38rem 0.95rem;
+  font-size: 0.82rem;
+  background-color: var(--color-warm-cream);
+  border-color: rgba(23, 74, 58, 0.18);
+  white-space: nowrap;
+}
+
+.admin-topbar .petzy-back-btn:hover,
+.dashboard-topbar .petzy-back-btn:hover {
+  background-color: var(--color-forest-green);
+  color: var(--color-warm-cream);
+  border-color: var(--color-forest-green);
+}
+
 /* ==================================================
    11. MILESTONE 3: APPOINTMENT & BOOKING SYSTEM WIZARD
    ================================================== */
