@@ -17,6 +17,7 @@ import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pag
 import { renderAdmin, setupAdminEvents } from './pages/admin.js';
 import { updateActiveNav } from './components/header.js';
 import { getDoctorById, getServiceById } from './services/storage.js';
+import { getSmartParentRoute } from './components/back-button.js';
 
 const routes = {
   '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Because Every Paw Deserves the Best Care' },
@@ -52,13 +53,21 @@ export function navigateTo(path) {
 let currentActiveRoute = null;
 
 export function handleRoute() {
-  const fullHash = window.location.hash.slice(1) || '/';
+  const fullRawHash = window.location.hash || '#/';
+  const fullHash = fullRawHash.slice(1) || '/';
   const cleanPath = fullHash.split('?')[0].split('#')[0] || '/';
   
-  if (currentActiveRoute && currentActiveRoute !== cleanPath) {
+  if (typeof window !== 'undefined') {
+    window.petzyHandleRoute = handleRoute;
+    if (typeof window.petzyRecordRoute === 'function' && !window.petzyIsGoingBack) {
+      window.petzyRecordRoute(fullRawHash);
+    }
+  }
+
+  if (currentActiveRoute && currentActiveRoute !== fullHash) {
     window.petzyPreviousRoute = currentActiveRoute;
   }
-  currentActiveRoute = cleanPath;
+  currentActiveRoute = fullHash;
 
   const appRoot = document.getElementById('app-root');
   if (!appRoot) return;
@@ -158,5 +167,6 @@ export function handleRoute() {
 
 export function initRouter() {
   window.addEventListener('hashchange', handleRoute);
+  window.addEventListener('popstate', handleRoute);
   handleRoute();
 }

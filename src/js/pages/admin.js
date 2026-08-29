@@ -181,11 +181,15 @@ export function setupAdminEvents() {
 
   // Tab switcher
   window.petzyAdminTab = (tabId) => {
-    activeAdminTab = tabId;
-    if (typeof history !== 'undefined' && history.pushState) {
-      history.pushState(null, '', `#/admin?tab=${tabId}`);
+    if (['overview', 'customers', 'services', 'veterinarians', 'availability', 'appointments', 'payments'].includes(tabId)) {
+      activeAdminTab = tabId;
+      const targetHash = `#/admin?tab=${tabId}`;
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        refreshAdmin();
+      }
     }
-    refreshAdmin();
   };
 
   // Nav Item Clicks
