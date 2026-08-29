@@ -94,11 +94,6 @@ export function renderAdmin() {
 
         <!-- Sidebar Footer Controls -->
         <div class="admin-sidebar-footer">
-          <a href="#/dashboard" class="btn btn-outline" style="width: 100%; font-size: 0.82rem; margin-bottom: 0.5rem; justify-content: center; background: var(--color-warm-cream);">
-            <i class="fa-solid fa-arrows-rotate"></i>
-            <span>Switch to Customer Portal</span>
-          </a>
-
           <button type="button" class="btn btn-outline" id="admin-logout-btn" style="width: 100%; font-size: 0.82rem; justify-content: center; border-color: #F5B7B1; color: #C0392B;">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>Sign Out Admin</span>
