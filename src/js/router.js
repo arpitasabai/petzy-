@@ -95,11 +95,15 @@ export function handleRoute() {
     }
   }
 
-  // Guard 2: Customer /dashboard requires authenticated session
+  // Guard 2: Customer /dashboard requires authenticated customer session (Admins redirected to admin panel)
   if (cleanPath === '/dashboard') {
     if (!currentUser) {
       showToast('Please sign in to access your customer dashboard.', 'coral', 'fa-solid fa-user-lock');
       window.location.hash = '#/login';
+      return;
+    }
+    if (isUserAdmin) {
+      window.location.hash = '#/admin/dashboard';
       return;
     }
   }

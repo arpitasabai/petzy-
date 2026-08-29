@@ -38,6 +38,21 @@ export function renderDashboard() {
     `;
   }
 
+  if (user.role === 'admin' || user.email.toLowerCase() === 'admin@petzy.com') {
+    // Administrators should never see the customer portal
+    setTimeout(() => {
+      window.location.hash = '#/admin/dashboard';
+    }, 10);
+    return `
+      <div class="auth-page-wrapper">
+        <div class="auth-card-box" style="text-align: center;">
+          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--color-forest-green); margin-bottom: 1rem;"></i>
+          <p>Redirecting to Hospital Administrator Portal...</p>
+        </div>
+      </div>
+    `;
+  }
+
   // Parse URL tab parameter if present: #/dashboard?tab=pets
   const fullHash = window.location.hash || '';
   if (fullHash.includes('tab=')) {

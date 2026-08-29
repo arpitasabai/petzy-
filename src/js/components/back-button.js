@@ -36,7 +36,7 @@ export function getSmartParentRoute(rawHash) {
     if (cleanPath !== '/admin' && cleanPath !== '/admin/dashboard') {
       return '#/admin/dashboard';
     }
-    return '#/dashboard';
+    return '#/admin/login';
   }
 
   // 6. Customer Dashboard Subtabs -> Dashboard Overview

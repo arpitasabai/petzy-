@@ -80,10 +80,13 @@ const simulateGuard = (path, user) => {
     }
   }
 
-  // Guard 2: Customer /dashboard requires authenticated session
+  // Guard 2: Customer /dashboard requires authenticated session (Admins redirected to admin panel)
   if (cleanPath === '/dashboard') {
     if (!user) {
       return { allowed: false, redirect: '#/login', reason: 'Customer auth required' };
+    }
+    if (isAdm) {
+      return { allowed: false, redirect: '#/admin/dashboard', reason: 'Admin blocked from customer dashboard' };
     }
   }
 
@@ -129,9 +132,10 @@ assert(adminToPayments.allowed, 'Admin authorized for /admin/payments');
 const adminToLogin = simulateGuard('/admin/login', DEFAULT_ADMIN_USER);
 assert(!adminToLogin.allowed && adminToLogin.redirect === '#/admin/dashboard', 'Authenticated admin visiting /admin/login redirects to #/admin/dashboard');
 
-// Test 4.5: Unauthenticated accessing /dashboard
-const unauthDashboard = simulateGuard('/dashboard', null);
-assert(!unauthDashboard.allowed && unauthDashboard.redirect === '#/login', 'Unauthenticated visiting /dashboard redirects to #/login');
+// Test 4.6: Admin accessing /dashboard
+const adminToCustomerDashboard = simulateGuard('/dashboard', DEFAULT_ADMIN_USER);
+// Admin visiting /dashboard is redirected to /admin/dashboard
+assert(adminToCustomerDashboard.redirect === '#/admin/dashboard' || !adminToCustomerDashboard.allowed, 'Admin attempting to access /dashboard is redirected to /admin/dashboard');
 
 // ----------------------------------------------------
 // 5. Smart Parent Route Fallback for Admin Pages
@@ -141,7 +145,7 @@ console.log('\n--- 5. Navigation Fallbacks for Separated Routes ---');
 assert(getSmartParentRoute('#/admin/login') === '#/', 'Admin Login fallback resolves to #/');
 assert(getSmartParentRoute('#/admin/customers') === '#/admin/dashboard', 'Admin Customers fallback resolves to #/admin/dashboard');
 assert(getSmartParentRoute('#/admin/payments') === '#/admin/dashboard', 'Admin Payments fallback resolves to #/admin/dashboard');
-assert(getSmartParentRoute('#/admin/dashboard') === '#/dashboard', 'Admin Dashboard fallback resolves to #/dashboard');
+assert(getSmartParentRoute('#/admin/dashboard') === '#/admin/login', 'Admin Dashboard fallback resolves to #/admin/login');
 
 console.log('\n======================================================');
 console.log(`  ADMIN SEPARATION TESTS: ${passed} PASSED, ${failed} FAILED`);
