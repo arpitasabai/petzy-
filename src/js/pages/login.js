@@ -7,7 +7,7 @@ export function renderLogin() {
   const currentUser = getCurrentUser();
   if (currentUser) {
     setTimeout(() => {
-      window.location.hash = isAdmin() ? '#/admin' : '#/dashboard';
+      window.location.hash = isAdmin() ? '#/admin/dashboard' : '#/dashboard';
     }, 10);
     return `<div class="auth-page-wrapper"><p>Redirecting to portal...</p></div>`;
   }
@@ -22,11 +22,11 @@ export function renderLogin() {
         </div>
         <div class="auth-card-header">
           <div class="section-badge" style="margin-bottom: 0.5rem;">
-            <i class="fa-solid fa-lock"></i>
-            <span>PETZY Portal Sign In</span>
+            <i class="fa-solid fa-paw"></i>
+            <span>Pet Parent Portal</span>
           </div>
           <h2 style="font-size: 1.95rem; color: var(--color-forest-green); margin-bottom: 0.35rem;">Sign In to PETZY</h2>
-          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Access your pet care records or manage hospital administration.</p>
+          <p style="font-size: 0.95rem; color: var(--color-charcoal-muted);">Access your companion pet medical files, vaccinations, and appointment history.</p>
         </div>
 
         <!-- Google OAuth Mock Button -->
@@ -46,7 +46,7 @@ export function renderLogin() {
         <form id="petzy-login-form">
           <div class="form-group">
             <label class="form-label" for="login-email">Email Address *</label>
-            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com or admin@petzy.com" required value="${rememberedEmail}">
+            <input type="email" id="login-email" class="form-input" placeholder="parent@example.com" required value="${rememberedEmail && !rememberedEmail.includes('admin') ? rememberedEmail : 'samantha@petzy.com'}">
           </div>
 
           <div class="form-group">
@@ -81,10 +81,6 @@ export function renderLogin() {
               <i class="fa-solid fa-paw"></i>
               <span>Sign In as Samantha (Demo Pet Parent)</span>
             </button>
-            <button type="button" class="demo-login-btn" id="quick-admin-btn" style="background: var(--color-forest-green); color: var(--color-warm-cream); border-color: var(--color-forest-green);">
-              <i class="fa-solid fa-shield-halved" style="color: var(--color-soft-coral);"></i>
-              <span>Sign In as Administrator (Dr. Marcus Vance)</span>
-            </button>
           </div>
         </div>
 
@@ -103,7 +99,6 @@ export function setupLoginEvents() {
   const emailInput = document.getElementById('login-email');
   const rememberCheckbox = document.getElementById('login-remember-me');
   const quickDemoBtn = document.getElementById('quick-demo-btn');
-  const quickAdminBtn = document.getElementById('quick-admin-btn');
   const googleBtn = document.getElementById('google-auth-btn');
   const forgotBtn = document.getElementById('forgot-password-link');
 
@@ -133,9 +128,9 @@ export function setupLoginEvents() {
     try {
       const user = loginUser(email, password, rememberMe);
       const isAdm = user.role === 'admin' || user.email.toLowerCase() === 'admin@petzy.com';
-      showToast(`Welcome back, ${user.name}! Signed in successfully.`, 'sage', isAdm ? 'fa-solid fa-shield-halved' : 'fa-solid fa-circle-check');
+      showToast(`Welcome back, ${user.name}! Signed in successfully.`, 'sage', 'fa-solid fa-circle-check');
       setTimeout(() => {
-        window.location.hash = getRedirectTarget(isAdm);
+        window.location.hash = isAdm ? '#/admin/dashboard' : '#/dashboard';
       }, 400);
     } catch (err) {
       showToast(err.message || 'Login failed', 'coral', 'fa-solid fa-triangle-exclamation');
@@ -147,16 +142,7 @@ export function setupLoginEvents() {
     const user = loginAsDemoUser();
     showToast(`Welcome back, ${user.name}! Signed in as Demo Pet Parent.`, 'sage', 'fa-solid fa-paw');
     setTimeout(() => {
-      window.location.hash = getRedirectTarget(false);
-    }, 400);
-  });
-
-  // Quick 1-Click Demo Admin Login
-  quickAdminBtn?.addEventListener('click', () => {
-    const user = loginAsAdmin();
-    showToast(`Welcome, ${user.name}! Administrator access granted.`, 'sage', 'fa-solid fa-shield-halved');
-    setTimeout(() => {
-      window.location.hash = getRedirectTarget(true);
+      window.location.hash = '#/dashboard';
     }, 400);
   });
 
@@ -165,7 +151,7 @@ export function setupLoginEvents() {
     const user = loginAsDemoUser();
     showToast('Signed in via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
     setTimeout(() => {
-      window.location.hash = getRedirectTarget(false);
+      window.location.hash = '#/dashboard';
     }, 400);
   });
 
@@ -174,15 +160,6 @@ export function setupLoginEvents() {
     const email = emailInput?.value.trim() || 'your email';
     showToast(`Password recovery link sent to ${email}. Please check your inbox.`, 'coral', 'fa-solid fa-paper-plane');
   });
-}
-
-function getRedirectTarget(isAdm = false) {
-  const hash = window.location.hash || '';
-  if (hash.includes('?redirect=')) {
-    const r = hash.split('?redirect=')[1]?.split('&')[0];
-    if (r) return `#/${r}`;
-  }
-  return isAdm ? '#/admin' : '#/dashboard';
 }
 
 

@@ -25,10 +25,16 @@ export function getSmartParentRoute(rawHash) {
     return '#/dashboard?tab=appointments';
   }
 
-  // 5. Admin Panel Subpages -> Admin Overview or Customer Portal
+  // 5. Admin Login & Subpages
+  if (cleanPath === '/admin/login') {
+    return '#/';
+  }
   if (cleanPath.startsWith('/admin')) {
     if (hash.includes('tab=') && !hash.includes('tab=overview')) {
       return '#/admin?tab=overview';
+    }
+    if (cleanPath !== '/admin' && cleanPath !== '/admin/dashboard') {
+      return '#/admin/dashboard';
     }
     return '#/dashboard';
   }

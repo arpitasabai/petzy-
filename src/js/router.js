@@ -15,9 +15,12 @@ import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
 import { renderPetProfile, setupPetProfileEvents } from './pages/pet-profile.js';
 import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pages/schedule-appointment.js';
 import { renderAdmin, setupAdminEvents } from './pages/admin.js';
+import { renderAdminLogin, setupAdminLoginEvents } from './pages/admin/admin-login.js';
 import { updateActiveNav } from './components/header.js';
 import { getDoctorById, getServiceById } from './services/storage.js';
 import { getSmartParentRoute } from './components/back-button.js';
+import { getCurrentUser, isAdmin } from './services/auth.js';
+import { showToast } from './components/toast.js';
 
 const routes = {
   '/': { render: renderHome, setup: setupHomeEvents, title: 'PETZY — Because Every Paw Deserves the Best Care' },
@@ -33,7 +36,9 @@ const routes = {
   '/dashboard': { render: renderDashboard, setup: setupDashboardEvents, title: 'Customer Dashboard — PETZY Veterinary Care' },
   '/schedule-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
   '/book-appointment': { render: renderScheduleAppointment, setup: setupScheduleAppointmentEvents, title: 'Schedule Veterinary Appointment — PETZY' },
+  '/admin/login': { render: renderAdminLogin, setup: setupAdminLoginEvents, title: 'Hospital Administration Sign In — PETZY' },
   '/admin': { render: renderAdmin, setup: setupAdminEvents, title: 'Hospital Administration — PETZY' },
+  '/admin/dashboard': { render: renderAdmin, setup: setupAdminEvents, title: 'Hospital Administration — PETZY' },
   '/admin/customers': { render: renderAdmin, setup: setupAdminEvents, title: 'Customer Management — PETZY Admin' },
   '/admin/services': { render: renderAdmin, setup: setupAdminEvents, title: 'Services Catalog — PETZY Admin' },
   '/admin/veterinarians': { render: renderAdmin, setup: setupAdminEvents, title: 'Veterinarians Management — PETZY Admin' },
@@ -69,6 +74,41 @@ export function handleRoute() {
 
   const appRoot = document.getElementById('app-root');
   if (!appRoot) return;
+
+  // ----------------------------------------------------
+  // STRICT ROUTE & ROLE-BASED ACCESS CONTROL (RBAC) GUARD
+  // ----------------------------------------------------
+  const currentUser = getCurrentUser();
+  const isUserAdmin = isAdmin();
+
+  // Guard 1: Any /admin/* route (except /admin/login) requires admin role
+  if (cleanPath.startsWith('/admin') && cleanPath !== '/admin/login') {
+    if (!currentUser) {
+      showToast('Administrative authorization required. Please sign in.', 'coral', 'fa-solid fa-shield-halved');
+      window.location.hash = '#/admin/login';
+      return;
+    }
+    if (!isUserAdmin) {
+      showToast('Access Denied: Restricted to PETZY hospital administrators.', 'coral', 'fa-solid fa-ban');
+      window.location.hash = '#/dashboard';
+      return;
+    }
+  }
+
+  // Guard 2: Customer /dashboard requires authenticated session
+  if (cleanPath === '/dashboard') {
+    if (!currentUser) {
+      showToast('Please sign in to access your customer dashboard.', 'coral', 'fa-solid fa-user-lock');
+      window.location.hash = '#/login';
+      return;
+    }
+  }
+
+  // Guard 3: If authenticated admin visits /admin/login, redirect to /admin/dashboard
+  if (cleanPath === '/admin/login' && currentUser && isUserAdmin) {
+    window.location.hash = '#/admin/dashboard';
+    return;
+  }
 
   // 1. Dynamic veterinarian profile route: /veterinarians/:doctorId
   if (cleanPath.startsWith('/veterinarians/') && cleanPath.length > '/veterinarians/'.length) {

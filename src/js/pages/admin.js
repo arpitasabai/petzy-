@@ -16,8 +16,8 @@ export function renderAdmin() {
   const user = getCurrentUser();
   if (!user || !isAdmin()) {
     setTimeout(() => {
-      window.location.hash = '#/login?redirect=admin';
-      showToast('Admin authorization required. Please sign in as an administrator.', 'coral', 'fa-solid fa-shield-halved');
+      window.location.hash = '#/admin/login';
+      showToast('Restricted: Administrative authorization required.', 'coral', 'fa-solid fa-shield-halved');
     }, 10);
     return `
       <div class="auth-page-wrapper">
@@ -36,6 +36,8 @@ export function renderAdmin() {
     if (['overview', 'customers', 'services', 'veterinarians', 'availability', 'appointments', 'payments'].includes(t)) {
       activeAdminTab = t;
     }
+  } else if (hash.includes('#/admin/dashboard') || hash === '#/admin') {
+    activeAdminTab = 'overview';
   } else if (hash.includes('#/admin/customers')) {
     activeAdminTab = 'customers';
   } else if (hash.includes('#/admin/services')) {
@@ -214,7 +216,7 @@ export function setupAdminEvents() {
     logoutUser();
     showToast('Administrator signed out.', 'sage', 'fa-solid fa-right-from-bracket');
     setTimeout(() => {
-      window.location.hash = '#/login';
+      window.location.hash = '#/admin/login';
     }, 400);
   });
 
