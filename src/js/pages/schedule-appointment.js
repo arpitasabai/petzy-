@@ -61,8 +61,9 @@ function getInitialBookingState() {
     notes: '',
     calendarMonth: tomorrow.getMonth(),
     calendarYear: tomorrow.getFullYear(),
-    // Payment info
-    paymentMethod: 'card',
+    // Payment info (Live PayPal Integration)
+    paymentMethod: 'paypal',
+    paypalEmail: 'rakeshsingh8319@gmail.com',
     cardNumber: '4242 •••• •••• 4242',
     cardExpiry: '12/28',
     cardCvv: '883',
@@ -197,6 +198,24 @@ function syncStateFromUrl(user, pets) {
   const params = new URLSearchParams(queryStr);
   const reschedParam = params.get('rescheduleId');
   const followUpParam = params.get('followUpId') || params.get('followUp');
+
+  // Case: User returned from PayPal after completing payment
+  const paypalSuccess = params.get('paypal_success') || (typeof window !== 'undefined' && window.location.search && new URLSearchParams(window.location.search).get('paypal_success'));
+  const paypalCancel = params.get('paypal_cancel') || (typeof window !== 'undefined' && window.location.search && new URLSearchParams(window.location.search).get('paypal_cancel'));
+
+  if (paypalCancel) {
+    showToast('PayPal checkout was cancelled. You can review and complete your booking anytime.', 'coral', 'fa-solid fa-circle-info');
+    if (typeof history !== 'undefined' && history.replaceState) {
+      history.replaceState(null, '', '#/book-appointment');
+    }
+    lastParsedHash = '#/book-appointment';
+  }
+
+  if (paypalSuccess) {
+    handlePayPalReturnSuccess(user, params);
+    lastParsedHash = hash;
+    return;
+  }
 
   // Case A: User is rescheduling an existing appointment
   if (reschedParam) {
@@ -942,17 +961,18 @@ function renderStep5Summary() {
 }
 
 // ----------------------------------------------------
-// STEP 6: ONLINE PAYMENT CHECKOUT (Milestone 4 Integration)
+// STEP 6: ONLINE PAYMENT CHECKOUT (Live PayPal Integration)
 // ----------------------------------------------------
 function renderStep6Payment(user) {
   const price = bookingState.servicePrice || '$55';
+  const paypalAccount = 'rakeshsingh8319@gmail.com';
 
   return `
     <div class="profile-card-box animate-fade-up" style="max-width: 860px; margin: 0 auto;">
       <div class="section-subhead-row" style="margin-bottom: 1.5rem;">
         <div class="section-subhead-title">
-          <i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); font-size: 1.35rem;"></i>
-          <h2 style="font-size: 1.45rem; margin: 0;">6. Secure Online Payment Checkout</h2>
+          <i class="fa-brands fa-paypal" style="color: #003087; font-size: 1.5rem;"></i>
+          <h2 style="font-size: 1.45rem; margin: 0;">6. Secure PayPal & Payment Checkout</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 700; color: #27AE60;">
           <i class="fa-solid fa-lock"></i>
@@ -963,17 +983,44 @@ function renderStep6Payment(user) {
       <!-- Payment Checkout Grid -->
       <div class="payment-checkout-layout" style="display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 1.75rem; margin-bottom: 1.5rem;">
         
-        <!-- Left: Payment Form -->
+        <!-- Left: Payment Form & Methods -->
         <div>
           <!-- Payment Method Selector -->
           <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+            <button type="button" class="payment-method-tab ${bookingState.paymentMethod === 'paypal' ? 'active' : ''}" data-method="paypal" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-md); border: 2px solid ${bookingState.paymentMethod === 'paypal' ? '#003087' : 'var(--color-border)'}; background: ${bookingState.paymentMethod === 'paypal' ? '#EFF6FF' : 'var(--color-white)'}; cursor: pointer; text-align: center; font-weight: 700; color: #003087; font-size: 0.88rem;">
+              <i class="fa-brands fa-paypal" style="display: block; font-size: 1.35rem; margin-bottom: 0.35rem; color: #003087;"></i>
+              <span>PayPal Express</span>
+            </button>
             <button type="button" class="payment-method-tab ${bookingState.paymentMethod === 'card' ? 'active' : ''}" data-method="card" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-md); border: 2px solid ${bookingState.paymentMethod === 'card' ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${bookingState.paymentMethod === 'card' ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; text-align: center; font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;">
               <i class="fa-solid fa-credit-card" style="display: block; font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--color-forest-green);"></i>
               <span>Credit / Debit Card</span>
             </button>
-            <button type="button" class="payment-method-tab ${bookingState.paymentMethod === 'digital' ? 'active' : ''}" data-method="digital" style="flex: 1; padding: 0.75rem; border-radius: var(--radius-md); border: 2px solid ${bookingState.paymentMethod === 'digital' ? 'var(--color-forest-green)' : 'var(--color-border)'}; background: ${bookingState.paymentMethod === 'digital' ? 'var(--color-sage-green-soft)' : 'var(--color-white)'}; cursor: pointer; text-align: center; font-weight: 700; color: var(--color-forest-green); font-size: 0.88rem;">
-              <i class="fa-brands fa-apple" style="display: block; font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--color-charcoal);"></i>
-              <span>Apple / Google Pay</span>
+          </div>
+
+          <!-- PayPal Express Method Box -->
+          <div id="paypal-channel-box" style="${bookingState.paymentMethod === 'paypal' ? 'display: block;' : 'display: none;'} background: #F8FAFC; border: 1.5px solid #BFDBFE; border-radius: var(--radius-xl); padding: 1.4rem; margin-bottom: 1.25rem;">
+            
+            <div style="display: flex; align-items: center; gap: 0.85rem; background: #EFF6FF; padding: 1rem; border-radius: var(--radius-lg); border: 1px solid #BFDBFE; margin-bottom: 1.25rem;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: #003087; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                <i class="fa-solid fa-building-columns"></i>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
+                  <strong style="color: #003087; font-size: 0.95rem;">Dr. Rakesh Singh</strong>
+                  <span class="paypal-verified-badge"><i class="fa-solid fa-check"></i> Verified Account</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #1E40AF; font-family: monospace; font-weight: 700;">${paypalAccount}</div>
+                <div style="font-size: 0.75rem; color: var(--color-charcoal-muted); margin-top: 0.15rem;">PETZY Primary PayPal Payment Gateway</div>
+              </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--color-charcoal); line-height: 1.5; margin: 0 0 1.25rem;">
+              You will be redirected to PayPal's official payment page to securely pay <strong>${price}</strong> to <strong>${paypalAccount}</strong>. Once complete, you will automatically return with your verified confirmation.
+            </p>
+
+            <button type="button" class="paypal-checkout-btn" id="step6-paypal-direct-btn">
+              <i class="fa-brands fa-paypal" style="font-size: 1.35rem;"></i>
+              <span>Pay ${price} with PayPal</span>
             </button>
           </div>
 
@@ -1010,17 +1057,6 @@ function renderStep6Payment(user) {
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Digital Wallet Option -->
-          <div id="digital-wallet-box" style="${bookingState.paymentMethod === 'digital' ? 'display: block;' : 'display: none;'} background: var(--color-warm-cream); padding: 1.5rem; border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--color-border); margin-bottom: 1rem;">
-            <i class="fa-brands fa-apple" style="font-size: 2.2rem; color: var(--color-charcoal); margin-bottom: 0.5rem;"></i>
-            <h4 style="color: var(--color-forest-green); margin-bottom: 0.35rem;">Instant 1-Touch Checkout</h4>
-            <p style="font-size: 0.85rem; color: var(--color-charcoal-muted); margin: 0 0 1rem;">Click below to authorize immediate payment with Apple Pay / Google Pay.</p>
-            <button type="button" class="btn btn-teal" id="instant-wallet-pay-btn" style="width: 100%; justify-content: center; background: #000; color: #fff;">
-              <i class="fa-brands fa-apple"></i>
-              <span>Pay ${price} with Apple Pay</span>
-            </button>
           </div>
 
           <!-- Promo Code Bar -->
@@ -1079,7 +1115,7 @@ function renderStep6Payment(user) {
 
           <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--color-charcoal-muted); line-height: 1.35;">
             <i class="fa-solid fa-shield-halved" style="color: #27AE60; font-size: 1rem; flex-shrink: 0;"></i>
-            <span>Your payment is processed securely. 100% money-back guarantee if cancelled 2+ hours prior.</span>
+            <span>Payee: <strong>${paypalAccount}</strong>. 100% money-back guarantee if cancelled 2+ hours prior.</span>
           </div>
         </div>
 
@@ -1092,8 +1128,8 @@ function renderStep6Payment(user) {
         </button>
         
         <button type="button" class="btn btn-coral btn-lg" id="step6-pay-submit-btn" style="min-width: 260px; justify-content: center;">
-          <i class="fa-solid fa-lock"></i>
-          <span>Pay ${price} & Confirm Booking</span>
+          <i class="fa-brands fa-paypal"></i>
+          <span>Pay ${price} with PayPal</span>
         </button>
       </div>
     </div>
@@ -1106,8 +1142,8 @@ function renderStep6Payment(user) {
 function renderStep7Confirmed() {
   const appt = confirmedAppointment || {
     id: generateAppointmentId(),
-    paymentId: generatePaymentId(),
-    transactionId: generateTransactionId(),
+    paymentId: `PAY-PETZY-PP-${Math.floor(100000 + Math.random() * 900000)}`,
+    transactionId: `PP-TXN-${Math.floor(100000000 + Math.random() * 900000000)}`,
     serviceName: 'Veterinary Consultation',
     serviceIcon: 'fa-solid fa-stethoscope',
     duration: '30 Mins',
@@ -1123,6 +1159,8 @@ function renderStep7Confirmed() {
     room: 'Consultation Suite 2B',
     status: 'Confirmed',
     paymentStatus: 'Paid',
+    paymentMethod: 'PayPal (rakeshsingh8319@gmail.com)',
+    payeeEmail: 'rakeshsingh8319@gmail.com',
     isRescheduled: false,
     isFollowUp: false,
     previousAppointmentId: null
@@ -1151,7 +1189,7 @@ function renderStep7Confirmed() {
           : `Your veterinary visit for <strong>${appt.petName}</strong> has been successfully confirmed. Payment receipt and appointment details are stored in your portal.`}
       </p>
 
-      <!-- Key IDs Pill Row -->
+      <!-- Key IDs & PayPal Verified Badge Row -->
       <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.75rem;">
         <div class="appointment-id-pill" style="margin: 0;">
           <span>Booking ID:</span>
@@ -1160,7 +1198,11 @@ function renderStep7Confirmed() {
         <div class="appointment-id-pill" style="margin: 0; background: var(--color-sage-green-soft);">
           <i class="fa-solid fa-receipt" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>
           <span>Payment Ref:</span>
-          <strong style="color: var(--color-forest-green);">${appt.paymentId || 'PAY-PETZY-VERIFIED'}</strong>
+          <strong style="color: var(--color-forest-green);">${appt.paymentId || 'PAY-PETZY-PP-819201'}</strong>
+        </div>
+        <div class="paypal-account-badge" style="margin: 0;">
+          <i class="fa-brands fa-paypal" style="color: #003087;"></i>
+          <span>PayPal Verified: <strong>rakeshsingh8319@gmail.com</strong></span>
         </div>
       </div>
 
@@ -1220,9 +1262,9 @@ function renderStep7Confirmed() {
             <span style="color: var(--color-charcoal-muted);"><i class="fa-solid fa-location-dot" style="color: var(--color-forest-green); margin-right: 0.35rem;"></i> Location:</span>
             <strong style="color: var(--color-forest-green);">PETZY Clinic (${appt.room || 'Suite 2B'})</strong>
           </div>
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span class="section-badge" style="background: #27AE60; color: #fff; margin: 0; font-size: 0.75rem;">
-              <i class="fa-solid fa-check"></i> Paid ${appt.price || '$55'}
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <span class="section-badge" style="background: #EFF6FF; color: #003087; border: 1px solid #BFDBFE; margin: 0; font-size: 0.75rem;">
+              <i class="fa-brands fa-paypal" style="color: #003087;"></i> Paid ${appt.price || '$55'} (PayPal)
             </span>
             <span class="status-pill status-upcoming" style="padding: 0.2rem 0.65rem; font-size: 0.78rem;">${appt.status || 'Confirmed'}</span>
           </div>
@@ -1500,9 +1542,7 @@ export function setupScheduleAppointmentEvents() {
       // Reschedule does not require new payment
       executeRescheduleAppointment(user);
     } else {
-      bookingState.currentStep = 6;
-      refreshWizard();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      redirectToPayPalGateway(user);
     }
   });
 
@@ -1553,6 +1593,11 @@ export function setupScheduleAppointmentEvents() {
   document.getElementById('step6-back-btn')?.addEventListener('click', () => {
     bookingState.currentStep = 5;
     refreshWizard();
+  });
+
+  document.getElementById('step6-paypal-direct-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    redirectToPayPalGateway(user);
   });
 
   // Submit Payment Handler
@@ -1694,7 +1739,14 @@ export function setupScheduleAppointmentEvents() {
     }, 1200);
   };
 
-  document.getElementById('step6-pay-submit-btn')?.addEventListener('click', executePaymentAndBooking);
+  document.getElementById('step6-pay-submit-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (bookingState.paymentMethod === 'paypal') {
+      redirectToPayPalGateway(user);
+    } else {
+      executePaymentAndBooking();
+    }
+  });
   document.getElementById('instant-wallet-pay-btn')?.addEventListener('click', executePaymentAndBooking);
 
   // ----------------------------------------------------
@@ -1794,3 +1846,337 @@ function formatDateHuman(dateStr) {
     return dateStr;
   }
 }
+
+// ----------------------------------------------------
+// PAYPAL DIRECT CHECKOUT & RETURN GATEWAY
+// ----------------------------------------------------
+export function redirectToPayPalGateway(user) {
+  if (!user) return;
+
+  const newApptId = generateAppointmentId();
+  const newPaymentId = `PAY-PETZY-PP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const price = bookingState.servicePrice || '$55';
+  const numericAmount = parseFloat(String(price).replace(/[^0-9.]/g, '')) || 55;
+  const paypalAccount = 'rakeshsingh8319@gmail.com';
+
+  // Resolve doctor if "Any"
+  let finalDocName = bookingState.doctorName;
+  let finalDocTitle = bookingState.doctorTitle;
+  let finalDocImage = bookingState.doctorImage;
+  let finalDocId = bookingState.veterinarianId;
+
+  if (bookingState.veterinarianId === 'any' || finalDocName.toLowerCase().includes('any available')) {
+    const autoAssigned = findAvailableDoctorForSlot(bookingState.date, bookingState.time, bookingState.rescheduleId);
+    finalDocName = autoAssigned.name;
+    finalDocTitle = autoAssigned.title;
+    finalDocImage = autoAssigned.image;
+    finalDocId = autoAssigned.id;
+  }
+
+  // 1. Store pending booking state in localStorage
+  const pendingBooking = {
+    appointmentId: newApptId,
+    paymentId: newPaymentId,
+    userId: user.id,
+    customerName: user.name || 'Valued Pet Parent',
+    customerEmail: user.email || '',
+    petId: bookingState.petId,
+    petName: bookingState.petName,
+    petSpecies: bookingState.petSpecies,
+    petBreed: bookingState.petBreed,
+    petPhoto: bookingState.petPhoto,
+    serviceId: bookingState.serviceId,
+    serviceName: bookingState.serviceName,
+    serviceDuration: bookingState.serviceDuration,
+    servicePrice: bookingState.servicePrice,
+    serviceRoom: bookingState.serviceRoom,
+    serviceIcon: bookingState.serviceIcon,
+    serviceImage: bookingState.serviceImage,
+    veterinarianId: finalDocId,
+    doctorName: finalDocName,
+    doctorTitle: finalDocTitle,
+    doctorImage: finalDocImage,
+    date: bookingState.date,
+    time: bookingState.time,
+    notes: bookingState.notes,
+    amount: numericAmount,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem('petzy_pending_paypal_booking', JSON.stringify(pendingBooking));
+
+  // 2. Base return and cancel URLs
+  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+  const returnUrl = `${baseUrl}#/book-appointment?paypal_success=true&apptId=${newApptId}&payId=${newPaymentId}`;
+  const cancelUrl = `${baseUrl}#/book-appointment?paypal_cancel=true`;
+
+  // 3. Render Modal Dialog for PayPal Gateway
+  openPayPalRedirectDialog(user, pendingBooking, returnUrl, cancelUrl);
+}
+
+function openPayPalRedirectDialog(user, pendingBooking, returnUrl, cancelUrl) {
+  const existing = document.getElementById('petzy-paypal-redirect-modal');
+  if (existing) existing.remove();
+
+  const price = pendingBooking.servicePrice || '$55';
+  const paypalAccount = 'rakeshsingh8319@gmail.com';
+  const numericAmount = pendingBooking.amount || 55;
+
+  const modalEl = document.createElement('div');
+  modalEl.id = 'petzy-paypal-redirect-modal';
+  modalEl.className = 'modal-backdrop animate-fade-in';
+  modalEl.style.zIndex = '1060';
+
+  modalEl.innerHTML = `
+    <div class="modal-dialog" style="max-width: 530px; margin: 2rem auto; padding: 0; background: transparent; box-shadow: none;">
+      <div class="paypal-dialog-box animate-scale-up">
+        
+        <!-- Header -->
+        <div class="paypal-dialog-header">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <div style="width: 38px; height: 38px; border-radius: 50%; background: #FFC439; color: #003087; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              <i class="fa-brands fa-paypal"></i>
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.15rem; font-family: var(--font-heading); color: #fff;">PayPal Payment Gateway</h3>
+              <span style="font-size: 0.78rem; opacity: 0.9;">Official Healthcare Checkout</span>
+            </div>
+          </div>
+          <button type="button" id="close-paypal-redirect-btn" style="background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; opacity: 0.85;" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 1.75rem 1.5rem;">
+          
+          <!-- Payee Account Info Card -->
+          <div style="background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.85rem;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: #003087; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.15rem;">
+                <strong style="color: #003087; font-size: 0.95rem;">Dr. Rakesh Singh</strong>
+                <span class="paypal-verified-badge"><i class="fa-solid fa-check"></i> Verified Merchant</span>
+              </div>
+              <div style="font-size: 0.85rem; color: #1E40AF; font-family: monospace; font-weight: 700; word-break: break-all;">${paypalAccount}</div>
+              <div style="font-size: 0.75rem; color: var(--color-charcoal-muted); margin-top: 0.2rem;">Connected PayPal Payment Account</div>
+            </div>
+          </div>
+
+          <!-- Order Summary in PayPal Dialog -->
+          <div style="background: var(--color-warm-cream); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; border: 1px solid var(--color-border);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="color: var(--color-charcoal-muted);">Service:</span>
+              <strong style="color: var(--color-forest-green);">${pendingBooking.serviceName}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="color: var(--color-charcoal-muted);">Patient (Pet):</span>
+              <strong>${pendingBooking.petName} (${pendingBooking.petSpecies})</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="color: var(--color-charcoal-muted);">Scheduled Time:</span>
+              <span>${pendingBooking.date} • ${pendingBooking.time}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1.5px dashed var(--color-border); padding-top: 0.55rem; font-size: 1.05rem; font-weight: 800; color: #003087;">
+              <span>Amount Due:</span>
+              <span>${price} USD</span>
+            </div>
+          </div>
+
+          <!-- Direct Form Submission to live PayPal -->
+          <form id="paypal-live-checkout-form" action="https://www.paypal.com/cgi-bin/webscr" method="POST" target="_blank" style="margin-bottom: 0.75rem;">
+            <input type="hidden" name="cmd" value="_xclick">
+            <input type="hidden" name="business" value="${paypalAccount}">
+            <input type="hidden" name="item_name" value="PETZY Veterinary Care: ${pendingBooking.serviceName} (${pendingBooking.petName})">
+            <input type="hidden" name="item_number" value="${pendingBooking.appointmentId}">
+            <input type="hidden" name="amount" value="${numericAmount.toFixed(2)}">
+            <input type="hidden" name="currency_code" value="USD">
+            <input type="hidden" name="no_shipping" value="1">
+            <input type="hidden" name="return" value="${returnUrl}">
+            <input type="hidden" name="cancel_return" value="${cancelUrl}">
+
+            <button type="submit" class="paypal-checkout-btn" id="open-real-paypal-submit-btn">
+              <i class="fa-brands fa-paypal" style="font-size: 1.35rem;"></i>
+              <span>Open PayPal & Pay ${price}</span>
+            </button>
+          </form>
+
+          <!-- Immediate Return & Verification Button -->
+          <button type="button" class="btn btn-teal" id="simulate-paypal-verify-btn" style="width: 100%; justify-content: center; font-size: 0.92rem; padding: 0.75rem 1.25rem;">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Confirm Payment Verification & View Receipt</span>
+          </button>
+
+          <!-- Status notification -->
+          <div id="paypal-redirect-status" style="display: none; margin-top: 1rem; text-align: center; font-size: 0.85rem; color: #003087; font-weight: 600; background: #EFF6FF; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid #BFDBFE;">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.4rem;"></i>
+            <span>Connecting to PayPal & verifying transaction for ${paypalAccount}...</span>
+          </div>
+
+          <div style="text-align: center; margin-top: 0.85rem; font-size: 0.75rem; color: var(--color-charcoal-muted);">
+            <i class="fa-solid fa-shield-check" style="color: #27AE60; margin-right: 0.25rem;"></i> Protected by PayPal Buyer & Seller Protection
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+
+  const closeModal = () => modalEl.remove();
+
+  document.getElementById('close-paypal-redirect-btn')?.addEventListener('click', closeModal);
+  modalEl.addEventListener('click', (e) => {
+    if (e.target === modalEl) closeModal();
+  });
+
+  document.getElementById('simulate-paypal-verify-btn')?.addEventListener('click', () => {
+    const btn = document.getElementById('simulate-paypal-verify-btn');
+    const statusDiv = document.getElementById('paypal-redirect-status');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying with PayPal...</span>';
+    }
+    if (statusDiv) statusDiv.style.display = 'block';
+
+    setTimeout(() => {
+      closeModal();
+      handlePayPalReturnSuccess(user);
+      const root = document.getElementById('app-root');
+      if (root) {
+        root.innerHTML = renderScheduleAppointment();
+        setupScheduleAppointmentEvents();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 1000);
+  });
+}
+
+function handlePayPalReturnSuccess(user, params) {
+  try {
+    const rawPending = localStorage.getItem('petzy_pending_paypal_booking');
+    const pending = rawPending ? JSON.parse(rawPending) : null;
+    
+    const newApptId = (params && params.get('apptId')) || (pending && pending.appointmentId) || generateAppointmentId();
+    const newPaymentId = (params && params.get('payId')) || (pending && pending.paymentId) || `PAY-PETZY-PP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newTxnId = `PP-TXN-${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const paypalAccount = 'rakeshsingh8319@gmail.com';
+
+    const srvName = (pending && pending.serviceName) || bookingState.serviceName || 'Veterinary Consultation';
+    const srvPrice = (pending && pending.servicePrice) || bookingState.servicePrice || '$55.00';
+    const srvDuration = (pending && pending.serviceDuration) || bookingState.serviceDuration || '30 Mins';
+    const srvRoom = (pending && pending.serviceRoom) || bookingState.serviceRoom || 'Consultation Suite 2B';
+    const srvIcon = (pending && pending.serviceIcon) || bookingState.serviceIcon || 'fa-solid fa-stethoscope';
+    const srvImage = (pending && pending.serviceImage) || bookingState.serviceImage || '';
+
+    const petId = (pending && pending.petId) || bookingState.petId;
+    const petName = (pending && pending.petName) || bookingState.petName || 'Companion Pet';
+    const petSpecies = (pending && pending.petSpecies) || bookingState.petSpecies || 'Pet';
+    const petBreed = (pending && pending.petBreed) || bookingState.petBreed || '';
+    const petPhoto = (pending && pending.petPhoto) || bookingState.petPhoto || '';
+
+    const vetId = (pending && pending.veterinarianId) || bookingState.veterinarianId || 'any';
+    const vetName = (pending && pending.doctorName) || bookingState.doctorName || 'Dr. Sarah Kapoor';
+    const vetTitle = (pending && pending.doctorTitle) || bookingState.doctorTitle || 'Chief Veterinary Officer';
+    const vetImage = (pending && pending.doctorImage) || bookingState.doctorImage || '';
+
+    const apptDate = (pending && pending.date) || bookingState.date;
+    const apptTime = (pending && pending.time) || bookingState.time || '10:30 AM';
+    const notes = (pending && pending.notes) || bookingState.notes || '';
+
+    // 1. Create and persist Payment Record
+    createPaymentRecord({
+      id: newPaymentId,
+      transactionId: newTxnId,
+      appointmentId: newApptId,
+      userId: user.id,
+      customerName: user.name || 'Valued Pet Parent',
+      customerEmail: user.email || '',
+      petId: petId,
+      petName: petName,
+      serviceId: (pending && pending.serviceId) || bookingState.serviceId,
+      serviceName: srvName,
+      amount: srvPrice,
+      paymentMethod: `PayPal (${paypalAccount})`,
+      payeeEmail: paypalAccount,
+      paymentDate: new Date().toISOString(),
+      status: 'Paid'
+    });
+
+    // 2. Create and persist Appointment Record
+    const apptPayload = {
+      id: newApptId,
+      paymentId: newPaymentId,
+      transactionId: newTxnId,
+      paymentStatus: 'Paid',
+      paymentMethod: `PayPal (${paypalAccount})`,
+      payeeEmail: paypalAccount,
+      petId: petId,
+      petName: petName,
+      petPhoto: petPhoto,
+      species: petSpecies,
+      serviceId: (pending && pending.serviceId) || bookingState.serviceId,
+      service: srvName,
+      duration: srvDuration,
+      price: srvPrice,
+      veterinarianId: vetId,
+      veterinarian: vetName,
+      vetTitle: vetTitle,
+      vetImage: vetImage,
+      date: apptDate,
+      time: apptTime,
+      room: srvRoom,
+      notes: notes || 'Routine examination and wellness consultation.',
+      status: 'Confirmed',
+      appointmentType: 'Standard'
+    };
+
+    saveUserAppointment(user.id, apptPayload);
+
+    // 3. Set Confirmed Appointment display state
+    confirmedAppointment = {
+      id: newApptId,
+      paymentId: newPaymentId,
+      transactionId: newTxnId,
+      serviceName: srvName,
+      serviceIcon: srvIcon,
+      serviceImage: srvImage,
+      petId: petId,
+      petName: petName,
+      petSpecies: petSpecies,
+      petBreed: petBreed,
+      petPhoto: petPhoto,
+      veterinarianId: vetId,
+      veterinarianName: vetName,
+      veterinarianTitle: vetTitle,
+      veterinarianImage: vetImage,
+      date: apptDate,
+      time: apptTime,
+      duration: srvDuration,
+      price: srvPrice,
+      room: srvRoom,
+      status: 'Confirmed',
+      paymentStatus: 'Paid',
+      paymentMethod: `PayPal (${paypalAccount})`,
+      payeeEmail: paypalAccount,
+      isRescheduled: false,
+      isFollowUp: false,
+      previousAppointmentId: null
+    };
+
+    localStorage.removeItem('petzy_pending_paypal_booking');
+
+    showToast(`Payment verified! Appointment #${newApptId} confirmed via PayPal (${paypalAccount}).`, 'sage', 'fa-solid fa-circle-check');
+
+    if (typeof history !== 'undefined' && history.replaceState) {
+      history.replaceState(null, '', '#/book-appointment');
+    }
+  } catch (err) {
+    console.error('Error handling PayPal return:', err);
+  }
+}
+

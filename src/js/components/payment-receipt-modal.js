@@ -39,6 +39,11 @@ export function openPaymentReceiptModal(paymentOrApptId) {
   modalEl.className = 'modal-backdrop animate-fade-in';
   modalEl.style.zIndex = '1050';
 
+  const isPP = (payment.paymentMethod || '').toLowerCase().includes('paypal') || !!payment.payeeEmail;
+  const methodIconHtml = isPP 
+    ? `<i class="fa-brands fa-paypal" style="color: #003087; font-size: 1.1rem; margin-right: 0.3rem;"></i>` 
+    : `<i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); margin-right: 0.25rem;"></i>`;
+
   modalEl.innerHTML = `
     <div class="modal-dialog" style="max-width: 620px; margin: 2rem auto; padding: 0; background: transparent; box-shadow: none;">
       <div class="receipt-paper-box animate-scale-up" id="receipt-print-area" style="background: #ffffff; border-radius: var(--radius-xl); padding: 2.25rem 2rem; border: 1px solid var(--color-border); box-shadow: var(--shadow-xl); position: relative; color: var(--color-charcoal);">
@@ -83,7 +88,7 @@ export function openPaymentReceiptModal(paymentOrApptId) {
           </div>
           <div>
             <span style="color: var(--color-charcoal-muted); display: block; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Payment Method</span>
-            <strong style="color: var(--color-charcoal);"><i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); margin-right: 0.25rem;"></i> ${payment.paymentMethod || 'Credit Card •••• 4242'}</strong>
+            <strong style="color: var(--color-charcoal);">${methodIconHtml} ${payment.paymentMethod || (isPP ? 'PayPal (rakeshsingh8319@gmail.com)' : 'Credit Card •••• 4242')}</strong>
           </div>
         </div>
 
@@ -139,12 +144,12 @@ export function openPaymentReceiptModal(paymentOrApptId) {
         </table>
 
         <!-- Verification Badge / Status -->
-        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sage-green-soft); border-left: 4px solid #27AE60; padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: var(--color-sage-green-soft); border-left: 4px solid #27AE60; padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem; color: #1e7e44; font-weight: 700;">
             <i class="fa-solid fa-circle-check" style="font-size: 1.1rem;"></i>
-            <span>Payment Status: <strong>${payment.status || 'PAID'}</strong></span>
+            <span>Payment Status: <strong>${payment.status || 'PAID'}</strong> ${isPP ? '(Verified via PayPal)' : ''}</span>
           </div>
-          <span style="font-size: 0.78rem; color: var(--color-forest-green); font-weight: 600;">Auth Code: #AUTH-29481</span>
+          <span style="font-size: 0.78rem; color: var(--color-forest-green); font-weight: 600;">${isPP ? 'Payee: rakeshsingh8319@gmail.com' : 'Auth Code: #AUTH-29481'}</span>
         </div>
 
         <!-- Footer Notice -->
