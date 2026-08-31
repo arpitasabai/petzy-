@@ -88,7 +88,7 @@ export function openPaymentReceiptModal(paymentOrApptId) {
           </div>
           <div>
             <span style="color: var(--color-charcoal-muted); display: block; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Payment Method</span>
-            <strong style="color: var(--color-charcoal);">${methodIconHtml} ${payment.paymentMethod || (isPP ? 'PayPal (rakeshsingh8319@gmail.com)' : 'Credit Card •••• 4242')}</strong>
+            <strong style="color: var(--color-charcoal);">${methodIconHtml} ${payment.paymentMethod || (isPP ? 'PayPal (Verified)' : 'Credit Card •••• 4242')}</strong>
           </div>
         </div>
 
@@ -118,25 +118,27 @@ export function openPaymentReceiptModal(paymentOrApptId) {
           <tbody>
             <tr style="border-bottom: 1px solid var(--color-border);">
               <td style="padding: 0.85rem 0;">
-                <strong style="color: var(--color-forest-green); display: block;">${payment.serviceName}</strong>
-                <span style="font-size: 0.78rem; color: var(--color-charcoal-muted);">Fear-Free Certified Clinical Veterinary Care</span>
+                <strong style="color: var(--color-forest-green);">${payment.serviceName || 'Veterinary Clinical Service'}</strong>
+                <span style="display: block; font-size: 0.78rem; color: var(--color-charcoal-muted);">Comprehensive Health Check & Diagnostic Examination</span>
               </td>
-              <td style="text-align: right; padding: 0.85rem 0; color: var(--color-charcoal);">1</td>
-              <td style="text-align: right; padding: 0.85rem 0; font-weight: 700; color: var(--color-forest-green);">${payment.amount}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--color-border); font-size: 0.82rem; color: var(--color-charcoal-muted);">
-              <td style="padding: 0.5rem 0;">Hospital Facility & Digital Records Fee</td>
-              <td style="text-align: right; padding: 0.5rem 0;">1</td>
-              <td style="text-align: right; padding: 0.5rem 0; color: #27AE60; font-weight: 600;">$0.00 (Waived)</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--color-border); font-size: 0.82rem; color: var(--color-charcoal-muted);">
-              <td style="padding: 0.5rem 0;">Clinical Supplies & Surcharge</td>
-              <td style="text-align: right; padding: 0.5rem 0;">1</td>
-              <td style="text-align: right; padding: 0.5rem 0; color: #27AE60; font-weight: 600;">$0.00 (Included)</td>
+              <td style="text-align: right; padding: 0.85rem 0; color: var(--color-charcoal-muted);">1</td>
+              <td style="text-align: right; padding: 0.85rem 0; font-weight: 600;">${payment.amount}</td>
             </tr>
           </tbody>
           <tfoot>
+            <tr style="border-top: 1px solid var(--color-border);">
+              <td colspan="2" style="padding-top: 0.75rem; text-align: right; color: var(--color-charcoal-muted);">Subtotal:</td>
+              <td style="padding-top: 0.75rem; text-align: right; font-weight: 600;">${payment.amount}</td>
+            </tr>
             <tr>
+              <td colspan="2" style="padding-top: 0.25rem; text-align: right; color: var(--color-charcoal-muted);">Hospital Facility Fee:</td>
+              <td style="padding-top: 0.25rem; text-align: right; color: #27AE60; font-weight: 600;">$0.00 (Waived)</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding-top: 0.25rem; text-align: right; color: var(--color-charcoal-muted);">Taxes & Surcharges:</td>
+              <td style="padding-top: 0.25rem; text-align: right; color: #27AE60; font-weight: 600;">$0.00 (Included)</td>
+            </tr>
+            <tr style="border-top: 2px solid var(--color-forest-green);">
               <td colspan="2" style="padding-top: 1rem; text-align: right; font-size: 0.95rem; font-weight: 700; color: var(--color-forest-green);">Total Paid:</td>
               <td style="padding-top: 1rem; text-align: right; font-size: 1.3rem; font-weight: 800; color: var(--color-forest-green); font-family: var(--font-heading);">${payment.amount}</td>
             </tr>
@@ -149,7 +151,7 @@ export function openPaymentReceiptModal(paymentOrApptId) {
             <i class="fa-solid fa-circle-check" style="font-size: 1.1rem;"></i>
             <span>Payment Status: <strong>${payment.status || 'PAID'}</strong> ${isPP ? '(Verified via PayPal)' : ''}</span>
           </div>
-          <span style="font-size: 0.78rem; color: var(--color-forest-green); font-weight: 600;">${isPP ? 'Payee: rakeshsingh8319@gmail.com' : 'Auth Code: #AUTH-29481'}</span>
+          <span style="font-size: 0.78rem; color: var(--color-forest-green); font-weight: 600;">${isPP ? 'Auth Code: #PP-AUTH-29481' : 'Auth Code: #AUTH-29481'}</span>
         </div>
 
         <!-- Footer Notice -->

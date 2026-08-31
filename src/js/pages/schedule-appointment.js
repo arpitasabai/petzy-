@@ -998,24 +998,11 @@ function renderStep6Payment(user) {
           </div>
 
           <!-- PayPal Express Method Box -->
-          <div id="paypal-channel-box" style="${bookingState.paymentMethod === 'paypal' ? 'display: block;' : 'display: none;'} background: #F8FAFC; border: 1.5px solid #BFDBFE; border-radius: var(--radius-xl); padding: 1.4rem; margin-bottom: 1.25rem;">
-            
-            <div style="display: flex; align-items: center; gap: 0.85rem; background: #EFF6FF; padding: 1rem; border-radius: var(--radius-lg); border: 1px solid #BFDBFE; margin-bottom: 1.25rem;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: #003087; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-                <i class="fa-solid fa-building-columns"></i>
-              </div>
-              <div style="flex: 1; min-width: 0;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem;">
-                  <strong style="color: #003087; font-size: 0.95rem;">Dr. Rakesh Singh</strong>
-                  <span class="paypal-verified-badge"><i class="fa-solid fa-check"></i> Verified Account</span>
-                </div>
-                <div style="font-size: 0.85rem; color: #1E40AF; font-family: monospace; font-weight: 700;">${paypalAccount}</div>
-                <div style="font-size: 0.75rem; color: var(--color-charcoal-muted); margin-top: 0.15rem;">PETZY Primary PayPal Payment Gateway</div>
-              </div>
-            </div>
-
+          <div id="paypal-channel-box" style="${bookingState.paymentMethod === 'paypal' ? 'display: block;' : 'display: none;'} background: #F8FAFC; border: 1.5px solid #BFDBFE; border-radius: var(--radius-xl); padding: 1.5rem; margin-bottom: 1.25rem; text-align: center;">
+            <i class="fa-brands fa-paypal" style="font-size: 2.25rem; color: #003087; margin-bottom: 0.65rem;"></i>
+            <h4 style="color: #003087; margin: 0 0 0.4rem; font-size: 1.05rem;">Instant PayPal Healthcare Checkout</h4>
             <p style="font-size: 0.85rem; color: var(--color-charcoal); line-height: 1.5; margin: 0 0 1.25rem;">
-              You will be redirected to PayPal's official payment page to securely pay <strong>${price}</strong> to <strong>${paypalAccount}</strong>. Once complete, you will automatically return with your verified confirmation.
+              Click below to proceed to PayPal's official payment page to securely pay <strong>${price}</strong>. Once complete, you will automatically return with your verified booking confirmation.
             </p>
 
             <button type="button" class="paypal-checkout-btn" id="step6-paypal-direct-btn">
@@ -1115,7 +1102,7 @@ function renderStep6Payment(user) {
 
           <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--color-charcoal-muted); line-height: 1.35;">
             <i class="fa-solid fa-shield-halved" style="color: #27AE60; font-size: 1rem; flex-shrink: 0;"></i>
-            <span>Payee: <strong>${paypalAccount}</strong>. 100% money-back guarantee if cancelled 2+ hours prior.</span>
+            <span>Your payment is processed securely. 100% money-back guarantee if cancelled 2+ hours prior.</span>
           </div>
         </div>
 
@@ -1202,7 +1189,7 @@ function renderStep7Confirmed() {
         </div>
         <div class="paypal-account-badge" style="margin: 0;">
           <i class="fa-brands fa-paypal" style="color: #003087;"></i>
-          <span>PayPal Verified: <strong>rakeshsingh8319@gmail.com</strong></span>
+          <span>PayPal Verified Payment</span>
         </div>
       </div>
 
@@ -1950,36 +1937,21 @@ function openPayPalRedirectDialog(user, pendingBooking, returnUrl, cancelUrl) {
         <!-- Body -->
         <div style="padding: 1.75rem 1.5rem;">
           
-          <!-- Payee Account Info Card -->
-          <div style="background: #EFF6FF; border: 1.5px solid #BFDBFE; border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.85rem;">
-            <div style="width: 44px; height: 44px; border-radius: 50%; background: #003087; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
-              <i class="fa-solid fa-building-columns"></i>
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.15rem;">
-                <strong style="color: #003087; font-size: 0.95rem;">Dr. Rakesh Singh</strong>
-                <span class="paypal-verified-badge"><i class="fa-solid fa-check"></i> Verified Merchant</span>
-              </div>
-              <div style="font-size: 0.85rem; color: #1E40AF; font-family: monospace; font-weight: 700; word-break: break-all;">${paypalAccount}</div>
-              <div style="font-size: 0.75rem; color: var(--color-charcoal-muted); margin-top: 0.2rem;">Connected PayPal Payment Account</div>
-            </div>
-          </div>
-
           <!-- Order Summary in PayPal Dialog -->
-          <div style="background: var(--color-warm-cream); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; border: 1px solid var(--color-border);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+          <div style="background: var(--color-warm-cream); border-radius: var(--radius-md); padding: 1.15rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.88rem; border: 1px solid var(--color-border);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.45rem;">
               <span style="color: var(--color-charcoal-muted);">Service:</span>
               <strong style="color: var(--color-forest-green);">${pendingBooking.serviceName}</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.45rem;">
               <span style="color: var(--color-charcoal-muted);">Patient (Pet):</span>
               <strong>${pendingBooking.petName} (${pendingBooking.petSpecies})</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.45rem;">
               <span style="color: var(--color-charcoal-muted);">Scheduled Time:</span>
               <span>${pendingBooking.date} • ${pendingBooking.time}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1.5px dashed var(--color-border); padding-top: 0.55rem; font-size: 1.05rem; font-weight: 800; color: #003087;">
+            <div style="display: flex; justify-content: space-between; border-top: 1.5px dashed var(--color-border); padding-top: 0.65rem; margin-top: 0.65rem; font-size: 1.15rem; font-weight: 800; color: #003087;">
               <span>Amount Due:</span>
               <span>${price} USD</span>
             </div>
@@ -2003,19 +1975,7 @@ function openPayPalRedirectDialog(user, pendingBooking, returnUrl, cancelUrl) {
             </button>
           </form>
 
-          <!-- Immediate Return & Verification Button -->
-          <button type="button" class="btn btn-teal" id="simulate-paypal-verify-btn" style="width: 100%; justify-content: center; font-size: 0.92rem; padding: 0.75rem 1.25rem;">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>Confirm Payment Verification & View Receipt</span>
-          </button>
-
-          <!-- Status notification -->
-          <div id="paypal-redirect-status" style="display: none; margin-top: 1rem; text-align: center; font-size: 0.85rem; color: #003087; font-weight: 600; background: #EFF6FF; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid #BFDBFE;">
-            <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.4rem;"></i>
-            <span>Connecting to PayPal & verifying transaction for ${paypalAccount}...</span>
-          </div>
-
-          <div style="text-align: center; margin-top: 0.85rem; font-size: 0.75rem; color: var(--color-charcoal-muted);">
+          <div style="text-align: center; margin-top: 1rem; font-size: 0.78rem; color: var(--color-charcoal-muted);">
             <i class="fa-solid fa-shield-check" style="color: #27AE60; margin-right: 0.25rem;"></i> Protected by PayPal Buyer & Seller Protection
           </div>
 
@@ -2032,27 +1992,6 @@ function openPayPalRedirectDialog(user, pendingBooking, returnUrl, cancelUrl) {
   document.getElementById('close-paypal-redirect-btn')?.addEventListener('click', closeModal);
   modalEl.addEventListener('click', (e) => {
     if (e.target === modalEl) closeModal();
-  });
-
-  document.getElementById('simulate-paypal-verify-btn')?.addEventListener('click', () => {
-    const btn = document.getElementById('simulate-paypal-verify-btn');
-    const statusDiv = document.getElementById('paypal-redirect-status');
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying with PayPal...</span>';
-    }
-    if (statusDiv) statusDiv.style.display = 'block';
-
-    setTimeout(() => {
-      closeModal();
-      handlePayPalReturnSuccess(user);
-      const root = document.getElementById('app-root');
-      if (root) {
-        root.innerHTML = renderScheduleAppointment();
-        setupScheduleAppointmentEvents();
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 1000);
   });
 }
 
