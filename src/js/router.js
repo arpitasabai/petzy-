@@ -13,7 +13,7 @@ import { renderPrivacyPolicy, setupPrivacyPolicyEvents } from './pages/privacy-p
 import { renderTermsConditions, setupTermsConditionsEvents } from './pages/terms-conditions.js';
 import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
 import { renderPetProfile, setupPetProfileEvents } from './pages/pet-profile.js';
-import { renderScheduleAppointment, setupScheduleAppointmentEvents } from './pages/schedule-appointment.js';
+import { renderScheduleAppointment, setupScheduleAppointmentEvents, resetBookingState } from './pages/schedule-appointment.js';
 import { renderAdmin, setupAdminEvents } from './pages/admin.js';
 import { renderAdminLogin, setupAdminLoginEvents } from './pages/admin/admin-login.js';
 import { updateActiveNav } from './components/header.js';
@@ -71,6 +71,13 @@ export function handleRoute() {
     window.petzyPreviousRoute = currentActiveRoute;
   }
   currentActiveRoute = fullHash;
+
+  // Reset booking wizard to start from beginning when leaving or entering fresh
+  if (cleanPath !== '/book-appointment' && cleanPath !== '/schedule-appointment') {
+    resetBookingState();
+  } else if (!fullHash.includes('?') && !fullHash.includes('paypal_success')) {
+    resetBookingState();
+  }
 
   const appRoot = document.getElementById('app-root');
   if (!appRoot) return;

@@ -85,6 +85,13 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+export function resetBookingState() {
+  confirmedAppointment = null;
+  bookingState = getInitialBookingState();
+  bookingState.currentStep = 1;
+  lastParsedHash = '';
+}
+
 export function renderScheduleAppointment() {
   const user = getCurrentUser();
   if (!user) {
@@ -102,7 +109,12 @@ export function renderScheduleAppointment() {
     `;
   }
 
-  // If a booking was just confirmed, render the Confirmation / Details page
+  const pets = getUserPets(user.id);
+
+  // Sync state with URL parameters (detect fresh booking, follow-up, reschedule, or paypal return)
+  syncStateFromUrl(user, pets);
+
+  // If a booking was just confirmed (and user has not navigated to start a new booking), render confirmation
   if (confirmedAppointment) {
     return `
       <div class="container pet-profile-page-wrapper animate-fade-up" style="max-width: 1060px;">
@@ -113,11 +125,6 @@ export function renderScheduleAppointment() {
       </div>
     `;
   }
-
-  const pets = getUserPets(user.id);
-
-  // Sync state with URL parameters (detect fresh booking, follow-up, or reschedule)
-  syncStateFromUrl(user, pets);
 
   // Default date setup if empty
   if (!bookingState.date) {
@@ -219,9 +226,11 @@ function syncStateFromUrl(user, pets) {
 
   // Case A: User is rescheduling an existing appointment
   if (reschedParam) {
+    confirmedAppointment = null;
     if (bookingState.rescheduleId !== reschedParam) {
       const existing = getUserAppointmentById(user.id, reschedParam);
       if (existing) {
+        bookingState = getInitialBookingState();
         bookingState.rescheduleId = reschedParam;
         bookingState.previousAppointmentId = null;
         bookingState.appointmentType = 'Reschedule';
@@ -255,6 +264,7 @@ function syncStateFromUrl(user, pets) {
 
   // Case B: User is booking a Follow-Up for a completed appointment
   if (followUpParam) {
+    confirmedAppointment = null;
     if (bookingState.previousAppointmentId !== followUpParam) {
       const prev = getUserAppointmentById(user.id, followUpParam);
       if (prev) {
@@ -310,12 +320,16 @@ function syncStateFromUrl(user, pets) {
   }
 
   // Case C: Fresh New Booking Flow
-  if (hash !== lastParsedHash) {
-    if (bookingState.rescheduleId !== null || bookingState.previousAppointmentId !== null) {
-      bookingState = getInitialBookingState();
-    }
-
+  confirmedAppointment = null;
+  if (hash !== lastParsedHash || bookingState.rescheduleId !== null || bookingState.previousAppointmentId !== null) {
     const srvParam = params.get('service') || params.get('serviceId');
+    const docParam = params.get('doctor') || params.get('doctorId');
+    const petParam = params.get('petId');
+
+    // Fresh reset to step 1
+    bookingState = getInitialBookingState();
+    bookingState.currentStep = 1;
+
     if (srvParam) {
       const foundSrv = getServiceById(srvParam);
       if (foundSrv) {
@@ -323,7 +337,6 @@ function syncStateFromUrl(user, pets) {
       }
     }
 
-    const docParam = params.get('doctor') || params.get('doctorId');
     if (docParam) {
       const foundDoc = getDoctorById(docParam);
       if (foundDoc) {
@@ -334,7 +347,6 @@ function syncStateFromUrl(user, pets) {
       }
     }
 
-    const petParam = params.get('petId');
     if (petParam && pets.length > 0) {
       const foundPet = pets.find(p => p.id === petParam);
       if (foundPet) {
