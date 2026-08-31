@@ -625,8 +625,8 @@ function renderAppointmentsTab(appointments) {
                     ${a.status}
                   </span>
 
-                  <span class="section-badge" style="background: var(--color-sage-green-soft); color: var(--color-forest-green); font-size: 0.72rem; padding: 0.2rem 0.55rem; margin: 0;">
-                    <i class="fa-solid fa-check" style="color: #27AE60;"></i> ${a.paymentStatus || 'Paid'} (${a.price || '$55'})
+                  <span class="section-badge" style="background: ${(a.paymentMethod || '').toLowerCase().includes('paypal') ? '#EFF6FF' : 'var(--color-sage-green-soft)'}; color: ${(a.paymentMethod || '').toLowerCase().includes('paypal') ? '#003087' : 'var(--color-forest-green)'}; font-size: 0.72rem; padding: 0.2rem 0.55rem; margin: 0; border: 1px solid ${(a.paymentMethod || '').toLowerCase().includes('paypal') ? '#BFDBFE' : 'transparent'};">
+                    ${(a.paymentMethod || '').toLowerCase().includes('paypal') ? '<i class="fa-brands fa-paypal" style="color: #003087;"></i>' : '<i class="fa-solid fa-check" style="color: #27AE60;"></i>'} ${a.paymentStatus || 'Paid'} (${a.price || '$55'})
                   </span>
 
                   <button class="appointment-view-detail-btn" onclick="window.petzyOpenApptModal('${a.id}')">
