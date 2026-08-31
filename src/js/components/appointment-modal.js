@@ -161,7 +161,7 @@ export function openAppointmentModal(appointment, callback = null, openCancelDia
             </div>
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
               <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Payment</span>
-              <span style="font-weight: 700; color: ${(appointment.paymentMethod || '').toLowerCase().includes('paypal') ? '#003087' : '#27AE60'}; font-size: 0.88rem;">${(appointment.paymentMethod || '').toLowerCase().includes('paypal') ? '<i class="fa-brands fa-paypal" style="color: #003087; margin-right: 0.25rem;"></i>' : '<i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i>'}${appointment.paymentStatus || 'Paid'} (${appointment.price || '$55'})</span>
+              <span style="font-weight: 700; color: #27AE60; font-size: 0.88rem;"><i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i>${appointment.paymentStatus || 'Paid'} (${appointment.price || '$55'})</span>
             </div>
             <div style="background: var(--color-white); border: 1px solid var(--color-border); padding: 0.75rem; border-radius: var(--radius-md);">
               <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-charcoal-light); text-transform: uppercase; display: block; margin-bottom: 0.2rem;">Location</span>

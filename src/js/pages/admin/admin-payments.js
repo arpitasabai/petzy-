@@ -169,10 +169,8 @@ export function renderAdminPayments() {
 
                       <!-- Method -->
                       <td style="padding: 0.85rem 1rem; color: var(--color-charcoal);">
-                        ${(p.paymentMethod || '').toLowerCase().includes('paypal') 
-                          ? `<i class="fa-brands fa-paypal" style="color: #003087; font-size: 1rem; margin-right: 0.3rem;"></i>` 
-                          : `<i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>`}
-                        <span>${p.paymentMethod || 'Credit Card •••• 4242'}</span>
+                        <i class="fa-solid fa-credit-card" style="color: var(--color-forest-green); margin-right: 0.3rem;"></i>
+                        ${p.paymentMethod || 'Credit Card •••• 4242'}
                       </td>
 
                       <!-- Date -->
