@@ -115,7 +115,7 @@ export function registerUser({ name, email, phone, password }) {
     phone: phone.trim(),
     password: password,
     role: 'customer',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    avatar: '',
     address: '',
     emergencyContact: '',
     joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),

@@ -38,7 +38,7 @@ export function renderHeader() {
         <!-- Customer Login / Dashboard Link -->
         ${currentUser ? `
           <a href="#/dashboard" class="header-login-link" data-route="/dashboard" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-sage-green-soft);">
-            <img src="${currentUser.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'}" alt="${currentUser.name}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--color-forest-green);">
+            <img src="${currentUser.avatar || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 128 128\' fill=\'none\'%3E%3Ccircle cx=\'64\' cy=\'64\' r=\'64\' fill=\'%23E2EBE2\'/%3E%3Ccircle cx=\'64\' cy=\'46\' r=\'22\' fill=\'%238BA888\'/%3E%3Cpath d=\'M24 112c0-22.091 17.909-40 40-40s40 17.909 40 40\' fill=\'%238BA888\'/%3E%3C/svg%3E'}" alt="${currentUser.name}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--color-forest-green);">
             <span style="font-weight: 700;">Dashboard</span>
           </a>
         ` : `

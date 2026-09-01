@@ -11,13 +11,19 @@ let activeTab = 'overview';
 let activeSpeciesFilter = 'all';
 let activeApptFilter = 'all';
 
-// Preset avatar options for pet parents
-const PARENT_AVATARS = [
+// Default blank avatar silhouette for users with no profile photo
+export const BLANK_USER_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' fill='none'%3E%3Ccircle cx='64' cy='64' r='64' fill='%23E2EBE2'/%3E%3Ccircle cx='64' cy='46' r='22' fill='%238BA888'/%3E%3Cpath d='M24 112c0-22.091 17.909-40 40-40s40 17.909 40 40' fill='%238BA888'/%3E%3C/svg%3E";
+
+// Curated AI pet parent avatars for the "AI images" option
+const AI_AVATARS = [
   'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'
+  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80'
 ];
 
 export function renderDashboard() {
@@ -92,7 +98,7 @@ export function renderDashboard() {
           <!-- Sidebar Header / User Card -->
           <div class="dashboard-sidebar-header">
             <div class="dashboard-user-card">
-              <img src="${user.avatar || PARENT_AVATARS[0]}" alt="${user.name}" class="dashboard-user-avatar" id="sidebar-avatar-img">
+              <img src="${user.avatar || BLANK_USER_AVATAR}" alt="${user.name}" class="dashboard-user-avatar" id="sidebar-avatar-img">
               <div class="dashboard-user-info">
                 <h4 class="dashboard-user-name">${user.name}</h4>
                 <span class="dashboard-user-badge">
@@ -673,28 +679,30 @@ function renderAppointmentsTab(appointments) {
 // 4. PROFILE TAB
 // ----------------------------------------------------
 function renderProfileTab(user) {
+  const hasAvatar = user.avatar && user.avatar !== BLANK_USER_AVATAR;
+
   return `
     <div class="profile-grid-layout animate-fade-up">
       <!-- Left Column: Avatar & Summary Box -->
       <div class="profile-card-box" style="text-align: center;">
         <div class="profile-avatar-uploader">
-          <img src="${user.avatar || PARENT_AVATARS[0]}" alt="${user.name}" class="profile-avatar-large" id="profile-preview-avatar">
+          <div class="profile-avatar-wrapper" id="open-profile-pic-modal-btn" title="Click to select profile picture">
+            <img src="${user.avatar || BLANK_USER_AVATAR}" alt="${user.name}" class="profile-avatar-large" id="profile-preview-avatar">
+            <div class="profile-avatar-camera-badge" title="Select or change photo">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+          </div>
           <h3 style="font-size: 1.35rem; color: var(--color-forest-green); margin: 0 0 0.25rem;">${user.name}</h3>
           <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">${user.email}</span>
 
-          <div style="margin-top: 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem;">
-            <input type="file" id="user-avatar-file-input" accept="image/*" style="display: none;">
-            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-              <button type="button" class="btn btn-outline" id="user-choose-avatar-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;">
-                <i class="fa-solid fa-images"></i>
-                <span>Choose from Gallery</span>
-              </button>
-              <button type="button" class="btn btn-outline" id="user-remove-avatar-btn" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; border-color: #E74C3C; color: #C0392B; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;" title="Remove current profile photo">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>Remove</span>
-              </button>
-            </div>
-            <span id="user-avatar-status" style="font-size: 0.78rem; color: var(--color-charcoal-muted);">Upload your own photo (JPG, PNG, WEBP)</span>
+          <div style="margin-top: 0.85rem;">
+            <button type="button" class="btn btn-outline" id="trigger-pic-modal-btn" style="font-size: 0.85rem; padding: 0.45rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; border-radius: var(--radius-full);">
+              <i class="fa-solid fa-camera"></i>
+              <span>Select Profile Picture</span>
+            </button>
+            <span id="user-avatar-status" style="font-size: 0.78rem; color: var(--color-charcoal-muted); display: block; margin-top: 0.45rem;">
+              ${hasAvatar ? 'Click avatar to edit or remove' : 'No photo set (Blank default)'}
+            </span>
           </div>
         </div>
 
@@ -748,7 +756,7 @@ function renderProfileTab(user) {
               <input type="text" id="prof-emergency" class="form-input" placeholder="e.g. +1 (555) 987-6543 (Mark Hayes)" value="${user.emergencyContact || ''}">
             </div>
 
-            <input type="hidden" id="prof-avatar-url" value="${user.avatar || PARENT_AVATARS[0]}">
+            <input type="hidden" id="prof-avatar-url" value="${user.avatar || ''}">
 
             <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
               <button type="submit" class="btn btn-teal btn-lg">
@@ -927,47 +935,34 @@ export function setupDashboardEvents() {
     openPetModal(null, () => refreshDashboard());
   });
 
-  // Choose profile photo from gallery & Remove photo
-  const avatarFileInput = document.getElementById('user-avatar-file-input');
-  const chooseAvatarBtn = document.getElementById('user-choose-avatar-btn');
-  const removeAvatarBtn = document.getElementById('user-remove-avatar-btn');
+  // Profile Picture modal triggers
+  const avatarWrapper = document.getElementById('open-profile-pic-modal-btn');
+  const triggerPicBtn = document.getElementById('trigger-pic-modal-btn');
   const avatarPreview = document.getElementById('profile-preview-avatar');
   const avatarHiddenInput = document.getElementById('prof-avatar-url');
   const avatarStatus = document.getElementById('user-avatar-status');
-  const defaultUserAvatar = PARENT_AVATARS[0];
 
-  chooseAvatarBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    avatarFileInput?.click();
-  });
-
-  avatarFileInput?.addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
-        return;
+  const handleOpenPicModal = () => {
+    const currentAvatar = avatarHiddenInput ? avatarHiddenInput.value : '';
+    openProfilePictureModal(
+      currentAvatar,
+      (newAvatarUrl, sourceLabel) => {
+        if (avatarPreview) avatarPreview.src = newAvatarUrl;
+        if (avatarHiddenInput) avatarHiddenInput.value = newAvatarUrl;
+        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${sourceLabel || 'Photo updated'}. Click Save below.</span>`;
+        showToast('Profile photo chosen! Click Save Profile Changes to apply.', 'sage', 'fa-solid fa-image');
+      },
+      () => {
+        if (avatarPreview) avatarPreview.src = BLANK_USER_AVATAR;
+        if (avatarHiddenInput) avatarHiddenInput.value = '';
+        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #C0392B; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Photo removed. Click Save below.</span>`;
+        showToast('Profile photo removed. Click Save Profile Changes to apply.', 'coral', 'fa-solid fa-trash-can');
       }
-      const reader = new FileReader();
-      reader.onload = (loadEvt) => {
-        const dataUrl = loadEvt.target.result;
-        if (avatarPreview) avatarPreview.src = dataUrl;
-        if (avatarHiddenInput) avatarHiddenInput.value = dataUrl;
-        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${file.name.length > 20 ? file.name.substring(0, 18) + '...' : file.name}</span>`;
-        showToast('Profile photo loaded from gallery! Click Save to apply.', 'sage', 'fa-solid fa-image');
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+    );
+  };
 
-  removeAvatarBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (avatarFileInput) avatarFileInput.value = '';
-    if (avatarPreview) avatarPreview.src = defaultUserAvatar;
-    if (avatarHiddenInput) avatarHiddenInput.value = defaultUserAvatar;
-    if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #C0392B; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Photo removed. Click Save Changes.</span>`;
-    showToast('Profile photo removed. Click Save Profile Changes to apply.', 'coral', 'fa-solid fa-trash-can');
-  });
+  avatarWrapper?.addEventListener('click', handleOpenPicModal);
+  triggerPicBtn?.addEventListener('click', handleOpenPicModal);
 
   // Profile Form Submit
   const profileForm = document.getElementById('profile-info-form');
@@ -1058,4 +1053,143 @@ function runStatCountUps() {
       }
     }, 40);
   });
+}
+
+// ----------------------------------------------------
+// PROFILE PICTURE OPTIONS MODAL (Camera, Gallery, AI, Delete)
+// ----------------------------------------------------
+export function openProfilePictureModal(currentAvatar, onUpdate, onRemove) {
+  const existing = document.getElementById('profile-pic-modal-root');
+  if (existing) existing.remove();
+
+  const modalEl = document.createElement('div');
+  modalEl.id = 'profile-pic-modal-root';
+  modalEl.className = 'petzy-modal-backdrop animate-fade-in';
+  modalEl.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+
+  modalEl.innerHTML = `
+    <div class="profile-pic-modal-card">
+      <!-- Modal Top Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-border);">
+        <button type="button" id="close-pic-modal-btn" style="background: none; border: none; font-size: 1.25rem; color: #2C3E50; cursor: pointer; padding: 0.35rem;" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3 style="font-size: 1.2rem; font-weight: 600; color: #2C3E50; margin: 0;">Profile picture</h3>
+        <button type="button" id="delete-pic-modal-btn" style="background: none; border: none; font-size: 1.2rem; color: #2C3E50; cursor: pointer; padding: 0.35rem; transition: color 0.15s;" title="Remove profile picture" aria-label="Remove profile picture">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+
+      <!-- Main Options List -->
+      <div id="pic-main-options" style="display: flex; flex-direction: column; gap: 0.4rem;">
+        <button type="button" class="profile-pic-option-item" id="opt-camera-btn">
+          <div class="option-icon"><i class="fa-solid fa-camera"></i></div>
+          <span class="option-label">Camera</span>
+        </button>
+
+        <button type="button" class="profile-pic-option-item" id="opt-gallery-btn">
+          <div class="option-icon"><i class="fa-solid fa-image"></i></div>
+          <span class="option-label">Gallery</span>
+        </button>
+
+        <button type="button" class="profile-pic-option-item" id="opt-ai-btn">
+          <div class="option-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <span class="option-label">AI images</span>
+        </button>
+      </div>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="modal-camera-input" accept="image/*" capture="environment" style="display: none;">
+      <input type="file" id="modal-gallery-input" accept="image/*" style="display: none;">
+
+      <!-- AI Images Sub-picker -->
+      <div id="ai-images-subpanel" style="display: none; margin-top: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-forest-green);">Choose an AI Pet Parent Avatar:</span>
+          <button type="button" id="back-to-pic-options-btn" class="btn btn-outline" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; justify-items: center;">
+          ${AI_AVATARS.map(url => `
+            <button type="button" class="ai-avatar-chip" data-avatar="${url}" title="Select avatar">
+              <img src="${url}" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+
+  const closeModal = () => modalEl.remove();
+
+  // Close handlers
+  document.getElementById('close-pic-modal-btn')?.addEventListener('click', closeModal);
+  modalEl.addEventListener('click', (e) => {
+    if (e.target === modalEl) closeModal();
+  });
+
+  // Delete / Remove handler
+  document.getElementById('delete-pic-modal-btn')?.addEventListener('click', () => {
+    closeModal();
+    if (typeof onRemove === 'function') onRemove();
+  });
+
+  // Camera handler
+  const cameraInput = document.getElementById('modal-camera-input');
+  document.getElementById('opt-camera-btn')?.addEventListener('click', () => {
+    cameraInput?.click();
+  });
+  cameraInput?.addEventListener('change', (e) => {
+    handleFileSelected(e.target.files?.[0]);
+  });
+
+  // Gallery handler
+  const galleryInput = document.getElementById('modal-gallery-input');
+  document.getElementById('opt-gallery-btn')?.addEventListener('click', () => {
+    galleryInput?.click();
+  });
+  galleryInput?.addEventListener('change', (e) => {
+    handleFileSelected(e.target.files?.[0]);
+  });
+
+  // AI Images handler
+  const mainOptions = document.getElementById('pic-main-options');
+  const aiSubpanel = document.getElementById('ai-images-subpanel');
+  document.getElementById('opt-ai-btn')?.addEventListener('click', () => {
+    if (mainOptions) mainOptions.style.display = 'none';
+    if (aiSubpanel) aiSubpanel.style.display = 'block';
+  });
+
+  document.getElementById('back-to-pic-options-btn')?.addEventListener('click', () => {
+    if (aiSubpanel) aiSubpanel.style.display = 'none';
+    if (mainOptions) mainOptions.style.display = 'flex';
+  });
+
+  modalEl.querySelectorAll('.ai-avatar-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const url = chip.getAttribute('data-avatar');
+      if (url) {
+        closeModal();
+        if (typeof onUpdate === 'function') onUpdate(url, 'AI Avatar selected');
+      }
+    });
+  });
+
+  function handleFileSelected(file) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (loadEvt) => {
+      const dataUrl = loadEvt.target.result;
+      closeModal();
+      if (typeof onUpdate === 'function') onUpdate(dataUrl, file.name);
+    };
+    reader.readAsDataURL(file);
+  }
 }
