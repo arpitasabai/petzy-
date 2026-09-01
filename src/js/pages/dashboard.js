@@ -682,15 +682,13 @@ function renderProfileTab(user) {
           <h3 style="font-size: 1.35rem; color: var(--color-forest-green); margin: 0 0 0.25rem;">${user.name}</h3>
           <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">${user.email}</span>
 
-          <div style="margin-top: 1.25rem;">
-            <label class="form-label" style="font-size: 0.82rem; text-transform: uppercase;">Choose Profile Photo Preset</label>
-            <div class="preset-avatar-grid">
-              ${PARENT_AVATARS.map(url => `
-                <button type="button" class="preset-avatar-btn ${url === user.avatar ? 'selected' : ''}" data-avatar="${url}">
-                  <img src="${url}" alt="Avatar option">
-                </button>
-              `).join('')}
-            </div>
+          <div style="margin-top: 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem;">
+            <input type="file" id="user-avatar-file-input" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-outline" id="user-choose-avatar-btn" style="font-size: 0.88rem; padding: 0.55rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <i class="fa-solid fa-images"></i>
+              <span>Choose from Gallery</span>
+            </button>
+            <span id="user-avatar-status" style="font-size: 0.78rem; color: var(--color-charcoal-muted);">Upload your own photo (JPG, PNG, WEBP)</span>
           </div>
         </div>
 
@@ -923,17 +921,35 @@ export function setupDashboardEvents() {
     openPetModal(null, () => refreshDashboard());
   });
 
-  // Avatar Presets selection
-  document.querySelectorAll('.preset-avatar-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.preset-avatar-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      const url = btn.getAttribute('data-avatar');
-      const preview = document.getElementById('profile-preview-avatar');
-      const input = document.getElementById('prof-avatar-url');
-      if (preview && url) preview.src = url;
-      if (input && url) input.value = url;
-    });
+  // Choose profile photo from gallery
+  const avatarFileInput = document.getElementById('user-avatar-file-input');
+  const chooseAvatarBtn = document.getElementById('user-choose-avatar-btn');
+  const avatarPreview = document.getElementById('profile-preview-avatar');
+  const avatarHiddenInput = document.getElementById('prof-avatar-url');
+  const avatarStatus = document.getElementById('user-avatar-status');
+
+  chooseAvatarBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    avatarFileInput?.click();
+  });
+
+  avatarFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target.result;
+        if (avatarPreview) avatarPreview.src = dataUrl;
+        if (avatarHiddenInput) avatarHiddenInput.value = dataUrl;
+        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${file.name.length > 20 ? file.name.substring(0, 18) + '...' : file.name}</span>`;
+        showToast('Profile photo loaded from gallery! Click Save to apply.', 'sage', 'fa-solid fa-image');
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   // Profile Form Submit
