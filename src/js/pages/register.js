@@ -3,6 +3,7 @@ import { registerUser, loginAsDemoUser, getCurrentUser } from '../services/auth.
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
 import { renderIntlPhoneInput, getIntlPhoneValue } from '../components/phone-input.js';
+import { openGoogleAccountChooser } from '../components/google-auth-modal.js';
 
 export function renderRegister() {
   const currentUser = getCurrentUser();
@@ -164,13 +165,14 @@ export function setupRegisterEvents() {
     }
   });
 
-  // Google OAuth Register Demo
-  googleBtn?.addEventListener('click', () => {
-    const user = loginAsDemoUser();
-    showToast('Signed up via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
-    setTimeout(() => {
-      window.location.hash = getRedirectTarget();
-    }, 400);
+  // Google OAuth Chooser Modal
+  googleBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openGoogleAccountChooser((user) => {
+      setTimeout(() => {
+        window.location.hash = getRedirectTarget();
+      }, 400);
+    });
   });
 }
 

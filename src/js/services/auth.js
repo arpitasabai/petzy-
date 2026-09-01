@@ -167,6 +167,36 @@ export function loginUser(email, password, rememberMe = true) {
   return user;
 }
 
+// Google OAuth Account Login / Auto-Registration Helper
+export function loginOrRegisterWithGoogle({ name, email, avatar = '' }) {
+  const users = getStoredUsers();
+  const normalizedEmail = email.trim().toLowerCase();
+  let existingUser = users.find(u => u.email.toLowerCase() === normalizedEmail);
+
+  if (!existingUser) {
+    existingUser = {
+      id: `usr_g_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      name: name.trim() || normalizedEmail.split('@')[0],
+      email: normalizedEmail,
+      phone: '+91 98765 43210',
+      password: 'google_oauth_authenticated',
+      role: 'customer',
+      avatar: avatar || '',
+      address: '',
+      emergencyContact: '',
+      joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      membershipTier: 'PETZY Google Member',
+      status: 'active'
+    };
+    users.push(existingUser);
+    saveStoredUsers(users);
+  }
+
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(existingUser));
+  dispatchAuthChange(existingUser);
+  return existingUser;
+}
+
 // 1-Click Quick Demo Customer Login Helper
 export function loginAsDemoUser() {
   getStoredUsers(); // ensure init

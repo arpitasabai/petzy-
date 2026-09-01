@@ -2,6 +2,7 @@
 import { loginUser, loginAsDemoUser, loginAsAdmin, getCurrentUser, isAdmin, getRememberedEmail } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
+import { openGoogleAccountChooser } from '../components/google-auth-modal.js';
 
 export function renderLogin() {
   const currentUser = getCurrentUser();
@@ -146,13 +147,22 @@ export function setupLoginEvents() {
     }, 400);
   });
 
-  // Google OAuth Demo
-  googleBtn?.addEventListener('click', () => {
-    const user = loginAsDemoUser();
-    showToast('Signed in via Google successfully! Welcome to PETZY.', 'sage', 'fa-brands fa-google');
-    setTimeout(() => {
-      window.location.hash = '#/dashboard';
-    }, 400);
+  // Google OAuth Chooser Modal
+  googleBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openGoogleAccountChooser((user) => {
+      setTimeout(() => {
+        const hash = window.location.hash || '';
+        if (hash.includes('?redirect=')) {
+          const r = hash.split('?redirect=')[1]?.split('&')[0];
+          if (r) {
+            window.location.hash = `#/${r}`;
+            return;
+          }
+        }
+        window.location.hash = '#/dashboard';
+      }, 400);
+    });
   });
 
   // Forgot Password
