@@ -190,7 +190,19 @@ export function getStoredVeterinarians() {
     return initial;
   }
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    let modified = false;
+    siteData.veterinarians.forEach(defaultVet => {
+      const exists = parsed.some(v => v.id === defaultVet.id || (v.slug && v.slug === defaultVet.slug));
+      if (!exists) {
+        parsed.push({ ...defaultVet, status: defaultVet.status || 'active' });
+        modified = true;
+      }
+    });
+    if (modified && typeof localStorage !== 'undefined') {
+      localStorage.setItem(VETS_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch (e) {
     return siteData.veterinarians;
   }

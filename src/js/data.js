@@ -588,6 +588,68 @@ export const siteData = {
         quote: "Finding a true avian expert for our African Grey was crucial. Dr. Priya's gentle touch, beak care, and dietary advice keep our parrot thriving.",
         author: "Sunil & Meera Iyer (Chirpy's Parents)"
       }
+    },
+    {
+      id: "marcus-sterling",
+      slug: "marcus-sterling",
+      name: "Dr. Marcus Sterling",
+      title: "Veterinary Cardiology Specialist",
+      experience: "11+ Years Experience",
+      availability: "Mon – Fri (Available Today)",
+      degrees: "DVM, MS, DACVIM (Cardiology)",
+      badge: "Cardiology Lead",
+      image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Specializes in echocardiography, congenital heart disease, cardiac biomarkers, and congestive heart failure therapy.",
+      headline: "Advanced Veterinary Cardiology & Hemodynamics",
+      bio: "Dr. Marcus Sterling is a board-certified veterinary cardiologist dedicated to detecting and managing feline and canine cardiovascular disorders with advanced color-Doppler echocardiography and personalized therapeutics.",
+      bioExtended: "He completed his cardiology residency at the Animal Heart Institute and leads clinical trials on early intervention for canine mitral valve disease and feline hypertrophic cardiomyopathy.",
+      specialties: ["Color-Doppler Echocardiography", "Congestive Heart Failure Management", "Arrhythmia & ECG Diagnostics", "Congenital Cardiac Defect Repair", "Cardiorenal Medicine"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Highest Academic Distinction",
+        "Diplomate, American College of Veterinary Internal Medicine (DACVIM Cardiology)",
+        "Master of Science (MS Comparative Cardiovascular Physiology)"
+      ],
+      quickFacts: {
+        experience: "11+ Years",
+        cases: "3,800+ Cardiac Consultations",
+        languages: "English, French",
+        certification: "DACVIM Board Certified"
+      },
+      testimonial: {
+        quote: "When our Cavalier King Charles Spaniel was diagnosed with a heart murmur, Dr. Marcus created a tailored treatment plan that gave our dog his joyful energy back.",
+        author: "David & Sarah Jenkins (Milo's Parents)"
+      }
+    },
+    {
+      id: "elena-rostova",
+      slug: "elena-rostova",
+      name: "Dr. Elena Rostova",
+      title: "Veterinary Dental & Oral Surgeon",
+      experience: "8+ Years Experience",
+      availability: "Tue – Sat (Available Today)",
+      degrees: "DVM, DAVDC Board Certified",
+      badge: "Dental Specialist",
+      image: "https://images.unsplash.com/photo-1594824813591-9e794354c414?auto=format&fit=crop&w=600&q=80",
+      shortDesc: "Specializes in advanced periodontics, endodontic root canal therapy, feline stomatitis, and restorative oral surgery.",
+      headline: "Advanced Veterinary Dentistry & Oral Surgery",
+      bio: "Dr. Elena Rostova directs PETZY's advanced dental and oral surgery suite, specializing in painless tooth extractions, jaw fracture repairs, and preventative periodontal wellness.",
+      bioExtended: "She is a Diplomate of the American Veterinary Dental College (DAVDC) and specializes in restorative dentistry, intraoral digital radiology, and complex maxillofacial surgeries for companion pets.",
+      specialties: ["Endodontics & Root Canal Therapy", "Advanced Periodontal Surgery", "Feline Chronic Gingivostomatitis", "Maxillofacial Trauma Repair", "Intraoral Digital Radiology"],
+      education: [
+        "Doctor of Veterinary Medicine (DVM) — Clinical Excellence Award",
+        "Diplomate, American Veterinary Dental College (DAVDC)",
+        "European Veterinary Dental Society (EVDS) Active Member"
+      ],
+      quickFacts: {
+        experience: "8+ Years",
+        cases: "2,600+ Dental Surgeries",
+        languages: "English, Russian, Spanish",
+        certification: "DAVDC Board Certified"
+      },
+      testimonial: {
+        quote: "Our cat suffered from painful dental issues for months. Dr. Elena performed a gentle oral surgery and within days our cat was purring and eating happily again.",
+        author: "Ananya & Rahul Sen (Whiskers' Parents)"
+      }
     }
   ],
 
