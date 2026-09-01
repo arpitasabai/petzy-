@@ -2,6 +2,7 @@
 import { siteData } from '../data.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
+import { renderIntlPhoneInput } from '../components/phone-input.js';
 
 export function renderContact() {
   return `
@@ -47,7 +48,7 @@ export function renderContact() {
               <div class="form-row-2">
                 <div class="form-group">
                   <label class="form-label" for="contact-user-phone">Phone Number *</label>
-                  <input type="tel" id="contact-user-phone" class="form-input" placeholder="(555) 000-0000" required>
+                  ${renderIntlPhoneInput({ id: 'contact-user-phone', placeholder: '98765 43210', required: true })}
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="contact-reason">Service or Doctor</label>

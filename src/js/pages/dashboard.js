@@ -6,6 +6,7 @@ import { openAppointmentModal } from '../components/appointment-modal.js';
 import { openPaymentReceiptModal } from '../components/payment-receipt-modal.js';
 import { renderBackButton } from '../components/back-button.js';
 import { showToast } from '../components/toast.js';
+import { renderIntlPhoneInput, getIntlPhoneValue } from '../components/phone-input.js';
 
 let activeTab = 'overview';
 let activeSpeciesFilter = 'all';
@@ -739,7 +740,7 @@ function renderProfileTab(user) {
               </div>
               <div class="form-group">
                 <label class="form-label" for="prof-phone">Phone Number *</label>
-                <input type="tel" id="prof-phone" class="form-input" required value="${user.phone || ''}">
+                ${renderIntlPhoneInput({ id: 'prof-phone', value: user.phone || '', required: true, placeholder: '98765 43210' })}
               </div>
             </div>
 
@@ -965,7 +966,7 @@ export function setupDashboardEvents() {
     try {
       const name = document.getElementById('prof-name')?.value.trim();
       const email = document.getElementById('prof-email')?.value.trim();
-      const phone = document.getElementById('prof-phone')?.value.trim();
+      const phone = getIntlPhoneValue('prof-phone');
       const address = document.getElementById('prof-address')?.value.trim();
       const emergencyContact = document.getElementById('prof-emergency')?.value.trim();
       const avatar = document.getElementById('prof-avatar-url')?.value;

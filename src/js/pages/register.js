@@ -2,6 +2,7 @@
 import { registerUser, loginAsDemoUser, getCurrentUser } from '../services/auth.js';
 import { showToast } from '../components/toast.js';
 import { renderBackButton } from '../components/back-button.js';
+import { renderIntlPhoneInput, getIntlPhoneValue } from '../components/phone-input.js';
 
 export function renderRegister() {
   const currentUser = getCurrentUser();
@@ -54,7 +55,7 @@ export function renderRegister() {
             </div>
             <div class="form-group">
               <label class="form-label" for="reg-user-phone">Phone Number *</label>
-              <input type="tel" id="reg-user-phone" class="form-input" placeholder="(555) 000-0000" required>
+              ${renderIntlPhoneInput({ id: 'reg-user-phone', placeholder: '98765 43210', required: true })}
             </div>
           </div>
 
@@ -128,7 +129,7 @@ export function setupRegisterEvents() {
     e.preventDefault();
     const name = document.getElementById('reg-fullname')?.value.trim();
     const email = document.getElementById('reg-user-email')?.value.trim();
-    const phone = document.getElementById('reg-user-phone')?.value.trim();
+    const phone = getIntlPhoneValue('reg-user-phone');
     const pwd = document.getElementById('reg-user-password')?.value;
     const confirmPwd = document.getElementById('reg-user-confirm')?.value;
     const terms = document.getElementById('reg-terms-check')?.checked;

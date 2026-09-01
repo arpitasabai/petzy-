@@ -1,6 +1,7 @@
 /* PETZY Homepage View (Veterinary Platform) */
 import { siteData } from '../data.js';
 import { showToast } from '../components/toast.js';
+import { renderIntlPhoneInput } from '../components/phone-input.js';
 
 let currentTestimonialIndex = 0;
 
@@ -458,7 +459,7 @@ export function renderHome() {
 
               <div class="form-group">
                 <label class="form-label" for="home-contact-phone">Phone Number</label>
-                <input type="tel" id="home-contact-phone" class="form-input" placeholder="(555) 000-0000">
+                ${renderIntlPhoneInput({ id: 'home-contact-phone', placeholder: '98765 43210', required: false })}
               </div>
 
               <div class="form-group">
