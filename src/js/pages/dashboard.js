@@ -733,15 +733,14 @@ function renderProfileTab(user) {
               <input type="text" id="prof-name" class="form-input" required value="${user.name}">
             </div>
 
-            <div class="form-row-2">
-              <div class="form-group">
-                <label class="form-label" for="prof-email">Email Address *</label>
-                <input type="email" id="prof-email" class="form-input" required value="${user.email}">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="prof-phone">Phone Number *</label>
-                ${renderIntlPhoneInput({ id: 'prof-phone', value: user.phone || '', required: true, placeholder: '98765 43210' })}
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="prof-email">Email Address *</label>
+              <input type="email" id="prof-email" class="form-input" required value="${user.email}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="prof-phone">Phone Number *</label>
+              ${renderIntlPhoneInput({ id: 'prof-phone', value: user.phone || '', required: true, placeholder: '98765 43210' })}
             </div>
 
             <div class="form-group">

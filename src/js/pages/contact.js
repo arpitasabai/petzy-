@@ -45,23 +45,22 @@ export function renderContact() {
                 </div>
               </div>
 
-              <div class="form-row-2">
-                <div class="form-group">
-                  <label class="form-label" for="contact-user-phone">Phone Number *</label>
-                  ${renderIntlPhoneInput({ id: 'contact-user-phone', placeholder: '98765 43210', required: true })}
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="contact-reason">Service or Doctor</label>
-                  <select id="contact-reason" class="form-select">
-                    <option value="general-consultation">Veterinary Consultation</option>
-                    <option value="vaccination">Vaccination & Immunity</option>
-                    <option value="grooming">Spa & Medical Grooming</option>
-                    <option value="dental">Dental Cleaning & Exam</option>
-                    <option value="surgery">Surgical Consultation</option>
-                    <option value="dr-ananya">Dr. Ananya Sharma (Surgeon)</option>
-                    <option value="emergency">Urgent Emergency Care</option>
-                  </select>
-                </div>
+              <div class="form-group">
+                <label class="form-label" for="contact-user-phone">Phone Number *</label>
+                ${renderIntlPhoneInput({ id: 'contact-user-phone', placeholder: '98765 43210', required: true })}
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="contact-reason">Service or Doctor</label>
+                <select id="contact-reason" class="form-select">
+                  <option value="general-consultation">Veterinary Consultation</option>
+                  <option value="vaccination">Vaccination & Immunity</option>
+                  <option value="grooming">Spa & Medical Grooming</option>
+                  <option value="dental">Dental Cleaning & Exam</option>
+                  <option value="surgery">Surgical Consultation</option>
+                  <option value="dr-ananya">Dr. Ananya Sharma (Surgeon)</option>
+                  <option value="emergency">Urgent Emergency Care</option>
+                </select>
               </div>
 
               <div class="form-group">

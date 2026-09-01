@@ -48,15 +48,14 @@ export function renderRegister() {
             <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Alex Morgan" required>
           </div>
 
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="reg-user-email">Email Address *</label>
-              <input type="email" id="reg-user-email" class="form-input" placeholder="alex@example.com" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="reg-user-phone">Phone Number *</label>
-              ${renderIntlPhoneInput({ id: 'reg-user-phone', placeholder: '98765 43210', required: true })}
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="reg-user-email">Email Address *</label>
+            <input type="email" id="reg-user-email" class="form-input" placeholder="alex@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-user-phone">Phone Number *</label>
+            ${renderIntlPhoneInput({ id: 'reg-user-phone', placeholder: '98765 43210', required: true })}
           </div>
 
           <div class="form-row-2">
