@@ -684,10 +684,16 @@ function renderProfileTab(user) {
 
           <div style="margin-top: 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem;">
             <input type="file" id="user-avatar-file-input" accept="image/*" style="display: none;">
-            <button type="button" class="btn btn-outline" id="user-choose-avatar-btn" style="font-size: 0.88rem; padding: 0.55rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-              <i class="fa-solid fa-images"></i>
-              <span>Choose from Gallery</span>
-            </button>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline" id="user-choose-avatar-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;">
+                <i class="fa-solid fa-images"></i>
+                <span>Choose from Gallery</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="user-remove-avatar-btn" style="font-size: 0.85rem; padding: 0.5rem 0.85rem; border-color: #E74C3C; color: #C0392B; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;" title="Remove current profile photo">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Remove</span>
+              </button>
+            </div>
             <span id="user-avatar-status" style="font-size: 0.78rem; color: var(--color-charcoal-muted);">Upload your own photo (JPG, PNG, WEBP)</span>
           </div>
         </div>
@@ -921,12 +927,14 @@ export function setupDashboardEvents() {
     openPetModal(null, () => refreshDashboard());
   });
 
-  // Choose profile photo from gallery
+  // Choose profile photo from gallery & Remove photo
   const avatarFileInput = document.getElementById('user-avatar-file-input');
   const chooseAvatarBtn = document.getElementById('user-choose-avatar-btn');
+  const removeAvatarBtn = document.getElementById('user-remove-avatar-btn');
   const avatarPreview = document.getElementById('profile-preview-avatar');
   const avatarHiddenInput = document.getElementById('prof-avatar-url');
   const avatarStatus = document.getElementById('user-avatar-status');
+  const defaultUserAvatar = PARENT_AVATARS[0];
 
   chooseAvatarBtn?.addEventListener('click', (e) => {
     e.preventDefault();
@@ -950,6 +958,15 @@ export function setupDashboardEvents() {
       };
       reader.readAsDataURL(file);
     }
+  });
+
+  removeAvatarBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (avatarFileInput) avatarFileInput.value = '';
+    if (avatarPreview) avatarPreview.src = defaultUserAvatar;
+    if (avatarHiddenInput) avatarHiddenInput.value = defaultUserAvatar;
+    if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #C0392B; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Photo removed. Click Save Changes.</span>`;
+    showToast('Profile photo removed. Click Save Profile Changes to apply.', 'coral', 'fa-solid fa-trash-can');
   });
 
   // Profile Form Submit
