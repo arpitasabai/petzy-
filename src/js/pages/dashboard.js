@@ -700,9 +700,6 @@ function renderProfileTab(user) {
               <i class="fa-solid fa-camera"></i>
               <span>Select Profile Picture</span>
             </button>
-            <span id="user-avatar-status" style="font-size: 0.78rem; color: var(--color-charcoal-muted); display: block; margin-top: 0.45rem;">
-              ${hasAvatar ? 'Click avatar to edit or remove' : 'No photo set (Blank default)'}
-            </span>
           </div>
         </div>
 
@@ -939,21 +936,18 @@ export function setupDashboardEvents() {
   window.petzyOpenProfilePicModal = () => {
     const avatarPreview = document.getElementById('profile-preview-avatar');
     const avatarHiddenInput = document.getElementById('prof-avatar-url');
-    const avatarStatus = document.getElementById('user-avatar-status');
     const currentAvatar = avatarHiddenInput ? avatarHiddenInput.value : '';
 
     openProfilePictureModal(
       currentAvatar,
-      (newAvatarUrl, sourceLabel) => {
+      (newAvatarUrl) => {
         if (avatarPreview) avatarPreview.src = newAvatarUrl;
         if (avatarHiddenInput) avatarHiddenInput.value = newAvatarUrl;
-        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${sourceLabel || 'Photo updated'}. Click Save below.</span>`;
-        showToast('Profile photo chosen! Click Save Profile Changes to apply.', 'sage', 'fa-solid fa-image');
+        showToast('Profile photo updated! Click Save Profile Changes to apply.', 'sage', 'fa-solid fa-image');
       },
       () => {
         if (avatarPreview) avatarPreview.src = BLANK_USER_AVATAR;
         if (avatarHiddenInput) avatarHiddenInput.value = '';
-        if (avatarStatus) avatarStatus.innerHTML = `<span style="color: #C0392B; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> Photo removed. Click Save below.</span>`;
         showToast('Profile photo removed. Click Save Profile Changes to apply.', 'coral', 'fa-solid fa-trash-can');
       }
     );
