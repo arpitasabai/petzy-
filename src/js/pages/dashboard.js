@@ -686,7 +686,7 @@ function renderProfileTab(user) {
       <!-- Left Column: Avatar & Summary Box -->
       <div class="profile-card-box" style="text-align: center;">
         <div class="profile-avatar-uploader">
-          <div class="profile-avatar-wrapper" id="open-profile-pic-modal-btn" title="Click to select profile picture">
+          <div class="profile-avatar-wrapper" id="open-profile-pic-modal-btn" onclick="window.petzyOpenProfilePicModal()" style="cursor: pointer;" title="Click to change profile picture">
             <img src="${user.avatar || BLANK_USER_AVATAR}" alt="${user.name}" class="profile-avatar-large" id="profile-preview-avatar">
             <div class="profile-avatar-camera-badge" title="Select or change photo">
               <i class="fa-solid fa-camera"></i>
@@ -696,7 +696,7 @@ function renderProfileTab(user) {
           <span style="font-size: 0.85rem; color: var(--color-charcoal-muted);">${user.email}</span>
 
           <div style="margin-top: 0.85rem;">
-            <button type="button" class="btn btn-outline" id="trigger-pic-modal-btn" style="font-size: 0.85rem; padding: 0.45rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; border-radius: var(--radius-full);">
+            <button type="button" class="btn btn-outline" id="trigger-pic-modal-btn" onclick="window.petzyOpenProfilePicModal()" style="font-size: 0.85rem; padding: 0.45rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; border-radius: var(--radius-full);">
               <i class="fa-solid fa-camera"></i>
               <span>Select Profile Picture</span>
             </button>
@@ -936,14 +936,12 @@ export function setupDashboardEvents() {
   });
 
   // Profile Picture modal triggers
-  const avatarWrapper = document.getElementById('open-profile-pic-modal-btn');
-  const triggerPicBtn = document.getElementById('trigger-pic-modal-btn');
-  const avatarPreview = document.getElementById('profile-preview-avatar');
-  const avatarHiddenInput = document.getElementById('prof-avatar-url');
-  const avatarStatus = document.getElementById('user-avatar-status');
-
-  const handleOpenPicModal = () => {
+  window.petzyOpenProfilePicModal = () => {
+    const avatarPreview = document.getElementById('profile-preview-avatar');
+    const avatarHiddenInput = document.getElementById('prof-avatar-url');
+    const avatarStatus = document.getElementById('user-avatar-status');
     const currentAvatar = avatarHiddenInput ? avatarHiddenInput.value : '';
+
     openProfilePictureModal(
       currentAvatar,
       (newAvatarUrl, sourceLabel) => {
@@ -961,8 +959,10 @@ export function setupDashboardEvents() {
     );
   };
 
-  avatarWrapper?.addEventListener('click', handleOpenPicModal);
-  triggerPicBtn?.addEventListener('click', handleOpenPicModal);
+  const avatarWrapper = document.getElementById('open-profile-pic-modal-btn');
+  const triggerPicBtn = document.getElementById('trigger-pic-modal-btn');
+  avatarWrapper?.addEventListener('click', window.petzyOpenProfilePicModal);
+  triggerPicBtn?.addEventListener('click', window.petzyOpenProfilePicModal);
 
   // Profile Form Submit
   const profileForm = document.getElementById('profile-info-form');
@@ -1064,8 +1064,8 @@ export function openProfilePictureModal(currentAvatar, onUpdate, onRemove) {
 
   const modalEl = document.createElement('div');
   modalEl.id = 'profile-pic-modal-root';
-  modalEl.className = 'petzy-modal-backdrop animate-fade-in';
-  modalEl.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+  modalEl.className = 'profile-pic-modal-overlay animate-fade-in';
+  modalEl.style.cssText = 'position: fixed; inset: 0; background: rgba(14, 48, 37, 0.65); backdrop-filter: blur(6px); z-index: 99999; display: flex !important; align-items: center; justify-content: center; padding: 1.25rem; opacity: 1 !important; visibility: visible !important;';
 
   modalEl.innerHTML = `
     <div class="profile-pic-modal-card">
