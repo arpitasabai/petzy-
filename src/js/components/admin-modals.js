@@ -253,8 +253,19 @@ export function openServiceFormModal(serviceId = null, onSave = null) {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="srv-image">Image URL</label>
-          <input type="url" id="srv-image" class="form-input" value="${service?.image || 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80'}" placeholder="https://images.unsplash.com/...">
+          <label class="form-label">Service Image</label>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <img id="srv-image-preview" src="${service?.image || 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80'}" style="width: 60px; height: 60px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green); flex-shrink: 0;">
+            <div style="flex: 1;">
+              <input type="file" id="srv-image-file" accept="image/*" style="display: none;">
+              <input type="hidden" id="srv-image" value="${service?.image || 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80'}">
+              <button type="button" class="btn btn-outline" id="srv-choose-image-btn" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                <i class="fa-solid fa-images"></i>
+                <span>Choose from Gallery</span>
+              </button>
+              <span id="srv-image-status" style="font-size: 0.8rem; color: var(--color-charcoal-muted); margin-left: 0.5rem;"></span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -280,6 +291,35 @@ export function openServiceFormModal(serviceId = null, onSave = null) {
   document.getElementById('cancel-srv-btn')?.addEventListener('click', closeModal);
   modalEl.addEventListener('click', (e) => {
     if (e.target === modalEl) closeModal();
+  });
+
+  const srvFileBtn = document.getElementById('srv-choose-image-btn');
+  const srvFileInput = document.getElementById('srv-image-file');
+  const srvImgHidden = document.getElementById('srv-image');
+  const srvImgPreview = document.getElementById('srv-image-preview');
+  const srvImgStatus = document.getElementById('srv-image-status');
+
+  srvFileBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    srvFileInput?.click();
+  });
+
+  srvFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target.result;
+        if (srvImgHidden) srvImgHidden.value = dataUrl;
+        if (srvImgPreview) srvImgPreview.src = dataUrl;
+        if (srvImgStatus) srvImgStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${file.name}</span>`;
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   document.getElementById('admin-service-form')?.addEventListener('submit', (e) => {
@@ -366,8 +406,19 @@ export function openVeterinarianFormModal(doctorId = null, onSave = null) {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="doc-image">Profile Photo URL</label>
-          <input type="url" id="doc-image" class="form-input" value="${doctor?.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80'}" placeholder="https://images.unsplash.com/...">
+          <label class="form-label">Profile Photo</label>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <img id="doc-image-preview" src="${doctor?.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80'}" style="width: 60px; height: 60px; border-radius: var(--radius-full); object-fit: cover; border: 2px solid var(--color-forest-green); flex-shrink: 0;">
+            <div style="flex: 1;">
+              <input type="file" id="doc-image-file" accept="image/*" style="display: none;">
+              <input type="hidden" id="doc-image" value="${doctor?.image || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80'}">
+              <button type="button" class="btn btn-outline" id="doc-choose-image-btn" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+                <i class="fa-solid fa-images"></i>
+                <span>Choose from Gallery</span>
+              </button>
+              <span id="doc-image-status" style="font-size: 0.8rem; color: var(--color-charcoal-muted); margin-left: 0.5rem;"></span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -393,6 +444,35 @@ export function openVeterinarianFormModal(doctorId = null, onSave = null) {
   document.getElementById('cancel-doc-btn')?.addEventListener('click', closeModal);
   modalEl.addEventListener('click', (e) => {
     if (e.target === modalEl) closeModal();
+  });
+
+  const docFileBtn = document.getElementById('doc-choose-image-btn');
+  const docFileInput = document.getElementById('doc-image-file');
+  const docImgHidden = document.getElementById('doc-image');
+  const docImgPreview = document.getElementById('doc-image-preview');
+  const docImgStatus = document.getElementById('doc-image-status');
+
+  docFileBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    docFileInput?.click();
+  });
+
+  docFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target.result;
+        if (docImgHidden) docImgHidden.value = dataUrl;
+        if (docImgPreview) docImgPreview.src = dataUrl;
+        if (docImgStatus) docImgStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${file.name}</span>`;
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   document.getElementById('admin-doctor-form')?.addEventListener('submit', (e) => {

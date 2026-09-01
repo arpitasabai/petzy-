@@ -136,11 +136,17 @@ function renderModalHtml() {
             <!-- Photo Selection & Preview -->
             <div class="form-group">
               <label class="form-label">Pet Photo</label>
-              <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 0.75rem;">
-                <img id="pet-photo-preview" src="${selectedPhotoUrl}" alt="Pet Preview" style="width: 72px; height: 72px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green);">
+              <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 0.85rem;">
+                <img id="pet-photo-preview" src="${selectedPhotoUrl}" alt="Pet Preview" style="width: 72px; height: 72px; border-radius: var(--radius-md); object-fit: cover; border: 2px solid var(--color-forest-green); box-shadow: var(--shadow-sm); flex-shrink: 0;">
                 <div style="flex: 1;">
-                  <span style="font-size: 0.85rem; color: var(--color-charcoal-muted); display: block; margin-bottom: 0.4rem;">Choose a photo preset or enter custom image URL:</span>
-                  <input type="url" id="pet-form-photo-url" class="form-input" placeholder="https://..." value="${selectedPhotoUrl}">
+                  <input type="file" id="pet-photo-file-input" accept="image/*" style="display: none;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" id="choose-from-gallery-btn" style="font-size: 0.88rem; padding: 0.55rem 1.15rem; border-color: var(--color-forest-green); color: var(--color-forest-green); display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                      <i class="fa-solid fa-images"></i>
+                      <span>Choose from Gallery</span>
+                    </button>
+                    <span id="photo-upload-status" style="font-size: 0.82rem; color: var(--color-charcoal-muted);">Or pick an avatar preset below:</span>
+                  </div>
                 </div>
               </div>
 
@@ -197,8 +203,10 @@ function setupModalEvents(modalEl) {
   const closeX = modalEl.querySelector('#modal-close-x');
   const cancelBtn = modalEl.querySelector('#modal-cancel-btn');
   const form = modalEl.querySelector('#pet-details-form');
-  const photoUrlInput = modalEl.querySelector('#pet-form-photo-url');
   const photoPreview = modalEl.querySelector('#pet-photo-preview');
+  const fileInput = modalEl.querySelector('#pet-photo-file-input');
+  const chooseGalleryBtn = modalEl.querySelector('#choose-from-gallery-btn');
+  const photoStatus = modalEl.querySelector('#photo-upload-status');
   const speciesBtns = modalEl.querySelectorAll('.species-chip-btn');
   const presetsContainer = modalEl.querySelector('#photo-presets-row');
 
@@ -207,6 +215,37 @@ function setupModalEvents(modalEl) {
   cancelBtn?.addEventListener('click', closePetModal);
   backdrop?.addEventListener('click', (e) => {
     if (e.target === backdrop) closePetModal();
+  });
+
+  // Choose from Gallery button trigger
+  chooseGalleryBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    fileInput?.click();
+  });
+
+  // File gallery input change
+  fileInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'coral', 'fa-solid fa-triangle-exclamation');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        const dataUrl = loadEvent.target.result;
+        selectedPhotoUrl = dataUrl;
+        if (photoPreview) {
+          photoPreview.src = dataUrl;
+        }
+        if (photoStatus) {
+          photoStatus.innerHTML = `<span style="color: #27AE60; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ${file.name.length > 22 ? file.name.substring(0, 20) + '...' : file.name}</span>`;
+        }
+        presetsContainer?.querySelectorAll('.preset-photo-chip').forEach(c => c.style.borderColor = 'transparent');
+        showToast('Pet photo selected from gallery!', 'sage', 'fa-solid fa-image');
+      };
+      reader.readAsDataURL(file);
+    }
   });
 
   // Species toggle
@@ -219,29 +258,20 @@ function setupModalEvents(modalEl) {
       // update preset list
       if (presetsContainer) {
         presetsContainer.innerHTML = getPresetsHtml(selectedSpecies);
-        setupPresetListeners(presetsContainer, photoUrlInput, photoPreview);
+        setupPresetListeners(presetsContainer, photoPreview, photoStatus);
       }
 
       // set default preset for species
       const key = selectedSpecies.toLowerCase();
       const presets = PET_IMAGE_PRESETS[key] || PET_IMAGE_PRESETS.dog;
       selectedPhotoUrl = presets[0];
-      if (photoUrlInput) photoUrlInput.value = selectedPhotoUrl;
       if (photoPreview) photoPreview.src = selectedPhotoUrl;
+      if (photoStatus) photoStatus.innerHTML = 'Or pick an avatar preset below:';
     });
   });
 
-  // Custom photo url typing
-  photoUrlInput?.addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    if (val && photoPreview) {
-      photoPreview.src = val;
-      selectedPhotoUrl = val;
-    }
-  });
-
   if (presetsContainer) {
-    setupPresetListeners(presetsContainer, photoUrlInput, photoPreview);
+    setupPresetListeners(presetsContainer, photoPreview, photoStatus);
   }
 
   // Form submit
@@ -262,7 +292,7 @@ function setupModalEvents(modalEl) {
     const allergies = document.getElementById('pet-form-allergies')?.value.trim() || 'None reported';
     const conditions = document.getElementById('pet-form-conditions')?.value.trim() || 'None';
     const medicalNotes = document.getElementById('pet-form-notes')?.value.trim() || 'Regular healthy veterinary checkup routine.';
-    const photo = photoUrlInput?.value.trim() || selectedPhotoUrl;
+    const photo = selectedPhotoUrl || PET_IMAGE_PRESETS.dog[0];
 
     const petData = {
       id: currentPetToEdit ? currentPetToEdit.id : undefined,
@@ -300,7 +330,7 @@ function setupModalEvents(modalEl) {
   });
 }
 
-function setupPresetListeners(presetsContainer, photoUrlInput, photoPreview) {
+function setupPresetListeners(presetsContainer, photoPreview, photoStatus) {
   presetsContainer.querySelectorAll('.preset-photo-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       presetsContainer.querySelectorAll('.preset-photo-chip').forEach(c => c.style.borderColor = 'transparent');
@@ -308,8 +338,8 @@ function setupPresetListeners(presetsContainer, photoUrlInput, photoPreview) {
       const url = chip.getAttribute('data-url');
       if (url) {
         selectedPhotoUrl = url;
-        if (photoUrlInput) photoUrlInput.value = url;
         if (photoPreview) photoPreview.src = url;
+        if (photoStatus) photoStatus.innerHTML = '<span style="color: var(--color-charcoal-muted);">Preset avatar selected</span>';
       }
     });
   });
