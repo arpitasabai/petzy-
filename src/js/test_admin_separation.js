@@ -1,4 +1,14 @@
 /* PETZY Admin Separation & Security Guard Automated Verification Suite */
+const storageStore = {};
+global.localStorage = {
+  getItem: (key) => storageStore[key] || null,
+  setItem: (key, val) => { storageStore[key] = String(val); },
+  removeItem: (key) => { delete storageStore[key]; },
+  clear: () => { Object.keys(storageStore).forEach(k => delete storageStore[k]); },
+  key: (i) => Object.keys(storageStore)[i] || null,
+  get length() { return Object.keys(storageStore).length; }
+};
+
 import { getStoredUsers, loginUser, loginAsDemoUser, loginAsAdmin, logoutUser, getCurrentUser, isAdmin, DEFAULT_DEMO_USER, DEFAULT_ADMIN_USER } from './services/auth.js';
 import { getSmartParentRoute } from './components/back-button.js';
 import { renderLogin } from './pages/login.js';

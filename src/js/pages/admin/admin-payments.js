@@ -122,11 +122,25 @@ export function renderAdminPayments() {
 
       <!-- Payments Table -->
       <div style="background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); overflow: hidden;">
-        ${filtered.length === 0 ? `
+        ${allPayments.length === 0 ? `
           <div style="text-align: center; padding: 3.5rem 1.5rem;">
-            <i class="fa-solid fa-receipt" style="font-size: 2.5rem; color: var(--color-sage-green); margin-bottom: 0.75rem;"></i>
-            <h4 style="color: var(--color-forest-green); margin-bottom: 0.25rem;">No Payment Transactions Found</h4>
-            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0;">Try adjusting your search criteria.</p>
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+              <i class="fa-solid fa-file-invoice-dollar" style="font-size: 1.75rem; color: var(--color-forest-green);"></i>
+            </div>
+            <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.35rem; font-size: 1.2rem;">No Payment Records Recorded</h4>
+            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0 auto; max-width: 440px;">Live transactions, digital invoices, and settlement ledgers will populate here automatically when appointments are paid via online checkout (Card, PayPal, Apple Pay).</p>
+          </div>
+        ` : filtered.length === 0 ? `
+          <div style="text-align: center; padding: 3.5rem 1.5rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+              <i class="fa-solid fa-filter-circle-xmark" style="font-size: 1.75rem; color: var(--color-soft-coral);"></i>
+            </div>
+            <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.35rem; font-size: 1.2rem;">No Matching Transactions</h4>
+            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0 0 1rem;">No payments match your current search query "<strong>${paymentSearchQuery}</strong>" or selected status filter.</p>
+            <button type="button" class="btn btn-outline" id="admin-pay-empty-clear-btn" style="font-size: 0.82rem; padding: 0.4rem 1rem;">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Reset Search & Filters</span>
+            </button>
           </div>
         ` : `
           <div style="overflow-x: auto;">
@@ -230,6 +244,12 @@ export function setupAdminPaymentsEvents(refreshAdmin) {
 
   document.getElementById('admin-pay-clear-btn')?.addEventListener('click', () => {
     paymentSearchQuery = '';
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-pay-empty-clear-btn')?.addEventListener('click', () => {
+    paymentSearchQuery = '';
+    paymentStatusFilter = 'all';
     refreshAdmin();
   });
 

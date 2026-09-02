@@ -370,84 +370,21 @@ export function unblockDoctorDate(doctorId, dateStr) {
 export function getPaymentRecords() {
   const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(PAYMENTS_KEY) : null;
   if (!raw) {
-    // Seed initial demo payments
-    const initialPayments = [
-      {
-        id: 'PAY-PETZY-948201',
-        transactionId: 'TXN_884920194',
-        appointmentId: 'PETZY-948201',
-        userId: 'usr_samantha_hayes_01',
-        customerName: 'Samantha Hayes',
-        customerEmail: 'samantha@petzy.com',
-        petId: 'pet_buddy_01',
-        petName: 'Buddy',
-        serviceId: 'consultation',
-        serviceName: 'Veterinary Consultation',
-        amount: '$55.00',
-        amountValue: 55,
-        paymentMethod: 'Visa •••• 4242',
-        paymentDate: '2026-08-20T10:05:00.000Z',
-        status: 'Paid'
-      },
-      {
-        id: 'PAY-PETZY-832104',
-        transactionId: 'TXN_773910283',
-        appointmentId: 'PETZY-832104',
-        userId: 'usr_samantha_hayes_01',
-        customerName: 'Samantha Hayes',
-        customerEmail: 'samantha@petzy.com',
-        petId: 'pet_buddy_01',
-        petName: 'Buddy',
-        serviceId: 'vaccination',
-        serviceName: 'Vaccination & Immunity',
-        amount: '$45.00',
-        amountValue: 45,
-        paymentMethod: 'Mastercard •••• 5555',
-        paymentDate: '2025-08-10T14:10:00.000Z',
-        status: 'Paid'
-      },
-      {
-        id: 'PAY-PETZY-719302',
-        transactionId: 'TXN_662809172',
-        appointmentId: 'PETZY-719302',
-        userId: 'usr_samantha_hayes_01',
-        customerName: 'Samantha Hayes',
-        customerEmail: 'samantha@petzy.com',
-        petId: 'pet_mimi_02',
-        petName: 'Mimi',
-        serviceId: 'dental-care',
-        serviceName: 'Dental Care & Hygiene',
-        amount: '$85.00',
-        amountValue: 85,
-        paymentMethod: 'Apple Pay (Visa •••• 1928)',
-        paymentDate: '2025-10-12T11:05:00.000Z',
-        status: 'Paid'
-      },
-      {
-        id: 'PAY-PETZY-605821',
-        transactionId: 'TXN_551798061',
-        appointmentId: 'PETZY-605821',
-        userId: 'usr_samantha_hayes_01',
-        customerName: 'Samantha Hayes',
-        customerEmail: 'samantha@petzy.com',
-        petId: 'pet_mimi_02',
-        petName: 'Mimi',
-        serviceId: 'vaccination',
-        serviceName: 'Vaccination & Immunity',
-        amount: '$45.00',
-        amountValue: 45,
-        paymentMethod: 'Visa •••• 4242',
-        paymentDate: '2025-06-15T15:05:00.000Z',
-        status: 'Paid'
-      }
-    ];
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(initialPayments));
-    }
-    return initialPayments;
+    return [];
   }
   try {
-    return JSON.parse(raw);
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    
+    // Filter out legacy hardcoded fake demo transactions
+    const fakeIds = ['PAY-PETZY-948201', 'PAY-PETZY-832104', 'PAY-PETZY-719302', 'PAY-PETZY-605821'];
+    const fakeTxns = ['TXN_884920194', 'TXN_773910283', 'TXN_662809172', 'TXN_551798061'];
+    const cleaned = list.filter(p => !fakeIds.includes(p.id) && !fakeTxns.includes(p.transactionId));
+    
+    if (cleaned.length !== list.length && typeof localStorage !== 'undefined') {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch (e) {
     return [];
   }
