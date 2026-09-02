@@ -302,59 +302,69 @@ export function renderAdminOverview() {
           </button>
         </div>
 
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-            <thead>
-              <tr style="border-bottom: 1.5px solid var(--color-forest-green); color: var(--color-forest-green); text-align: left; font-family: var(--font-heading); font-size: 0.78rem; text-transform: uppercase;">
-                <th style="padding: 0.65rem 0.5rem;">Booking ID</th>
-                <th style="padding: 0.65rem 0.5rem;">Patient / Pet</th>
-                <th style="padding: 0.65rem 0.5rem;">Service</th>
-                <th style="padding: 0.65rem 0.5rem;">Attending Doctor</th>
-                <th style="padding: 0.65rem 0.5rem;">Date & Time</th>
-                <th style="padding: 0.65rem 0.5rem;">Status</th>
-                <th style="padding: 0.65rem 0.5rem;">Payment</th>
-                <th style="padding: 0.65rem 0.5rem; text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${recentAppts.map(a => `
-                <tr style="border-bottom: 1px solid var(--color-border); transition: background 0.15s ease;">
-                  <td style="padding: 0.75rem 0.5rem; font-family: monospace; font-weight: 700; color: var(--color-forest-green);">#${a.id}</td>
-                  <td style="padding: 0.75rem 0.5rem;">
-                    <strong style="color: var(--color-charcoal);">${a.petName}</strong>
-                    <span style="display: block; font-size: 0.75rem; color: var(--color-charcoal-muted);">${a.species || 'Pet'}</span>
-                  </td>
-                  <td style="padding: 0.75rem 0.5rem; color: var(--color-forest-green); font-weight: 600;">${a.service}</td>
-                  <td style="padding: 0.75rem 0.5rem; color: var(--color-charcoal);">${a.veterinarian}</td>
-                  <td style="padding: 0.75rem 0.5rem;">
-                    <div>${a.date}</div>
-                    <span style="font-size: 0.75rem; color: var(--color-charcoal-muted);">${a.time}</span>
-                  </td>
-                  <td style="padding: 0.75rem 0.5rem;">
-                    <span class="appointment-status-badge ${a.status.toLowerCase()}" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">
-                      ${a.status}
-                    </span>
-                  </td>
-                  <td style="padding: 0.75rem 0.5rem;">
-                    <span class="section-badge" style="background: ${a.paymentStatus === 'Paid' ? '#DCFCE7' : '#FEF3C7'}; color: ${a.paymentStatus === 'Paid' ? '#16A34A' : '#D97706'}; font-size: 0.7rem; padding: 0.15rem 0.5rem; margin: 0;">
-                      ${a.paymentStatus || 'Paid'}
-                    </span>
-                  </td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right;">
-                    <div style="display: inline-flex; gap: 0.35rem;">
-                      <button type="button" class="btn btn-outline" onclick="window.petzyAdminUpdateAppt('${a.id}')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" title="Update Status & Clinical Notes">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                      </button>
-                      <button type="button" class="btn btn-outline" onclick="window.petzyAdminReceipt('${a.paymentId || a.id}')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" title="View Digital Receipt">
-                        <i class="fa-solid fa-receipt"></i>
-                      </button>
-                    </div>
-                  </td>
+        ${recentAppts.length === 0 ? `
+          <div style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem;">
+              <i class="fa-solid fa-calendar-check" style="font-size: 1.5rem; color: var(--color-forest-green);"></i>
+            </div>
+            <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.25rem; font-size: 1.15rem;">No Appointments Booked Yet</h4>
+            <p style="color: var(--color-charcoal-muted); font-size: 0.85rem; margin: 0 auto; max-width: 420px;">All new patient appointments scheduled by pet parents will appear here in real time.</p>
+          </div>
+        ` : `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <thead>
+                <tr style="border-bottom: 1.5px solid var(--color-forest-green); color: var(--color-forest-green); text-align: left; font-family: var(--font-heading); font-size: 0.78rem; text-transform: uppercase;">
+                  <th style="padding: 0.65rem 0.5rem;">Booking ID</th>
+                  <th style="padding: 0.65rem 0.5rem;">Patient / Pet</th>
+                  <th style="padding: 0.65rem 0.5rem;">Service</th>
+                  <th style="padding: 0.65rem 0.5rem;">Attending Doctor</th>
+                  <th style="padding: 0.65rem 0.5rem;">Date & Time</th>
+                  <th style="padding: 0.65rem 0.5rem;">Status</th>
+                  <th style="padding: 0.65rem 0.5rem;">Payment</th>
+                  <th style="padding: 0.65rem 0.5rem; text-align: right;">Action</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                ${recentAppts.map(a => `
+                  <tr style="border-bottom: 1px solid var(--color-border); transition: background 0.15s ease;">
+                    <td style="padding: 0.75rem 0.5rem; font-family: monospace; font-weight: 700; color: var(--color-forest-green);">#${a.id}</td>
+                    <td style="padding: 0.75rem 0.5rem;">
+                      <strong style="color: var(--color-charcoal);">${a.petName}</strong>
+                      <span style="display: block; font-size: 0.75rem; color: var(--color-charcoal-muted);">${a.species || 'Pet'}</span>
+                    </td>
+                    <td style="padding: 0.75rem 0.5rem; color: var(--color-forest-green); font-weight: 600;">${a.service}</td>
+                    <td style="padding: 0.75rem 0.5rem; color: var(--color-charcoal);">${a.veterinarian}</td>
+                    <td style="padding: 0.75rem 0.5rem;">
+                      <div>${a.date}</div>
+                      <span style="font-size: 0.75rem; color: var(--color-charcoal-muted);">${a.time}</span>
+                    </td>
+                    <td style="padding: 0.75rem 0.5rem;">
+                      <span class="appointment-status-badge ${a.status.toLowerCase()}" style="font-size: 0.72rem; padding: 0.2rem 0.55rem;">
+                        ${a.status}
+                      </span>
+                    </td>
+                    <td style="padding: 0.75rem 0.5rem;">
+                      <span class="section-badge" style="background: ${a.paymentStatus === 'Paid' ? '#DCFCE7' : '#FEF3C7'}; color: ${a.paymentStatus === 'Paid' ? '#16A34A' : '#D97706'}; font-size: 0.7rem; padding: 0.15rem 0.5rem; margin: 0;">
+                        ${a.paymentStatus || 'Paid'}
+                      </span>
+                    </td>
+                    <td style="padding: 0.75rem 0.5rem; text-align: right;">
+                      <div style="display: inline-flex; gap: 0.35rem;">
+                        <button type="button" class="btn btn-outline" onclick="window.petzyAdminUpdateAppt('${a.id}')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" title="Update Status & Clinical Notes">
+                          <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="window.petzyAdminReceipt('${a.paymentId || a.id}')" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" title="View Digital Receipt">
+                          <i class="fa-solid fa-receipt"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
       </div>
 
     </div>

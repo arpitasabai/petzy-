@@ -10,7 +10,7 @@ global.localStorage = {
 };
 
 import { getAllRegisteredCustomers } from './services/auth.js';
-import { getStoredServices, getStoredVeterinarians, getAllGlobalAppointments, getPaymentRecords, createPaymentRecord, getUserPets } from './services/storage.js';
+import { getStoredServices, getStoredVeterinarians, getAllGlobalAppointments, getPaymentRecords, createPaymentRecord, saveUserAppointment, getUserPets } from './services/storage.js';
 
 let passed = 0;
 let failed = 0;
@@ -131,10 +131,22 @@ const searchDegree = searchVets('BVSc');
 assert(searchDegree.length > 0, 'Search by Degree Credentials ("BVSc") returns qualified veterinarians');
 
 // ----------------------------------------------------
-// 4. Appointments Global Search Verification
+// 4. Appointments Search Verification
 // ----------------------------------------------------
 console.log('\n--- 4. Appointments Search ---');
-const appts = getAllGlobalAppointments();
+let appts = getAllGlobalAppointments();
+if (appts.length === 0) {
+  saveUserAppointment('usr_samantha_hayes_01', {
+    id: 'PETZY-TEST-001',
+    petName: 'Buddy',
+    species: 'Dog',
+    service: 'Veterinary Consultation',
+    veterinarian: 'Dr. Ananya Sharma',
+    date: '2026-09-10',
+    time: '10:00 AM'
+  });
+  appts = getAllGlobalAppointments();
+}
 
 const searchAppts = (query) => {
   const q = query.toLowerCase().trim();

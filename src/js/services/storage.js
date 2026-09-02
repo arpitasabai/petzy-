@@ -578,117 +578,39 @@ export function seedDemoData(userId) {
     ];
     localStorage.setItem(petsKey, JSON.stringify(demoPets));
   }
+}
 
-  if (typeof localStorage !== 'undefined' && !localStorage.getItem(apptsKey)) {
-    const demoAppointments = [
-      {
-        id: 'PETZY-948201',
-        paymentId: 'PAY-PETZY-948201',
-        transactionId: 'TXN_884920194',
-        paymentStatus: 'Paid',
-        paymentMethod: 'Visa •••• 4242',
-        petId: 'pet_buddy_01',
-        petName: 'Buddy',
-        petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
-        species: 'Dog',
-        serviceId: 'consultation',
-        service: 'Veterinary Consultation',
-        duration: '30 Mins',
-        price: '$55',
-        veterinarianId: 'ananya-sharma',
-        veterinarian: 'Dr. Ananya Sharma',
-        vetTitle: 'Chief Veterinary Surgeon',
-        vetImage: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80',
-        date: '2026-09-05',
-        time: '10:30 AM',
-        status: 'Upcoming',
-        room: 'Consultation Suite 2B',
-        notes: 'Annual comprehensive wellness physical, heart auscultation, weight check, and routine preventative blood panel.',
-        diagnosisSummary: 'Scheduled routine annual examination.',
-        createdAt: '2026-08-20T10:00:00.000Z'
-      },
-      {
-        id: 'PETZY-832104',
-        paymentId: 'PAY-PETZY-832104',
-        transactionId: 'TXN_773910283',
-        paymentStatus: 'Paid',
-        paymentMethod: 'Mastercard •••• 5555',
-        petId: 'pet_buddy_01',
-        petName: 'Buddy',
-        petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=600&q=80',
-        species: 'Dog',
-        serviceId: 'vaccination',
-        service: 'Vaccination & Immunity',
-        duration: '30 Mins',
-        price: '$45',
-        veterinarianId: 'rohan-mehta',
-        veterinarian: 'Dr. Rohan Mehta',
-        vetTitle: 'Pet Wellness & Nutrition Specialist',
-        vetImage: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80',
-        date: '2025-08-14',
-        time: '02:15 PM',
-        status: 'Completed',
-        room: 'Immunization Suite 1',
-        notes: 'Administered DHPP and Lepto boosters. Checked skin barrier for seasonal allergy signs. Recommended omega-3 fish oil supplement.',
-        diagnosisSummary: 'Healthy coat, all vitals normal. Prescribed Derma-Care Omega Drops.',
-        createdAt: '2025-08-10T14:00:00.000Z'
-      },
-      {
-        id: 'PETZY-719302',
-        paymentId: 'PAY-PETZY-719302',
-        transactionId: 'TXN_662809172',
-        paymentStatus: 'Paid',
-        paymentMethod: 'Apple Pay (Visa •••• 1928)',
-        petId: 'pet_mimi_02',
-        petName: 'Mimi',
-        petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
-        species: 'Cat',
-        serviceId: 'dental-care',
-        service: 'Dental Care & Hygiene',
-        duration: '45 Mins',
-        price: '$85',
-        veterinarianId: 'sarah-kapoor',
-        veterinarian: 'Dr. Sarah Kapoor',
-        vetTitle: 'Senior Veterinary Physician',
-        vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
-        date: '2025-10-18',
-        time: '11:00 AM',
-        status: 'Completed',
-        room: 'Dental Suite A',
-        notes: 'Ultrasonic cleaning of mild tartar. Gingival tissue healthy with zero pocketing. Fluoride polish applied.',
-        diagnosisSummary: 'Grade 1 mild gingivitis resolved post-cleaning. Home oral gel provided.',
-        createdAt: '2025-10-12T11:00:00.000Z'
-      },
-      {
-        id: 'PETZY-605821',
-        paymentId: 'PAY-PETZY-605821',
-        transactionId: 'TXN_551798061',
-        paymentStatus: 'Paid',
-        paymentMethod: 'Visa •••• 4242',
-        petId: 'pet_mimi_02',
-        petName: 'Mimi',
-        petPhoto: 'https://images.unsplash.com/photo-1513360309081-38f0762daed1?auto=format&fit=crop&w=600&q=80',
-        species: 'Cat',
-        serviceId: 'vaccination',
-        service: 'Vaccination & Immunity',
-        duration: '30 Mins',
-        price: '$45',
-        veterinarianId: 'sarah-kapoor',
-        veterinarian: 'Dr. Sarah Kapoor',
-        vetTitle: 'Senior Veterinary Physician',
-        vetImage: 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=600&q=80',
-        date: '2025-06-20',
-        time: '03:45 PM',
-        status: 'Completed',
-        room: 'Immunization Suite 1',
-        notes: 'FVRCP and PureVax Rabies administered with zero stress. Weight steady at 4.2 kg.',
-        diagnosisSummary: 'Excellent feline vitals. Heart clear, clear lungs, bright alert response.',
-        createdAt: '2025-06-15T15:00:00.000Z'
-      }
-    ];
-    localStorage.setItem(apptsKey, JSON.stringify(demoAppointments));
+const FRESH_DATA_RESET_FLAG = 'petzy_fresh_data_v3';
+
+export function clearAllPaymentsAndAppointments() {
+  if (typeof localStorage === 'undefined') return;
+  
+  // Wipe payments
+  localStorage.setItem(PAYMENTS_KEY, JSON.stringify([]));
+
+  // Wipe all user appointment stores
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(APPOINTMENTS_KEY_PREFIX)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(k => {
+    localStorage.removeItem(k);
+  });
+}
+
+export function ensureFreshStart() {
+  if (typeof localStorage === 'undefined') return;
+  if (!localStorage.getItem(FRESH_DATA_RESET_FLAG)) {
+    clearAllPaymentsAndAppointments();
+    localStorage.setItem(FRESH_DATA_RESET_FLAG, 'true');
   }
 }
+
+// Auto-run migration to clear fake payments and appointments
+ensureFreshStart();
 
 // ----------------------------------------------------
 // PETS CRUD OPERATIONS

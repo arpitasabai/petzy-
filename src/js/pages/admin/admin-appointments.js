@@ -118,11 +118,25 @@ export function renderAdminAppointments() {
 
       <!-- Appointments Table Card -->
       <div style="background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); overflow: hidden;">
-        ${filtered.length === 0 ? `
+        ${allAppointments.length === 0 ? `
           <div style="text-align: center; padding: 3.5rem 1.5rem;">
-            <i class="fa-solid fa-calendar-xmark" style="font-size: 2.5rem; color: var(--color-sage-green); margin-bottom: 0.75rem;"></i>
-            <h4 style="color: var(--color-forest-green); margin-bottom: 0.25rem;">No Appointments Match Criteria</h4>
-            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0;">Try adjusting your search terms or filter selections.</p>
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+              <i class="fa-solid fa-calendar-days" style="font-size: 1.75rem; color: var(--color-forest-green);"></i>
+            </div>
+            <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.35rem; font-size: 1.2rem;">No Appointments Booked Yet</h4>
+            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0 auto; max-width: 440px;">All future appointments scheduled by clients or registered by the hospital team will appear here in real time.</p>
+          </div>
+        ` : filtered.length === 0 ? `
+          <div style="text-align: center; padding: 3.5rem 1.5rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--color-warm-cream); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+              <i class="fa-solid fa-calendar-xmark" style="font-size: 1.75rem; color: var(--color-soft-coral);"></i>
+            </div>
+            <h4 style="color: var(--color-forest-green); font-family: var(--font-heading); margin: 0 0 0.35rem; font-size: 1.2rem;">No Appointments Match Criteria</h4>
+            <p style="color: var(--color-charcoal-muted); font-size: 0.88rem; margin: 0 0 1rem;">No bookings match your search query "<strong>${apptSearchQuery}</strong>" or active filter criteria.</p>
+            <button type="button" class="btn btn-outline" id="admin-appt-empty-clear-btn" style="font-size: 0.82rem; padding: 0.4rem 1rem;">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Reset All Filters</span>
+            </button>
           </div>
         ` : `
           <div style="overflow-x: auto;">
@@ -236,6 +250,14 @@ export function setupAdminAppointmentsEvents(refreshAdmin) {
 
   document.getElementById('admin-appt-clear-btn')?.addEventListener('click', () => {
     apptSearchQuery = '';
+    refreshAdmin();
+  });
+
+  document.getElementById('admin-appt-empty-clear-btn')?.addEventListener('click', () => {
+    apptSearchQuery = '';
+    apptStatusFilter = 'all';
+    apptDoctorFilter = 'all';
+    apptPaymentFilter = 'all';
     refreshAdmin();
   });
 
