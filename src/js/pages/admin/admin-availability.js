@@ -40,20 +40,20 @@ export function renderAdminAvailability() {
       </div>
 
       <!-- Doctor Selector Pill Tabs -->
-      <div style="display: flex; gap: 0.65rem; overflow-x: auto; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+      <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 1.5rem; width: 100%;">
         ${vets.map(v => {
           const isSelected = v.id === selectedDoctorId;
           return `
-            <button type="button" class="quick-action-pill ${isSelected ? 'primary' : ''}" onclick="window.petzySelectAvailDoctor('${v.id}')" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 1rem; border-radius: var(--radius-full); white-space: nowrap;">
-              <img src="${v.image}" alt="${v.name}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
-              <span>${v.name}</span>
+            <button type="button" class="quick-action-pill ${isSelected ? 'primary' : ''}" onclick="window.petzySelectAvailDoctor('${v.id}')" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.95rem; border-radius: var(--radius-full); font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+              <img src="${v.image}" alt="${v.name}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+              <span style="white-space: nowrap;">${v.name}</span>
             </button>
           `;
         }).join('')}
       </div>
 
       ${selectedVet ? `
-        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1.5rem; align-items: start;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; align-items: start;">
           
           <!-- Left: Working Days & Shifts Form -->
           <div style="background: var(--color-white); padding: 1.75rem; border-radius: var(--radius-xl); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
